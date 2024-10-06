@@ -105,7 +105,7 @@ impl<'a> c_bitstream<'a> {
         let remaining_stream_bytes = end_stream_position - (self.m_bitstream_data.current_stream_byte_position + 1);
         let remaining_stream_bits = (8 - self.m_bitstream_data.current_memory_bit_position) + (remaining_stream_bytes * 8);
 
-        let size_in_bytes = (size_in_bits / 8) + 1;
+        let size_in_bytes = size_in_bits.div_ceil(8);
         if end_memory_position < size_in_bytes {
             panic!("Tried to read {size_in_bytes} bytes ({size_in_bits} bits) into a {end_memory_position} byte buffer!")
         }
@@ -185,7 +185,7 @@ impl<'a> c_bitstream<'a> {
 
             // Write to output.
             let current_memory_position = self.m_bitstream_data.current_memory_bit_position / 8;
-            let window_bytes_used = ((self.m_bitstream_data.window_bits_used - 1) / 8) + 1;
+            let window_bytes_used = self.m_bitstream_data.window_bits_used.div_ceil(8);
             let next_memory_position = current_memory_position + window_bytes_used;
             let window_value = self.m_bitstream_data.window >> 64 - self.m_bitstream_data.window_bits_used;
             let window_bytes = window_value.to_le_bytes();
