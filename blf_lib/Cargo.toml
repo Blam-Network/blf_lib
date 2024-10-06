@@ -1,0 +1,9 @@
+[package]
+name = "blf_lib"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libc = "0.2"
+blf_lib-derivable = { path = "../blf_lib-derivable" }
+blf_lib-derive = { path = "../blf_lib-derive" }

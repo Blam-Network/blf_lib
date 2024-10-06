@@ -17,6 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build
+      working-directory: ./blf_lib
       run: cargo build --verbose
     - name: Run tests
+      working-directory: ./blf_lib
       run: cargo test --verbose
