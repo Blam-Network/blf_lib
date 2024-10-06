@@ -13,7 +13,8 @@
 #![allow(unused_variables)]
 #![allow(non_camel_case_types)]
 
-
+use std::cmp::min;
+use std::mem;
 use libc::wchar_t;
 use crate::blam::math::integer_math::int32_point3d;
 use crate::blam::math::real_math::vector3d;
@@ -120,8 +121,7 @@ impl<'a> c_bitstream<'a> {
         let mut windows_to_read = (size_in_bits / 64) + 1;
         let mut remaining_bits_to_read = size_in_bits;
         while windows_to_read > 0 {
-            // surely there's better syntax than this...
-            let mut window_bits_to_read = if remaining_bits_to_read >= 64 { 64 } else { remaining_bits_to_read };
+            let mut window_bits_to_read = min(remaining_bits_to_read, 64);
             self.m_bitstream_data.window = 0;
             self.m_bitstream_data.window_bits_used = 0;
 
@@ -133,12 +133,12 @@ impl<'a> c_bitstream<'a> {
                 let mut bits = self.m_data[current_byte_index];
 
                 // shift the byte to remove previously read bits.
-                bits << self.m_bitstream_data.current_stream_bit_position;
+                bits <<= self.m_bitstream_data.current_stream_bit_position;
 
                 if size_in_bits < remaining_bits_at_position {
                     // Mask off the excess
-                    let mask = 0xff >> size_in_bits;
-                    bits |= mask;
+                    let mask = 0xff << (8 - size_in_bits);
+                    bits &= mask;
                 }
 
                 // push the byte onto the window.
@@ -166,12 +166,17 @@ impl<'a> c_bitstream<'a> {
             }
 
             // 3. Read any remaining bits.
-            if (window_bits_to_read > 0) {
+            if window_bits_to_read > 0 {
                 let current_byte_index = self.m_bitstream_data.current_stream_byte_position;
 
-                let final_bits = self.m_data[current_byte_index];
-                let window_shift = 64 - (window_bits_to_read + self.m_bitstream_data.window_bits_used);
-                self.m_bitstream_data.window |= u64::from(final_bits) << window_shift;
+                let mut bits = self.m_data[current_byte_index];
+
+                // Shift off the excess
+                bits >>= 8 - window_bits_to_read;
+
+
+                let window_shift = 64 - window_bits_to_read - self.m_bitstream_data.window_bits_used;
+                self.m_bitstream_data.window |= u64::from(bits) << window_shift;
                 self.m_bitstream_data.window_bits_used += window_bits_to_read;
                 self.m_bitstream_data.current_stream_bit_position = window_bits_to_read;
                 self.m_bitstream_data.current_stream_byte_position = current_byte_index;
@@ -179,7 +184,7 @@ impl<'a> c_bitstream<'a> {
             }
 
             // Write to output.
-            let current_memory_position = self.m_bitstream_data.current_memory_bit_position * 8;
+            let current_memory_position = self.m_bitstream_data.current_memory_bit_position / 8;
             let window_bytes_used = ((self.m_bitstream_data.window_bits_used - 1) / 8) + 1;
             let next_memory_position = current_memory_position + window_bytes_used;
             let window_value = self.m_bitstream_data.window >> 64 - self.m_bitstream_data.window_bits_used;
@@ -188,6 +193,7 @@ impl<'a> c_bitstream<'a> {
             self.m_bitstream_data.current_memory_bit_position += self.m_bitstream_data.window_bits_used;
 
             windows_to_read -= 1;
+            self.m_bitstream_data.current_memory_bit_position = next_memory_position * 8;
 
             if remaining_bits_to_read >= 64 {
                 remaining_bits_to_read -= 64;
@@ -195,11 +201,17 @@ impl<'a> c_bitstream<'a> {
                 remaining_bits_to_read = 0;
             }
         }
+
+        self.m_bitstream_data.current_memory_bit_position = 0;
     }
 
 
-    pub fn read_integer(size_in_bits: u8) -> u32 {
-        unimplemented!()
+    pub fn read_integer(&mut self, size_in_bits: usize) -> u32 {
+        assert!(size_in_bits > 0);
+        assert!(size_in_bits <= mem::size_of::<u32>() * 8);
+        let mut bytes = [0u8; 4];
+        self.read_bits_internal(&mut bytes, size_in_bits);
+        u32::from_le_bytes(bytes)
     }
 
     pub fn read_identifier(identifier: String) { // param may be wrong.
@@ -482,7 +494,6 @@ mod tests {
     }
 
     #[test]
-
     fn test_read_bits_internal_multiple_reads() {
         // Sample data that will provide sufficient bits for testing
         let data: &mut [u8] = &mut [
@@ -499,8 +510,21 @@ mod tests {
         output = [0u8; 2];
         // Read 9 bits
         bitstream.read_bits_internal(&mut output, 9);
-        assert_eq!(output[0], 0b01011001); // Expect the next 9 bits to be 0b110011001
-        assert_eq!(output[1], 0b00000001); // Expect the next 9 bits to be 0b110011001
+        assert_eq!(output[0], 0b10110011); // Expect the next 9 bits to be 0b110011001
+        assert_eq!(output[1], 0b00000000); // Expect the next 9 bits to be 0b110011001
 
+    }
+
+    #[test]
+    fn test_read_integers() {
+        let data: &mut [u8] = &mut [
+            0x03, 0x29, 0x48, 0xFF, 0xAB, 0x30, 0x92, 0x49
+        ];
+
+        let mut bitstream = c_bitstream::new(data);
+        assert_eq!(bitstream.read_integer(10), 12);
+        assert_eq!(bitstream.read_integer(3), 5);
+        assert_eq!(bitstream.read_integer(24), 2695157);
+        assert_eq!(bitstream.read_integer(32), 1712474431)
     }
 }
