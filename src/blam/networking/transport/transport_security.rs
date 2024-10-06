@@ -30,6 +30,6 @@ mod tests {
 
     #[test]
     fn sizeof_s_transport_secure_address() {
-        assert_eq!(size_of::<s_transport_unique_identifier>(), 0x10);
+        assert_eq!(size_of::<s_transport_secure_address>(), 0x10);
     }
 }
