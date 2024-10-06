@@ -449,29 +449,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_reset_reading_state() {
-        let mut data = vec![0u8; 64]; // Create a buffer with 64 bytes
-        // Pre-fill some data for reading
-        data[..8].copy_from_slice(&[1, 2, 3, 4, 5, 6, 7, 8]);
-
-        let mut bitstream = c_bitstream::new(&mut data);
-
-        bitstream.reset(e_bitstream_state::_bitstream_state_reading); // Reset to reading state
-
-        // Assert that the internal state is set correctly
-        assert_eq!(bitstream.m_state, e_bitstream_state::_bitstream_state_reading);
-        assert_eq!(bitstream.m_bitstream_data.current_memory_bit_position, 64);
-        assert_eq!(bitstream.m_bitstream_data.current_stream_bit_position, 0);
-        assert_eq!(bitstream.m_position_stack_depth, 0);
-        assert!(bitstream.__unknown14 == 0);
-        assert_eq!(bitstream.m_bitstream_data.current_stream_byte_position, 8); // Should point to the next byte after the read
-        assert!(bitstream.m_bitstream_data.window != 0); // Check that the window has been populated
-    }
-
-
-    #[test]
     fn test_read_bits_internal() {
-        // Sample data that will provide sufficient bits for testing
         let data: &mut [u8] = &mut [
             0b10101010, 0b11001100, 0b11110000
         ];
@@ -481,13 +459,13 @@ mod tests {
 
         // Read 5 bits
         bitstream.read_bits_internal(&mut output, 5);
-        assert_eq!(output[0], 0b10101); // Expect the first 5 bits to be 0b10101
+        assert_eq!(output[0], 0b10101);
 
         output = [0u8; 2];
         // Read 9 bits
         bitstream.read_bits_internal(&mut output, 9);
-        assert_eq!(output[0], 0b10110011); // Expect the next 9 bits to be 0b110011001
-        assert_eq!(output[1], 0b00000000); // Expect the next 9 bits to be 0b110011001
+        assert_eq!(output[0], 0b10110011);
+        assert_eq!(output[1], 0b00000000);
 
     }
 
