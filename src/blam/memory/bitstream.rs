@@ -107,7 +107,7 @@ impl<'a> c_bitstream<'a> {
 
         let size_in_bytes = (size_in_bits / 8) + 1;
         if end_memory_position < size_in_bytes {
-            panic!("Tried to read {size_in_bits} bits into a {end_memory_position} byte buffer!")
+            panic!("Tried to read {size_in_bytes} bytes ({size_in_bits} bits) into a {end_memory_position} byte buffer!")
         }
 
         if remaining_stream_bits < size_in_bits {
