@@ -7,3 +7,4 @@
 
 pub mod blam;
 pub mod blf;
+pub mod types;

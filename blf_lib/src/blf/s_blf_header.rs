@@ -1,20 +1,23 @@
 use std::ffi::c_char;
 
 #[repr(C, packed)]
-struct s_blf_header
+#[derive(Default)]
+pub struct s_blf_header
 {
-    chunk_type: [c_char; 4],
-    chunk_size: u32,
-    major_version: u16,
-    minor_version: u16,
+    pub chunk_type: [c_char; 4],
+    pub chunk_size: u32,
+    pub major_version: u16,
+    pub minor_version: u16,
 }
 
 impl s_blf_header {
-    pub fn setup(&mut self, chunk_type: [c_char; 4], chunk_size: u32, major_version: u16, minor_version: u16) {
-        self.chunk_type = chunk_type;
-        self.chunk_size = chunk_size;
-        self.major_version = major_version;
-        self.minor_version = minor_version;
+    pub fn setup(chunk_type: [c_char; 4], chunk_size: u32, version: [u16; 2]) -> s_blf_header {
+        s_blf_header {
+            chunk_type,
+            chunk_size,
+            major_version: version[0],
+            minor_version: version[1],
+        }
     }
 }
 

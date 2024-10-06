@@ -39,7 +39,7 @@ struct s_bitstream_data {
     current_stream_byte_position: usize, // aka current_memory_byte_position
 }
 
-struct c_bitstream<'a>
+pub struct c_bitstream<'a>
 {
     m_data: &'a [u8],
     // m_data_max: u32, REMOVED
