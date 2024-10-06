@@ -3,10 +3,7 @@
 // though most of it's interface is in-tact.
 // https://github.com/twist84/ManagedDonkey/blob/main/game/source/math/integer_math.hpp
 
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
 #![allow(dead_code)]
-#![allow(non_camel_case_types)]
 
 #[derive(Clone, Copy)]
 struct int32_point3d_coordinates {

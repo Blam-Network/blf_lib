@@ -2,10 +2,6 @@
 // It has been significantly altered in moving from C++ to Rust,
 // though most of it's interface is in-tact.
 // https://github.com/twist84/ManagedDonkey/blob/main/game/source/networking/transport/transport_security.cpp
-
-#![allow(non_snake_case)]
-#![allow(non_camel_case_types)]
-#![allow(non_upper_case_globals)]
 #![allow(dead_code)]
 
 pub struct s_transport_unique_identifier

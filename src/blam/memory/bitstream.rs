@@ -7,11 +7,8 @@
 // - We don't use pointer arithmetic internally, as such m_data_max is removed.
 // - The empty constructor is removed, function overloads are unsupported in Rust.
 
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
 #![allow(dead_code)]
 #![allow(unused_variables)]
-#![allow(non_camel_case_types)]
 
 use std::cmp::min;
 use std::mem;
