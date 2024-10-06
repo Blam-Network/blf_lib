@@ -99,112 +99,102 @@ impl<'a> c_bitstream<'a> {
     }
 
     pub fn read_bits_internal(&mut self, output: &mut [u8], size_in_bits: usize) {
-        let mut bits_remaining = size_in_bits;
-
-        let mut current_memory_position = 0;
-        let mut current_stream_position = self.m_bitstream_data.current_stream_byte_position;
-        let mut next_memory_position = 0;
-        let mut next_stream_position = 0;
         let end_memory_position = output.len();
         let end_stream_position = self.m_data.len();
-        let remaining_stream_bytes = end_stream_position - current_stream_position;
+        let remaining_stream_bytes = end_stream_position - (self.m_bitstream_data.current_stream_byte_position + 1);
+        let remaining_stream_bits = (8 - self.m_bitstream_data.current_memory_bit_position) + (remaining_stream_bytes * 8);
 
         let size_in_bytes = (size_in_bits / 8) + 1;
         if end_memory_position < size_in_bytes {
             panic!("Tried to read {size_in_bits} bits into a {end_memory_position} byte buffer!")
         }
 
-        if remaining_stream_bytes < size_in_bytes {
-            panic!("Tried to read {size_in_bits} bits but the stream only has {remaining_stream_bytes} bytes left!")
+        if remaining_stream_bits < size_in_bits {
+            panic!("Tried to read {size_in_bits} bits but the stream only has {remaining_stream_bits} bits left!")
         }
 
-        // Process full 64-bit chunks
-        while bits_remaining >= 64 {
-            next_stream_position = current_stream_position + 8;
-            next_memory_position = current_memory_position + 8;
-
-            // Add bytes to the window...
-            if next_stream_position <= end_stream_position {
-                let window_bytes = &self.m_data[current_stream_position..next_stream_position];
-                self.m_bitstream_data.window = u64::from_le_bytes(window_bytes.try_into().unwrap());
-                self.m_bitstream_data.current_stream_byte_position += 8;
-            } else {
-                // Handle case where data runs out before we can read 8 bytes
-                let bytes_to_read = end_stream_position - self.m_bitstream_data.current_stream_byte_position;
-                let mut window_bytes = [0u8; 8];
-                window_bytes[..bytes_to_read].copy_from_slice(&self.m_data[self.m_bitstream_data.current_stream_byte_position..self.m_bitstream_data.current_stream_byte_position + size_of::<u64>()]);
-                self.m_bitstream_data.window = u64::from_le_bytes(window_bytes) << (64 - (bytes_to_read * 8));
-                self.m_bitstream_data.current_stream_byte_position += bytes_to_read;
-            }
-
-            // The window is full, add it to the output buffer.
-            let window_value = self.m_bitstream_data.window >> (64 - bits_remaining);
-            output[(size_in_bits / 8 + 1) - (bits_remaining / 8)..(size_in_bits / 8 + 1) - ((bits_remaining / 8) + 8)].copy_from_slice(&window_value.to_le_bytes());
-            bits_remaining -= 64;
-            self.m_bitstream_data.current_memory_bit_position += 64;
-            self.m_bitstream_data.current_stream_bit_position += 64;
-            self.m_bitstream_data.window_bits_used = 0;
-            current_memory_position = next_memory_position;
-            current_stream_position = next_stream_position;
+        if size_in_bits == 0 {
+            panic!("Tried to read zero bits.")
         }
 
-        if bits_remaining >= 8 {
-            let bytes_remaining = bits_remaining / 8;
-
-            next_memory_position = current_memory_position + bytes_remaining;
-            next_stream_position = current_stream_position + bytes_remaining;
-
-            let window_shift = 64 - (bytes_remaining * 8);
-
-            // grab as many bytes as we can.
-            let read_bytes = &self.m_data[current_stream_position..next_stream_position];
-            let mut window_bytes: [u8; 8] = [0; 8];
-            window_bytes[0..bytes_remaining].copy_from_slice(read_bytes);
-            self.m_bitstream_data.window = u64::from_le_bytes(window_bytes) << window_shift;
-
-            bits_remaining -= bytes_remaining * 8;
-
-            if bits_remaining == 0 {
-                let window_value = self.m_bitstream_data.window >> window_shift;
-                output[current_memory_position..next_memory_position].copy_from_slice(&window_value.to_le_bytes()[0..bytes_remaining]);
-                self.m_bitstream_data.window = 0;
-                self.m_bitstream_data.window_bits_used = 0;
-                current_memory_position = next_memory_position;
-            } else {
-                self.m_bitstream_data.window_bits_used = bytes_remaining * 8;
-            }
-
-            self.m_bitstream_data.current_memory_bit_position += bytes_remaining * 8;
-            self.m_bitstream_data.current_stream_bit_position += bytes_remaining * 8;
-            current_stream_position = next_stream_position;
-        }
-
-        // Handle remaining bits if any
-        if bits_remaining > 0 {
-            next_memory_position = next_memory_position + 1;
-            next_stream_position = current_stream_position + 1;
-
-            self.m_bitstream_data.window_bits_used += bits_remaining;
-            let window_bytes_used = (self.m_bitstream_data.window_bits_used / 8) + 1;
-
-            let window_shift = 64 - self.m_bitstream_data.window_bits_used;
-
-            // Read the next partial window if there's still data
-            let final_byte = self.m_data[current_stream_position];
-            self.m_bitstream_data.window |= u64::from(final_byte) << (window_shift - 1);
-
-            // Store the remaining bits
-            let window_value = self.m_bitstream_data.window >> window_shift;
-            output[current_memory_position..next_memory_position].copy_from_slice(&window_value.to_le_bytes()[0..window_bytes_used]);
+        let mut windows_to_read = (size_in_bits / 64) + 1;
+        let mut remaining_bits_to_read = size_in_bits;
+        while windows_to_read > 0 {
+            // surely there's better syntax than this...
+            let mut window_bits_to_read = if remaining_bits_to_read >= 64 { 64 } else { remaining_bits_to_read };
             self.m_bitstream_data.window = 0;
             self.m_bitstream_data.window_bits_used = 0;
-            self.m_bitstream_data.current_memory_bit_position += bits_remaining;
-            self.m_bitstream_data.current_stream_bit_position += bits_remaining;
-            current_memory_position = next_memory_position;
-            current_stream_position = next_stream_position;
-        }
 
-        self.m_bitstream_data.current_stream_byte_position = next_stream_position;
+            // 1. Read any remaining bits on the current byte.
+            let remaining_bits_at_position = 8 - self.m_bitstream_data.current_stream_bit_position;
+            if remaining_bits_at_position < 8 {
+                let current_byte_index = self.m_bitstream_data.current_stream_byte_position;
+
+                let mut bits = self.m_data[current_byte_index];
+
+                // shift the byte to remove previously read bits.
+                bits << self.m_bitstream_data.current_stream_bit_position;
+
+                if size_in_bits < remaining_bits_at_position {
+                    // Mask off the excess
+                    let mask = 0xff >> size_in_bits;
+                    bits |= mask;
+                }
+
+                // push the byte onto the window.
+                self.m_bitstream_data.window = u64::from(bits) << (64 - 8);
+                self.m_bitstream_data.window_bits_used = remaining_bits_at_position;
+                self.m_bitstream_data.current_stream_byte_position += 1;
+                self.m_bitstream_data.current_stream_bit_position = 0;
+                window_bits_to_read -= remaining_bits_at_position;
+            }
+
+            // 2. Read any full bytes.
+            if window_bits_to_read >= 8 {
+                let current_byte_index = self.m_bitstream_data.current_stream_byte_position;
+
+                let bytes_to_read = window_bits_to_read / 8;
+                let window_shift = 64 - ((bytes_to_read * 8) + self.m_bitstream_data.window_bits_used);
+                let mut window_bytes = [0u8; 8];
+                window_bytes[..bytes_to_read].copy_from_slice(&self.m_data[current_byte_index..current_byte_index + bytes_to_read]);
+                // Add em to the window...
+                self.m_bitstream_data.window |= u64::from_le_bytes(window_bytes) << window_shift;
+                self.m_bitstream_data.window_bits_used += bytes_to_read * 8;
+                self.m_bitstream_data.current_stream_byte_position += bytes_to_read;
+                self.m_bitstream_data.current_stream_bit_position = 0;
+                window_bits_to_read -= bytes_to_read * 8;
+            }
+
+            // 3. Read any remaining bits.
+            if (window_bits_to_read > 0) {
+                let current_byte_index = self.m_bitstream_data.current_stream_byte_position;
+
+                let final_bits = self.m_data[current_byte_index];
+                let window_shift = 64 - (window_bits_to_read + self.m_bitstream_data.window_bits_used);
+                self.m_bitstream_data.window |= u64::from(final_bits) << window_shift;
+                self.m_bitstream_data.window_bits_used += window_bits_to_read;
+                self.m_bitstream_data.current_stream_bit_position = window_bits_to_read;
+                self.m_bitstream_data.current_stream_byte_position = current_byte_index;
+                window_bits_to_read = 0;
+            }
+
+            // Write to output.
+            let current_memory_position = self.m_bitstream_data.current_memory_bit_position * 8;
+            let window_bytes_used = ((self.m_bitstream_data.window_bits_used - 1) / 8) + 1;
+            let next_memory_position = current_memory_position + window_bytes_used;
+            let window_value = self.m_bitstream_data.window >> 64 - self.m_bitstream_data.window_bits_used;
+            let window_bytes = window_value.to_le_bytes();
+            output[current_memory_position..next_memory_position].copy_from_slice(&window_bytes[0..window_bytes_used]);
+            self.m_bitstream_data.current_memory_bit_position += self.m_bitstream_data.window_bits_used;
+
+            windows_to_read -= 1;
+
+            if remaining_bits_to_read >= 64 {
+                remaining_bits_to_read -= 64;
+            } else {
+                remaining_bits_to_read = 0;
+            }
+        }
     }
 
 
