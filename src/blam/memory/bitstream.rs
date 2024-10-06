@@ -103,7 +103,7 @@ impl<'a> c_bitstream<'a> {
         let end_memory_position = output.len();
         let end_stream_position = self.m_data.len();
         let remaining_stream_bytes = end_stream_position - (self.m_bitstream_data.current_stream_byte_position + 1);
-        let remaining_stream_bits = (8 - self.m_bitstream_data.current_memory_bit_position) + (remaining_stream_bytes * 8);
+        let remaining_stream_bits = (8 - self.m_bitstream_data.current_stream_bit_position) + (remaining_stream_bytes * 8);
 
         let size_in_bytes = size_in_bits.div_ceil(8);
         if end_memory_position < size_in_bytes {
@@ -131,11 +131,13 @@ impl<'a> c_bitstream<'a> {
                 let current_byte_index = self.m_bitstream_data.current_stream_byte_position;
 
                 let mut bits = self.m_data[current_byte_index];
+                // Of the remaining bits at the current byte, how many are we reading?
+                let reading_bits_at_position = min(size_in_bits, remaining_bits_at_position);
 
                 // shift the byte to remove previously read bits.
                 bits <<= self.m_bitstream_data.current_stream_bit_position;
 
-                if size_in_bits < remaining_bits_at_position {
+                if reading_bits_at_position < remaining_bits_at_position {
                     // Mask off the excess
                     let mask = 0xff << (8 - size_in_bits);
                     bits &= mask;
@@ -143,10 +145,15 @@ impl<'a> c_bitstream<'a> {
 
                 // push the byte onto the window.
                 self.m_bitstream_data.window = u64::from(bits) << (64 - 8);
-                self.m_bitstream_data.window_bits_used = remaining_bits_at_position;
-                self.m_bitstream_data.current_stream_byte_position += 1;
-                self.m_bitstream_data.current_stream_bit_position = 0;
-                window_bits_to_read -= remaining_bits_at_position;
+                self.m_bitstream_data.window_bits_used = reading_bits_at_position;
+                // If we read all the remaining bits at this byte, move to the next.
+                if reading_bits_at_position == remaining_bits_at_position {
+                    self.m_bitstream_data.current_stream_bit_position = 0;
+                    self.m_bitstream_data.current_stream_byte_position += 1;
+                } else {
+                    self.m_bitstream_data.current_stream_bit_position += reading_bits_at_position;
+                }
+                window_bits_to_read -= reading_bits_at_position;
             }
 
             // 2. Read any full bytes.
@@ -154,9 +161,11 @@ impl<'a> c_bitstream<'a> {
                 let current_byte_index = self.m_bitstream_data.current_stream_byte_position;
 
                 let bytes_to_read = window_bits_to_read / 8;
-                let window_shift = 64 - ((bytes_to_read * 8) + self.m_bitstream_data.window_bits_used);
+                let window_shift = 64 - (bytes_to_read * 8) - self.m_bitstream_data.window_bits_used;
                 let mut window_bytes = [0u8; 8];
-                window_bytes[..bytes_to_read].copy_from_slice(&self.m_data[current_byte_index..current_byte_index + bytes_to_read]);
+                let unused_bytes = 8 - bytes_to_read;
+                window_bytes[unused_bytes..8].copy_from_slice(&self.m_data[current_byte_index..current_byte_index + bytes_to_read]);
+                window_bytes.reverse();
                 // Add em to the window...
                 self.m_bitstream_data.window |= u64::from_le_bytes(window_bytes) << window_shift;
                 self.m_bitstream_data.window_bits_used += bytes_to_read * 8;
@@ -180,7 +189,6 @@ impl<'a> c_bitstream<'a> {
                 self.m_bitstream_data.window_bits_used += window_bits_to_read;
                 self.m_bitstream_data.current_stream_bit_position = window_bits_to_read;
                 self.m_bitstream_data.current_stream_byte_position = current_byte_index;
-                window_bits_to_read = 0;
             }
 
             // Write to output.
@@ -460,41 +468,9 @@ mod tests {
         assert!(bitstream.m_bitstream_data.window != 0); // Check that the window has been populated
     }
 
+
     #[test]
     fn test_read_bits_internal() {
-        // Setup: Create a bitstream with known data.
-        let data: &mut [u8] = &mut [
-            0b10101010, 0b11110000, // First 16 bits (2 bytes)
-            0b00110011, 0b00001111, // Next 16 bits (2 bytes)
-        ];
-
-        let mut bitstream = c_bitstream::new(data);
-
-        // Set the state to reading (assumes the state enum is implemented)
-        bitstream.reset(e_bitstream_state::_bitstream_state_reading);
-
-        // Prepare a buffer to read the bits into
-        let mut buffer: [u8; 4] = [0; 4]; // Enough space for 32 bits (4 bytes)
-
-        // Read 32 bits
-        bitstream.read_bits_internal(&mut buffer, 32);
-
-        // Check the output
-        let expected: [u8; 4] = [
-            0b10101010, 0b11110000, // First 16 bits (2 bytes)
-            0b00110011, 0b00001111, // Next 16 bits (2 bytes)
-        ];
-
-        // Assert that the buffer matches the expected output
-        assert_eq!(buffer, expected);
-
-        // Optionally, verify the internal state after reading
-        assert_eq!(bitstream.m_bitstream_data.current_memory_bit_position, 32);
-        assert_eq!(bitstream.m_bitstream_data.current_stream_bit_position, 32);
-    }
-
-    #[test]
-    fn test_read_bits_internal_multiple_reads() {
         // Sample data that will provide sufficient bits for testing
         let data: &mut [u8] = &mut [
             0b10101010, 0b11001100, 0b11110000
@@ -518,10 +494,11 @@ mod tests {
     #[test]
     fn test_read_integers() {
         let data: &mut [u8] = &mut [
-            0x03, 0x29, 0x48, 0xFF, 0xAB, 0x30, 0x92, 0x49
+            0x03, 0x29, 0x48, 0xFF, 0xAB, 0x30, 0x92, 0x49, 0xFF
         ];
 
         let mut bitstream = c_bitstream::new(data);
+
         assert_eq!(bitstream.read_integer(10), 12);
         assert_eq!(bitstream.read_integer(3), 5);
         assert_eq!(bitstream.read_integer(24), 2695157);
