@@ -1,6 +1,7 @@
 use std::ffi::c_char;
 use blf_lib_derive::BlfChunk;
 
+#[repr(C, packed)]
 #[derive(BlfChunk)]
 #[Signature("athr")]
 #[Version(3.1)]
