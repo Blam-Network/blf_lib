@@ -10,10 +10,14 @@ pub fn unpacked_serializable_macro(input: TokenStream) -> TokenStream {
         Data::Struct(_s) => {
             quote! {
                 impl blf_lib_derivable::blf::chunks::Serializable for #name {
+                    // TODO: Implement
                     fn encode(&self) -> &[u8] {
                          unimplemented!();
                     }
 
+                    // TODO: Rewrite to consider byte-order.
+                    // Probably need to fetch all fields and write in sequence...
+                    // And many implement a writable trait...
                     fn decode(buffer: &[u8]) -> Self {
                         let name = #name_string;
                         let mut value: #name = unsafe { std::mem::zeroed() };
