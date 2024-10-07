@@ -16,14 +16,14 @@ pub struct s_blf_chunk_author
 
 #[cfg(test)]
 mod tests {
-    use blf_lib_derivable::blf::chunks::BlfChunk;
+    use blf_lib_derivable::{blf::chunks::BlfChunk, types::chunk_signature::chunk_signature};
     use super::*;
 
     // These are more tests of the blf_lib-derive package.
     // They don't really belong here, we'll move them in future.
     #[test]
     fn s_blf_chunk_author_signature() {
-        assert_eq!(s_blf_chunk_author::get_signature(), ['a' as c_char, 't' as c_char, 'h' as c_char, 'r' as c_char]);
+        assert_eq!(s_blf_chunk_author::get_signature(), chunk_signature::from_string("athr"));
     }
 
     #[test]
