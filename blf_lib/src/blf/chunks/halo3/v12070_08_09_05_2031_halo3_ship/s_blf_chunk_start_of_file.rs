@@ -22,12 +22,13 @@ mod tests {
     use crate::types::c_string::to_string;
     use blf_lib_derivable::blf::chunks::BlfChunk;
     use blf_lib_derivable::blf::chunks::Serializable;
+    use blf_lib_derivable::types::chunk_signature::chunk_signature;
 
     // These are more tests of the blf_lib-derive package.
     // They don't really belong here, we'll move them in future.
     #[test]
     fn s_blf_chunk_start_of_file_signature() {
-        assert_eq!(s_blf_chunk_start_of_file::get_signature(), ['_' as c_char, 'b' as c_char, 'l' as c_char, 'f' as c_char]);
+        assert_eq!(s_blf_chunk_start_of_file::get_signature(), chunk_signature::from_string("_blf"));
     }
 
     #[test]

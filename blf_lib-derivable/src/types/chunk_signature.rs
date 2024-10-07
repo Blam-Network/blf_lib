@@ -1,5 +1,7 @@
-use std::{ffi::c_char, fmt::{Display, Formatter, Result}, path::Display};
+use std::ffi::c_char;
+use std::fmt::{Display, Formatter, Result};
 
+#[derive(Clone, Copy, Default, Debug)]
 pub struct chunk_signature {
     value: [c_char; 4],
 }
@@ -11,7 +13,7 @@ impl chunk_signature {
         }
     }
 
-    pub fn from_string(value: String) -> chunk_signature {
+    pub fn from_string(value: &str) -> chunk_signature {
         let mut array: [c_char; 4] = [0; 4];
         let bytes = value.as_bytes();
         
@@ -42,13 +44,24 @@ impl Display for chunk_signature {
     }
 }
 
+impl PartialEq for chunk_signature {
+    fn eq(&self, other: &Self) -> bool {
+        for i in 0..4 {
+            if self.value[i] != other.value[i] {
+                return false;
+            }
+        }
+        true
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_chunk_signature() {
-        let signature = chunk_signature::from_string("TEST".to_string());
-        assert_eq!(signature.to_string(), "TEST");
+        let signature = chunk_signature::from_string("_blf");
+        assert_eq!(signature.to_string(), "_blf");
     }
 }

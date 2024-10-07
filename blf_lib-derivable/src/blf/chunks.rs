@@ -1,4 +1,4 @@
-use std::ffi::c_char;
+use crate::types::chunk_signature::chunk_signature;
 
 pub trait Serializable {
     fn encode(&self) -> &[u8];
@@ -6,7 +6,7 @@ pub trait Serializable {
 }
 
 pub trait BlfChunk {
-    fn get_signature() -> [c_char; 4];
+    fn get_signature() -> chunk_signature;
     fn get_version() -> [u16; 2];
 }
 
@@ -19,5 +19,5 @@ pub trait TitleAndBuild {
 }
 
 pub trait ChunkFactory {
-    fn decode_chunk(&self, signature: &[c_char; 4], major_version: u16, minor_version: u16, buffer: &[u8]) -> Result<Box<dyn DynamicBlfChunk>, &'static str>;
+    fn decode_chunk(&self, signature: &chunk_signature, major_version: u16, minor_version: u16, buffer: &[u8]) -> Result<Box<dyn DynamicBlfChunk>, &'static str>;
 }

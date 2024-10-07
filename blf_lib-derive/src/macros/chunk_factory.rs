@@ -80,7 +80,7 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
                     }
                 }
                 impl blf_lib_derivable::blf::chunks::ChunkFactory for #name {
-                    fn decode_chunk(&self, signature: &[c_char; 4], major_version: u16, minor_version: u16, buffer: &[u8]) -> Result<Box<dyn blf_lib_derivable::blf::chunks::DynamicBlfChunk>, &'static str> {
+                    fn decode_chunk(&self, signature: &blf_lib_derivable::types::chunk_signature::chunk_signature, major_version: u16, minor_version: u16, buffer: &[u8]) -> Result<Box<dyn blf_lib_derivable::blf::chunks::DynamicBlfChunk>, &'static str> {
                         #(#if_statements)*
 
                         Err("Chunk not found!")
