@@ -11,6 +11,8 @@ use crate::blam::memory::bitstream::c_bitstream;
 mod blf;
 mod blam;
 
+mod types;
+
 fn main() {
     use blf::chunks::s_blf_chunk_start_of_file::s_blf_chunk_start_of_file;
     use blf::s_blf_header::s_blf_header;
