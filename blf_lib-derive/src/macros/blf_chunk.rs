@@ -1,5 +1,4 @@
 use proc_macro::TokenStream;
-use std::ffi::c_char;
 use syn::{parse_macro_input, Data, DeriveInput, LitFloat, LitStr, Meta, Token};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
@@ -55,26 +54,16 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
     let bytes = signature_string.as_bytes();
     assert_eq!(bytes.len(), 4, "Signature provided with invalid byte length! {signature_string}");
 
-    // There's probably a better way of doing this.
-    // We spread these out for the quote below.
-    let char1 = bytes[0] as c_char;
-    let char2 = bytes[1] as c_char;
-    let char3 = bytes[2] as c_char;
-    let char4 = bytes[3] as c_char;
-
-    let version_major = version[0];
-    let version_minor = version[1];
-
     match input.data {
         Data::Struct(_s) => {
             quote! {
                 impl blf_lib_derivable::blf::chunks::BlfChunk for #name {
                     fn get_signature() -> [c_char; 4] {
-                         [(#char1), (#char2), (#char3), (#char4)]
+                        [#((#bytes) as c_char), *]
                     }
 
                     fn get_version() -> [u16; 2] {
-                        [(#version_major), (#version_minor)]
+                        [#(#version), *]
                     }
                 }
             }

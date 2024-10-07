@@ -10,7 +10,7 @@ pub fn unpacked_serializable_macro(input: TokenStream) -> TokenStream {
         Data::Struct(_s) => {
             quote! {
                 impl blf_lib_derivable::blf::chunks::Serializable for #name {
-                    fn encode(&self, buffer: &[u8]) {
+                    fn encode(&self) -> &[u8] {
                          unimplemented!();
                     }
 

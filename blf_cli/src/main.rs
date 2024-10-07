@@ -5,18 +5,11 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use blf_lib::blf::chunks::s_blf_chunk_start_of_file::s_blf_chunk_start_of_file;
-use crate::blam::memory::bitstream::c_bitstream;
-
-mod blf;
-mod blam;
-
-mod types;
+use blf_lib::blam::memory::bitstream::c_bitstream;
+use blf_lib::blf::s_blf_header::s_blf_header;
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_start_of_file;
 
 fn main() {
-    use blf::chunks::s_blf_chunk_start_of_file::s_blf_chunk_start_of_file;
-    use blf::s_blf_header::s_blf_header;
-
     let mut my_shitty_data = [0x5F, 0x62, 0x6C, 0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0xFF, 0xFE];
 
     let mut header: s_blf_header = s_blf_header::default();

@@ -1,2 +1,5 @@
-pub mod s_blf_chunk_author;
-pub mod s_blf_chunk_start_of_file;
+use blf_lib_derivable::blf::chunks::{BlfChunk, Serializable};
+
+pub mod halo3;
+
+pub trait SerializableBlfChunk: BlfChunk + Serializable {}

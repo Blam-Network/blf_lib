@@ -10,8 +10,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  build_lib:
+    name: "Build blf_lib"
     runs-on: ubuntu-latest
 
     steps:
@@ -22,3 +22,16 @@ jobs:
     - name: Run tests
       working-directory: ./blf_lib
       run: cargo test --verbose
+
+  build_cli:
+    name: "Build blf_cli"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        working-directory: ./blf_cli
+        run: cargo build --verbose
+      - name: Run tests
+        working-directory: ./blf_cli
+        run: cargo test --verbose
