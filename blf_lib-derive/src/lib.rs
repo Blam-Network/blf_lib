@@ -5,7 +5,7 @@ extern crate quote;
 
 use proc_macro::TokenStream;
 use std::ffi::c_char;
-use syn::{parse_macro_input, Data, DeriveInput, LitFloat, LitStr, Meta, Token};
+use syn::{parse_macro_input, Data, DeriveInput, LitFloat, LitInt, LitStr, Meta, Token};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 
@@ -132,4 +132,44 @@ pub fn unpacked_serializable(input: TokenStream) -> TokenStream {
         }
         _ => { panic!("#[derive(BlfChunk)] is only defined for structs!")}
     }.into()
+}
+
+
+#[proc_macro_derive(TestSize, attributes(Size))]
+pub fn test_size(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident;
+    let test_name = format_ident!("sizeof_{}", name);
+
+    let expected_size: usize;
+
+    let size_attribute = input.attrs.iter().filter(
+        |a| a.path().segments.len() == 1 && a.path().segments[0].ident == "Size"
+    ).nth(0).expect("Size attribute required for deriving TestSize!");
+
+    match &size_attribute.meta {
+        // Consider switching to a NameValue attribute.
+        Meta::List(list) => {
+            let parsed_ints: Punctuated<LitInt, Comma> = list.parse_args_with(Punctuated::<LitInt, Token![,]>::parse_terminated)
+                .unwrap();
+
+            let size_literal = parsed_ints.first().unwrap();
+
+            expected_size = size_literal.base10_parse().expect("Size value is invalid");
+        }
+        _ => {
+            panic!("Unsupported attribute type for Size. Please use the #[Size(0x44)] syntax.");
+        }
+    }
+
+    (quote! {
+        #[cfg(test)]
+        mod derive_test_size {
+            use super::*;
+            #[test]
+            fn #test_name() {
+                assert_eq!(size_of::<#name>(), #expected_size);
+            }
+        }
+    }).into()
 }

@@ -1,7 +1,9 @@
 use std::ffi::c_char;
+use blf_lib_derive::{TestSize, UnpackedSerializable};
 
 #[repr(C, packed)]
-#[derive(Default)]
+#[derive(Default, UnpackedSerializable, TestSize)]
+#[Size(0xC)]
 pub struct s_blf_header
 {
     pub chunk_type: [c_char; 4],
@@ -18,14 +20,5 @@ impl s_blf_header {
             major_version: version[0],
             minor_version: version[1],
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn sizeof_s_blf_header() {
-        assert_eq!(size_of::<s_blf_header>(), 0xC);
     }
 }

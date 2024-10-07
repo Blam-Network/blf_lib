@@ -1,11 +1,12 @@
 use std::ffi::c_char;
-use blf_lib_derive::BlfChunk;
+use blf_lib_derive::{BlfChunk, TestSize};
 
 #[repr(C, packed)]
-#[derive(BlfChunk)]
+#[derive(BlfChunk, TestSize)]
 #[Signature("athr")]
 #[Version(3.1)]
-struct s_blf_chunk_author
+#[Size(0x44)]
+pub struct s_blf_chunk_author
 {
     build_name: [c_char; 16],
     build_identifier: u64,
@@ -17,10 +18,6 @@ struct s_blf_chunk_author
 mod tests {
     use blf_lib_derivable::blf::chunks::BlfChunk;
     use super::*;
-    #[test]
-    fn sizeof_s_blf_chunk_author() {
-        assert_eq!(size_of::<s_blf_chunk_author>(), 0x44);
-    }
 
     // These are more tests of the blf_lib-derive package.
     // They don't really belong here, we'll move them in future.

@@ -5,9 +5,12 @@
 
 #![allow(dead_code)]
 
+use blf_lib_derive::TestSize;
+
 const k_3d_count: usize = 3;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, TestSize)]
+#[Size(0xC)]
 struct vector3d_coordinates {
     i: f32,
     j: f32,
@@ -18,14 +21,4 @@ pub union vector3d  {
 
     coordinates: vector3d_coordinates,
     n: [f32; k_3d_count]
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn sizeof_vector3d() {
-        assert_eq!(size_of::<vector3d>(), size_of::<f32>() * k_3d_count);
-    }
 }

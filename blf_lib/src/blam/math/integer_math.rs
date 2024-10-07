@@ -5,6 +5,8 @@
 
 #![allow(dead_code)]
 
+use blf_lib_derive::TestSize;
+
 #[derive(Clone, Copy)]
 struct int32_point3d_coordinates {
     x: u32,
@@ -12,18 +14,10 @@ struct int32_point3d_coordinates {
     z: u32,
 }
 
+#[derive(TestSize)]
+#[Size(0xC)]
 pub union int32_point3d  {
 
     coordinates: int32_point3d_coordinates,
     n: [u32; 3]
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn sizeof_int32_point3d() {
-        assert_eq!(size_of::<int32_point3d>(), 0xC);
-    }
 }
