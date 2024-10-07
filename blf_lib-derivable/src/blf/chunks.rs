@@ -10,8 +10,10 @@ pub trait BlfChunk {
     fn get_version() -> [u16; 2];
 }
 
+pub trait DynamicBlfChunk {}
+
 pub trait ChunkFactory {
-    fn decode_chunk(signature: &[c_char; 4], major_version: u16, minor_version: u16, buffer: &[u8]) -> Result<impl BlfChunk + Serializable, &'static str>;
+    fn decode_chunk(&self, signature: &[c_char; 4], major_version: u16, minor_version: u16, buffer: &[u8]) -> Result<Box<dyn DynamicBlfChunk>, &'static str>;
 
     fn get_title() -> &'static str;
 

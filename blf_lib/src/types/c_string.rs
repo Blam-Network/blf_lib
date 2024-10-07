@@ -8,7 +8,7 @@ pub fn to_string(chars: &[c_char]) -> String {
         if copy == 0 {
             break;
         }
-        res.write_char(char::from(copy));
+        res.write_char(char::from(copy)).unwrap();
     }
     res
 }

@@ -59,6 +59,14 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
         }
     }
 
+    let if_statements = chunk_idents.iter().map(|chunk_ident| {
+        quote! {
+            if signature == &#chunk_ident::get_signature() {
+                return Ok(Box::new(#chunk_ident::decode(buffer)));
+            }
+        }
+    });
+
     match input.data {
         Data::Struct(_s) => {
             quote! {
@@ -71,8 +79,10 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
                         #title_string
                     }
 
-                    fn decode_chunk(signature: &[c_char; 4], major_version: u16, minor_version: u16, buffer: &[u8]) -> Result<impl BlfChunk + Serializable, &'static str> {
-                        Ok(s_blf_chunk_start_of_file::decode(buffer))
+                    fn decode_chunk(&self, signature: &[c_char; 4], major_version: u16, minor_version: u16, buffer: &[u8]) -> Result<Box<dyn blf_lib_derivable::blf::chunks::DynamicBlfChunk>, &'static str> {
+                        #(#if_statements)*
+
+                        Err("Chunk not found!")
                     }
                 }
             }

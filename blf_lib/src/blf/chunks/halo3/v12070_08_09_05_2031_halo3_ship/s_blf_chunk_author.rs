@@ -1,8 +1,8 @@
 use std::ffi::c_char;
-use blf_lib_derive::{BlfChunk, TestSize};
+use blf_lib_derive::{BlfChunk, TestSize, UnpackedSerializable};
 
 #[repr(C, packed)]
-#[derive(BlfChunk, TestSize)]
+#[derive(BlfChunk, UnpackedSerializable, TestSize)]
 #[Signature("athr")]
 #[Version(3.1)]
 #[Size(0x44)]

@@ -57,6 +57,7 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
     match input.data {
         Data::Struct(_s) => {
             quote! {
+                impl blf_lib_derivable::blf::chunks::DynamicBlfChunk for #name {}
                 impl blf_lib_derivable::blf::chunks::BlfChunk for #name {
                     fn get_signature() -> [c_char; 4] {
                         [#((#bytes) as c_char), *]

@@ -1,8 +1,6 @@
 use std::ffi::c_char;
 use blf_lib_derive::TestSize;
 use blf_lib_derive::{BlfChunk, UnpackedSerializable};
-use blf_lib_derivable::blf::chunks::BlfChunk;
-use blf_lib_derivable::blf::chunks::Serializable;
 
 const k_tag_string_length: usize = 32;
 
@@ -22,6 +20,8 @@ pub struct s_blf_chunk_start_of_file
 mod tests {
     use super::*;
     use crate::types::c_string::to_string;
+    use blf_lib_derivable::blf::chunks::BlfChunk;
+    use blf_lib_derivable::blf::chunks::Serializable;
 
     // These are more tests of the blf_lib-derive package.
     // They don't really belong here, we'll move them in future.
