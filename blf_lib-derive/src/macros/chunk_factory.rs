@@ -55,7 +55,7 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
             chunk_idents = parsed_idents.iter().map(|ident| ident.clone()).collect();
         }
         _ => {
-            panic!("Unsupported attribute type for Build. Please use the #[Build(\"12070.08.09.05.2031.halo3_ship\")] syntax.");
+            panic!("Unsupported attribute type for Build. Please use the #[Chunks(s_blf_chunk_author)] syntax.");
         }
     }
 
@@ -70,7 +70,7 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
     match input.data {
         Data::Struct(_s) => {
             quote! {
-                impl blf_lib_derivable::blf::chunks::ChunkFactory for #name {
+                impl blf_lib_derivable::blf::chunks::TitleAndBuild for #name {
                     fn get_build_string() -> &'static str {
                         #build_string
                     }
@@ -78,7 +78,8 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
                     fn get_title() -> &'static str {
                         #title_string
                     }
-
+                }
+                impl blf_lib_derivable::blf::chunks::ChunkFactory for #name {
                     fn decode_chunk(&self, signature: &[c_char; 4], major_version: u16, minor_version: u16, buffer: &[u8]) -> Result<Box<dyn blf_lib_derivable::blf::chunks::DynamicBlfChunk>, &'static str> {
                         #(#if_statements)*
 

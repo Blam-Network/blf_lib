@@ -27,3 +27,8 @@ pub fn test_size(input: TokenStream) -> TokenStream {
 pub fn chunk_factory(input: TokenStream) -> TokenStream {
     macros::chunk_factory::chunk_factory_macro(input)
 }
+
+#[proc_macro_derive(VersionFactory, attributes(Versions))]
+pub fn version_factory(input: TokenStream) -> TokenStream {
+    macros::version_factory::version_factory_macro(input)
+}

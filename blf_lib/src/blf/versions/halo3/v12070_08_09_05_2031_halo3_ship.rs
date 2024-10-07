@@ -13,8 +13,9 @@ pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_author::s_blf_chunk_
     s_blf_chunk_start_of_file, 
     s_blf_chunk_author
 )]
-struct v12070_08_09_05_2031_halo3_ship {}
+pub struct v12070_08_09_05_2031_halo3_ship {}
 
+// TODO: Move test
 #[cfg(test)]
 mod tests {
     use crate::types::c_string::to_string;
