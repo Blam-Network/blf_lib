@@ -3,12 +3,13 @@ use bincode::Encode;
 use blf_lib_derive::{BlfChunk, TestSize, UnpackedSerializable};
 use crate::types::build_number_identifier::build_number_identifier;
 
-#[repr(C, packed)]
+#[repr(C, packed(4))]
 #[derive(BlfChunk, UnpackedSerializable, TestSize, Debug)]
 #[Signature("athr")]
 #[Version(3.1)]
 #[Size(0x44)]
 #[BigEndian]
+#[Pack(1)]
 pub struct s_blf_chunk_author
 {
     pub build_name: [c_char; 16],
@@ -65,16 +66,17 @@ mod tests {
         assert_eq!(read_build_ident, expected_build_ident);
     }
 
-    #[repr(C, align(4))]
-    #[derive(BlfChunk, UnpackedSerializable, TestSize, Debug)]
+    #[derive(BlfChunk, UnpackedSerializable, Debug, TestSize)]
     #[Signature("test")]
     #[Version(0.0)]
-    #[Size(0x8)]
     #[BigEndian]
+    #[Pack(4)]
+    #[Size(8)]
     struct padding_test {
         pub val1: u8,
         pub val2: u8,
     }
+
     #[test]
     fn encode_and_decode_test_struct() {
         let expected: [u8; 0x8] = [

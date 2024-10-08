@@ -1,8 +1,9 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::ToTokens;
-use syn::{parse_macro_input, Data, DeriveInput, Meta, Ident, parenthesized};
-use syn::token::Group;
+use syn::{parse_macro_input, Data, DeriveInput, Meta, Ident, parenthesized, LitInt, Token};
+use syn::punctuated::Punctuated;
+use syn::token::{Comma, Group};
 use crate::bincode_packed::derive_lib::{derive_decode_inner, derive_encode_inner};
 use crate::helpers::{DeriveInputHelpers};
 
@@ -36,45 +37,23 @@ pub fn unpacked_serializable_macro(token_stream: TokenStream) -> TokenStream {
     let endian_string = if big_endian { "big" } else { "little" };
     let with_endian = format_ident!("with_{}_endian", endian_string);
 
-    let mut alignment: usize;
+    let mut alignment: usize = 4; // not sure if this is actually the default
 
-    let repr_attribute = input.get_attribute("repr");
+    let pack_attribute = input.get_required_attribute("Pack");
 
-    if repr_attribute.is_some() {
-        match &repr_attribute.unwrap().meta {
-            // Consider switching to a NameValue attribute.
-            Meta::List(list) => {
-                // map tokens to string
-                // panic!("{}", list.tokens.to_string());
-                // c...
-                let mut iterator = list.clone().tokens.into_iter();
-                let first_ident = iterator.next();
-                if first_ident.unwrap().to_string().to_lowercase() != "c" {
-                    panic!("non-c structs aren't supported by UnpackedSerializable");
-                }
+    match &pack_attribute.meta {
+        // Consider switching to a NameValue attribute.
+        Meta::List(list) => {
+            let parsed_ints: Punctuated<LitInt, Comma> = list.parse_args_with(Punctuated::<LitInt, Token![,]>::parse_terminated)
+                .unwrap();
 
-                // comma...
-                iterator.next();
-                // packed or align
-                let second_ident = iterator.next().unwrap();
+            let pack_int_literal = parsed_ints.first().unwrap();
 
-                if second_ident.to_string() == "packed" {
-                    alignment = 1
-                } else if second_ident.to_string() == "align" {
-                    let alignment_string = iterator.next().expect("Bad alignment on struct!").to_string();
-                    let alignment_string = alignment_string.replace("(", "");
-                    let alignment_string = alignment_string.replace(")", "");
-                    alignment = alignment_string.parse::<usize>().expect("Unrecognized alignment provided.");
-                } else {
-                    panic!("{:?}", second_ident)
-                }
-            }
-            _ => {
-                panic!("non-list repr provided!");
-            }
+            alignment = pack_int_literal.base10_parse().expect("Pack value is invalid");
         }
-    } else {
-        panic!("repr attribute is required for unpacked serialization");
+        _ => {
+            panic!("Unsupported attribute type for Version. Please use the #[Version(1.2)] syntax.");
+        }
     }
 
     let encode_packed_tokens: TokenStream2 = derive_encode_inner(token_stream.clone(), alignment).expect("Failed to generate encoder!").into();

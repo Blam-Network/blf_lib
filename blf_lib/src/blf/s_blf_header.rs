@@ -7,6 +7,7 @@ use crate::types::chunk_signature::chunk_signature;
 #[derive(Default, UnpackedSerializable, TestSize)]
 #[Size(0xC)]
 #[LittleEndian]
+#[Pack(1)]
 pub struct s_blf_header
 {
     pub signature: chunk_signature,

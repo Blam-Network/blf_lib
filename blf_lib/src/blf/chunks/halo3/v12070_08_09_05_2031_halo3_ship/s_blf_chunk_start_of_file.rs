@@ -5,12 +5,12 @@ use blf_lib_derive::{BlfChunk, UnpackedSerializable};
 
 const k_tag_string_length: usize = 32;
 
-#[repr(C, packed)]
 #[derive(BlfChunk, Default, UnpackedSerializable, TestSize, PartialEq, Debug)]
 #[Signature("_blf")]
 #[Version(1.2)]
 #[Size(0x24)]
 #[LittleEndian]
+#[Pack(1)]
 pub struct s_blf_chunk_start_of_file
 {
     pub byte_order_mark: u16,

@@ -14,12 +14,12 @@ pub fn blf_chunk(input: TokenStream) -> TokenStream {
     macros::blf_chunk::blf_chunk_macro(input)
 }
 
-#[proc_macro_derive(UnpackedSerializable, attributes(BigEndian, LittleEndian))]
+#[proc_macro_derive(UnpackedSerializable, attributes(BigEndian, LittleEndian, Pack))]
 pub fn unpacked_serializable(input: TokenStream) -> TokenStream {
     macros::unpacked_serializable::unpacked_serializable_macro(input)
 }
 
-#[proc_macro_derive(TestSize, attributes(Size))]
+#[proc_macro_derive(TestSize, attributes(Size, Pack))]
 pub fn test_size(input: TokenStream) -> TokenStream {
     macros::test_size::test_size_macro(input)
 }

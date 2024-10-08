@@ -4,28 +4,9 @@ use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use crate::helpers::DeriveInputHelpers;
 
-fn assert_c_repr(input: &DeriveInput) {
-    let repr_attribute = input.get_attribute("repr").expect("Please make sure the BLF chunk has a #[repr(C !");
-
-    match &repr_attribute.meta {
-        // Consider switching to a NameValue attribute.
-        Meta::List(list) => {
-            let first_ident = list.clone().tokens.into_iter().next();
-            if first_ident.unwrap().to_string().to_lowercase() != "c" {
-                panic!("BLF Chunk has non-c alignment!");
-            }
-        }
-        _ => {
-            panic!("non-list repr provided!");
-        }
-    }
-}
-
 pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
-
-    assert_c_repr(&input);
 
     let signature_string: String;
     let version_float: f32;

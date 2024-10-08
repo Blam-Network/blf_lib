@@ -5,19 +5,14 @@
 
 #![allow(dead_code)]
 
-use blf_lib_derive::TestSize;
-
 #[derive(Clone, Copy)]
 struct int32_point3d_coordinates {
-    x: u32,
-    y: u32,
-    z: u32,
+    pub x: u32,
+    pub y: u32,
+    pub z: u32,
 }
 
-#[derive(TestSize)]
-#[Size(0xC)]
 pub union int32_point3d  {
-
-    coordinates: int32_point3d_coordinates,
-    n: [u32; 3]
+    pub coordinates: int32_point3d_coordinates,
+    pub n: [u32; 3]
 }
