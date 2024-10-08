@@ -12,9 +12,9 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
     let build_string: String;
     let chunk_idents: Vec<Ident>;
 
-    let title_attribute = input.get_attribute("Title");
-    let build_attribute = input.get_attribute("Build");
-    let chunks_attribute = input.get_attribute("Chunks");
+    let title_attribute = input.get_required_attribute("Title");
+    let build_attribute = input.get_required_attribute("Build");
+    let chunks_attribute = input.get_required_attribute("Chunks");
 
     match &title_attribute.meta {
         // Consider switching to a NameValue attribute.
@@ -62,7 +62,7 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
     let if_statements = chunk_idents.iter().map(|chunk_ident| {
         quote! {
             if signature == &#chunk_ident::get_signature() {
-                return Ok(Box::new(#chunk_ident::decode(buffer)));
+                return Ok(Box::new(#chunk_ident::decode_chunk(buffer)));
             }
         }
     });

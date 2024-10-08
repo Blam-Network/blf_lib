@@ -1,3 +1,4 @@
+use bincode::Encode;
 use blf_lib_derive::{TestSize, UnpackedSerializable};
 
 use crate::types::chunk_signature::chunk_signature;
@@ -5,6 +6,7 @@ use crate::types::chunk_signature::chunk_signature;
 #[repr(C, packed)]
 #[derive(Default, UnpackedSerializable, TestSize)]
 #[Size(0xC)]
+#[LittleEndian]
 pub struct s_blf_header
 {
     pub signature: chunk_signature,

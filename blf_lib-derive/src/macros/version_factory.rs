@@ -10,7 +10,7 @@ pub fn version_factory_macro(input: TokenStream) -> TokenStream {
 
     let version_idents: Vec<Ident>;
 
-    let versions_attribute = input.get_attribute("Versions");
+    let versions_attribute = input.get_required_attribute("Versions");
 
     match &versions_attribute.meta {
         Meta::List(list) => {

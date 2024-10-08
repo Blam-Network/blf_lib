@@ -1,7 +1,8 @@
 use std::ffi::c_char;
 use std::fmt::{Display, Formatter, Result};
+use bincode::{Decode, Encode};
 
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, Encode, Decode)]
 pub struct chunk_signature {
     value: [c_char; 4],
 }
@@ -28,6 +29,7 @@ impl chunk_signature {
         for i in 0..4 {
             array[i] = bytes[i] as c_char;
         }
+
         chunk_signature {
             value: array,
         }

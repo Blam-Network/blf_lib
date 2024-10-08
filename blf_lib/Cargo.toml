@@ -6,4 +6,9 @@ edition = "2021"
 [dependencies]
 libc = "0.2"
 blf_lib-derivable = { path = "../blf_lib-derivable" }
-blf_lib-derive = { path = "../blf_lib-derive" }
+blf_lib-derive = { path = "../blf_lib-derive", optional = true }
+bincode = "2.0.0-rc.3"
+
+[features]
+default = ["derive"]
+derive = ["blf_lib-derive"]

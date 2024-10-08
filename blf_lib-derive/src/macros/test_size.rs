@@ -11,7 +11,7 @@ pub fn test_size_macro(input: TokenStream) -> TokenStream {
 
     let expected_size: usize;
 
-    let size_attribute = input.get_attribute("Size");
+    let size_attribute = input.get_required_attribute("Size");
 
 
     match &size_attribute.meta {

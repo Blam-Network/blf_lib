@@ -12,3 +12,21 @@ pub fn to_string(chars: &[c_char]) -> String {
     }
     res
 }
+
+pub fn from_string(string: String, length: usize) -> Vec<c_char> {
+    let mut vec = Vec::new();
+
+    let bytes = string.as_bytes();
+
+    if string.len() != bytes.len() {
+        panic!("Invalid string.");
+    }
+
+    for i in 0..bytes.len() {
+        vec.push(bytes[i] as c_char);
+    }
+
+    vec.resize(length, 0);
+
+    vec
+}

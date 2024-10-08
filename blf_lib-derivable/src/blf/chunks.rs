@@ -1,8 +1,8 @@
 use crate::types::chunk_signature::chunk_signature;
 
 pub trait Serializable {
-    fn encode(&self) -> &[u8];
-    fn decode(buffer: &[u8]) -> Self;
+    fn encode_chunk(&self) -> Vec<u8>;
+    fn decode_chunk(buffer: &[u8]) -> Self;
 }
 
 pub trait BlfChunk {

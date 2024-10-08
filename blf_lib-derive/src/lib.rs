@@ -7,13 +7,14 @@ use proc_macro::TokenStream;
 
 mod helpers;
 mod macros;
+mod bincode_packed;
 
 #[proc_macro_derive(BlfChunk, attributes(Signature, Version))]
 pub fn blf_chunk(input: TokenStream) -> TokenStream {
     macros::blf_chunk::blf_chunk_macro(input)
 }
 
-#[proc_macro_derive(UnpackedSerializable)]
+#[proc_macro_derive(UnpackedSerializable, attributes(BigEndian, LittleEndian))]
 pub fn unpacked_serializable(input: TokenStream) -> TokenStream {
     macros::unpacked_serializable::unpacked_serializable_macro(input)
 }
