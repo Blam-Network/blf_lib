@@ -66,7 +66,7 @@ pub fn unpacked_serializable_macro(token_stream: TokenStream) -> TokenStream {
                 #encode_packed_tokens
                 #decode_packed_tokens
                 impl blf_lib_derivable::blf::chunks::Serializable for #name {
-                    fn encode_chunk(&self) -> Vec<u8> {
+                    fn encode(&self) -> Vec<u8> {
                         let config = bincode::config::standard()
                             .with_fixed_int_encoding()
                             .#with_endian();
@@ -77,7 +77,7 @@ pub fn unpacked_serializable_macro(token_stream: TokenStream) -> TokenStream {
                     // TODO: Rewrite to consider byte-order.
                     // Probably need to fetch all fields and write in sequence...
                     // And many implement a writable trait...
-                    fn decode_chunk(buffer: &[u8]) -> Self {
+                    fn decode(buffer: &[u8]) -> Self {
                         let config = bincode::config::standard()
                             .with_fixed_int_encoding()
                             .#with_endian();

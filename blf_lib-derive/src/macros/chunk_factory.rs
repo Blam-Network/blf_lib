@@ -62,7 +62,7 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
     let if_statements = chunk_idents.iter().map(|chunk_ident| {
         quote! {
             if signature == &#chunk_ident::get_signature() && version == #chunk_ident::get_version() {
-                return Ok(Box::new(#chunk_ident::decode_chunk(buffer)));
+                return Ok(Box::new(#chunk_ident::decode(buffer)));
             }
         }
     });
@@ -80,7 +80,7 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
                     }
                 }
                 impl blf_lib_derivable::blf::chunks::ChunkFactory for #name {
-                    fn decode_chunk(&self, signature: &blf_lib_derivable::types::chunk_signature::chunk_signature, version: blf_lib_derivable::types::chunk_version::chunk_version, buffer: &[u8]) -> Result<Box<dyn blf_lib_derivable::blf::chunks::DynamicBlfChunk>, &'static str> {
+                    fn decode(&self, signature: &blf_lib_derivable::types::chunk_signature::chunk_signature, version: blf_lib_derivable::types::chunk_version::chunk_version, buffer: &[u8]) -> Result<Box<dyn blf_lib_derivable::blf::chunks::DynamicBlfChunk>, &'static str> {
                         #(#if_statements)*
 
                         Err("Chunk not found!")

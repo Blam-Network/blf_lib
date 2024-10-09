@@ -4,6 +4,7 @@ use crate::blf::chunks::halo3;
 
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_start_of_file::s_blf_chunk_start_of_file;
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_author::s_blf_chunk_author;
+pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_end_of_file::s_blf_chunk_end_of_file;
 
 #[derive(ChunkFactory)]
 #[Title("Halo 3")]
@@ -34,7 +35,7 @@ mod tests {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
         ];
 
-        let result = version.decode_chunk(&chunk_signature::from_string("_blf"), chunk_version::new(1.2), &data);
+        let result = version.decode(&chunk_signature::from_string("_blf"), chunk_version::new(1.2), &data);
         let boxed = result.unwrap();
         
         // Editing dynamic chunks isn't yet supported.
