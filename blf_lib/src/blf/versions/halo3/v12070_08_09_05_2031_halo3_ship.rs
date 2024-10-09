@@ -19,7 +19,7 @@ pub struct v12070_08_09_05_2031_halo3_ship {}
 mod tests {
     use crate::types::c_string::to_string;
     use blf_lib_derivable::{blf::chunks::ChunkFactory, types::chunk_signature::chunk_signature};
-
+    use blf_lib_derivable::types::chunk_version::chunk_version;
     use super::*;
 
     #[test]
@@ -34,7 +34,7 @@ mod tests {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
         ];
 
-        let result = version.decode_chunk(&chunk_signature::from_string("_blf"), 1, 2, &data);
+        let result = version.decode_chunk(&chunk_signature::from_string("_blf"), chunk_version::new(1.2), &data);
         let boxed = result.unwrap();
         
         // Editing dynamic chunks isn't yet supported.

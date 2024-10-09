@@ -44,11 +44,6 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
         }
     }
 
-    let mut version = [0u16; 2];
-    let version_int = (version_float * 10.0) as u32;
-    version[0] = (version_int / 10) as u16;
-    version[1] = (version_int % 10) as u16;
-
     assert_eq!(signature_string.len(), 4, "Signature provided with invalid character length! {signature_string}");
     let bytes = signature_string.as_bytes();
     assert_eq!(bytes.len(), 4, "Signature provided with invalid byte length! {signature_string}");
@@ -62,8 +57,8 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
                         blf_lib_derivable::types::chunk_signature::chunk_signature::new([#((#bytes) as c_char), *])
                     }
 
-                    fn get_version() -> [u16; 2] {
-                        [#(#version), *]
+                    fn get_version() -> blf_lib_derivable::types::chunk_version::chunk_version {
+                        blf_lib_derivable::types::chunk_version::chunk_version::new(#version_float)
                     }
                 }
             }

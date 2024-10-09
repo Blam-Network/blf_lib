@@ -9,6 +9,8 @@ use blf_lib::blam::memory::bitstream::c_bitstream;
 use blf_lib::blf::s_blf_header::s_blf_header;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::*;
 use blf_lib::blf::versions::version_factory;
+use blf_lib::blf::write_blf_chunk;
+use blf_lib::types::c_string::from_string;
 
 fn main() {
     let mut my_shitty_data = [0x5F, 0x62, 0x6C, 0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0xFF, 0xFE];
@@ -25,4 +27,9 @@ fn main() {
     _blf.byte_order_mark = bitstream.read_integer(16) as u16;
 
     let version = version_factory::get_version("Halo 3", "12070.08.09.05.2031.halo3_ship");
+
+    _blf.name = from_string("Test BLF File".to_string(), 32).try_into().unwrap();
+
+    let chunk_bytes = write_blf_chunk(&_blf);
+    println!("{:X?}", chunk_bytes);
 }

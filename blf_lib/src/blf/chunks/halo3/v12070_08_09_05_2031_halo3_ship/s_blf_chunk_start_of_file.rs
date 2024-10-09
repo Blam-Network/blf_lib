@@ -25,6 +25,7 @@ mod tests {
     use blf_lib_derivable::blf::chunks::BlfChunk;
     use blf_lib_derivable::blf::chunks::Serializable;
     use blf_lib_derivable::types::chunk_signature::chunk_signature;
+    use blf_lib_derivable::types::chunk_version::chunk_version;
 
     // These are more tests of the blf_lib-derive package.
     // They don't really belong here, we'll move them in future.
@@ -35,7 +36,7 @@ mod tests {
 
     #[test]
     fn s_blf_chunk_start_of_file_version() {
-        assert_eq!(s_blf_chunk_start_of_file::get_version(), [1, 2]);
+        assert_eq!(s_blf_chunk_start_of_file::get_version(), chunk_version::new(1.2));
     }
 
     #[test]

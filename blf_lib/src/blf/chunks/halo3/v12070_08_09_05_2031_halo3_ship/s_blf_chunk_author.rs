@@ -24,6 +24,7 @@ mod tests {
     use crate::types::c_string::{from_string, to_string};
     use super::*;
     use blf_lib_derivable::blf::chunks::Serializable;
+    use blf_lib_derivable::types::chunk_version::chunk_version;
     use crate::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_start_of_file;
 
     // These are more tests of the blf_lib-derive package.
@@ -35,7 +36,7 @@ mod tests {
 
     #[test]
     fn s_blf_chunk_author_version() {
-        assert_eq!(s_blf_chunk_author::get_version(), [3, 1]);
+        assert_eq!(s_blf_chunk_author::get_version(), chunk_version::new(3.1));
     }
 
     #[test]
