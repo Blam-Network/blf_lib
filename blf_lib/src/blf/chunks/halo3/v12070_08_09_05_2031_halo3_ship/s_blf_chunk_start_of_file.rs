@@ -1,13 +1,13 @@
 use std::ffi::c_char;
 use bincode::Encode;
 use blf_lib_derive::TestSize;
-use blf_lib_derive::{BlfChunk, UnpackedSerializable};
+use blf_lib_derive::{BlfChunk, BytePackedSerializable};
 use crate::types::byte_order_mark::byte_order_mark;
 use crate::types::c_string::from_string;
 
 const k_tag_string_length: usize = 32;
 
-#[derive(BlfChunk, Default, UnpackedSerializable, TestSize, PartialEq, Debug)]
+#[derive(BlfChunk, Default, BytePackedSerializable, TestSize, PartialEq, Debug)]
 #[Signature("_blf")]
 #[Version(1.2)]
 #[Size(0x24)]
@@ -36,7 +36,7 @@ mod tests {
     use crate::types::byte_order_mark;
     use crate::types::c_string::{from_string, to_string};
     use blf_lib_derivable::blf::chunks::BlfChunk;
-    use blf_lib_derivable::blf::chunks::Serializable;
+    use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
     use blf_lib_derivable::types::chunk_signature::chunk_signature;
     use blf_lib_derivable::types::chunk_version::chunk_version;
 

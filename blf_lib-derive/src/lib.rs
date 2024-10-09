@@ -21,9 +21,9 @@ pub fn blf_file(input: TokenStream) -> TokenStream {
     macros::blf_file::blf_file_macro(input)
 }
 
-#[proc_macro_derive(UnpackedSerializable, attributes(BigEndian, LittleEndian, Pack))]
-pub fn unpacked_serializable(input: TokenStream) -> TokenStream {
-    macros::unpacked_serializable::unpacked_serializable_macro(input)
+#[proc_macro_derive(BytePackedSerializable, attributes(BigEndian, LittleEndian, Pack, Signature))]
+pub fn byte_packed_serializable(input: TokenStream) -> TokenStream {
+    macros::byte_packed_serializable::byte_packed_serializable_macro(input)
 }
 
 #[proc_macro_derive(TestSize, attributes(Size, Pack))]

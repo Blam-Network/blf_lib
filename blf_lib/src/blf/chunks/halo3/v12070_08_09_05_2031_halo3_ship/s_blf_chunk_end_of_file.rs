@@ -1,8 +1,9 @@
 use std::ffi::c_char;
 use bincode::{Decode, Encode};
-use blf_lib_derive::{BlfChunk, TestSize, UnpackedSerializable};
+use blf_lib_derivable::blf::chunks::{SerializableBlfChunk};
+use blf_lib_derive::{BlfChunk, TestSize, BytePackedSerializable};
 
-#[derive(BlfChunk, UnpackedSerializable, TestSize, Debug)]
+#[derive(BlfChunk, BytePackedSerializable, TestSize, Debug)]
 #[Signature("_eof")]
 #[Version(1.1)]
 #[Size(0x5)]
@@ -12,6 +13,13 @@ pub struct s_blf_chunk_end_of_file
 {
     pub file_size: u32,
     pub authentication_type: e_blf_file_authentication_type,
+}
+
+impl s_blf_chunk_end_of_file {
+    // automagically called for _eof chunks by BytePackedSerializable derive
+    fn update_eof(&mut self, written_bytes: &Vec<u8>) {
+        self.file_size = written_bytes.len() as u32;
+    }
 }
 
 #[derive(Encode, Decode, Debug, Clone, Copy)]
@@ -31,6 +39,10 @@ impl s_blf_chunk_end_of_file {
             file_size,
             authentication_type,
         }
+    }
+
+    fn before_write(&mut self, previous_chunks: Vec<u8>) {
+        self.file_size = previous_chunks.len() as u32;
     }
 }
 

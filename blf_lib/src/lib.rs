@@ -9,4 +9,8 @@ pub mod blam;
 pub mod blf;
 pub mod types;
 
-pub use  blf_lib_derive::*;
+pub use blf_lib_derive::*;
+
+pub mod derive {
+    pub use blf_lib_derive::*;
+}

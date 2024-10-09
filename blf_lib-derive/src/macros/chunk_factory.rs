@@ -62,7 +62,9 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
     let if_statements = chunk_idents.iter().map(|chunk_ident| {
         quote! {
             if signature == &#chunk_ident::get_signature() && version == #chunk_ident::get_version() {
-                return Ok(Box::new(#chunk_ident::decode(buffer)));
+                let mut m = unsafe { core::mem::MaybeUninit::<#chunk_ident>::uninit().assume_init() };
+                m.decode_body(buffer);
+                return Ok(Box::new(m));
             }
         }
     });

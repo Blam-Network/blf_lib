@@ -1,11 +1,11 @@
 use std::ffi::c_char;
 use bincode::Encode;
-use blf_lib_derive::{BlfChunk, TestSize, UnpackedSerializable};
+use blf_lib_derive::{BlfChunk, TestSize, BytePackedSerializable};
 use crate::types::build_number_identifier::build_number_identifier;
 use crate::types::c_string::from_string;
 
 #[repr(C, packed(4))]
-#[derive(BlfChunk, UnpackedSerializable, TestSize, Debug)]
+#[derive(BlfChunk, BytePackedSerializable, TestSize, Debug)]
 #[Signature("athr")]
 #[Version(3.1)]
 #[Size(0x44)]
