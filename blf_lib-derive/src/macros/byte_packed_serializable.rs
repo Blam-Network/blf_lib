@@ -1,8 +1,6 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::__private::ext::RepToTokensExt;
-use quote::ToTokens;
-use syn::{parse_macro_input, Data, DeriveInput, Meta, LitInt, Token, LitStr};
+use syn::{parse_macro_input, Data, DeriveInput, Meta, Token, LitStr};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use crate::bincode_packed::derive_lib::{derive_decode_inner, derive_encode_inner};
@@ -13,7 +11,7 @@ pub fn byte_packed_serializable_macro(token_stream: TokenStream) -> TokenStream 
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
 
-    let mut big_endian = cfg!(target_endian = "big");
+    let big_endian;
 
     let alignment: usize;
 
