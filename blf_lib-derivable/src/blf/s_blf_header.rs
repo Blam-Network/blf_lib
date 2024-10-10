@@ -1,3 +1,5 @@
+#![allow(non_camel_case_types)]
+
 use bincode::{Decode, Encode};
 
 use crate::types::chunk_signature::chunk_signature;

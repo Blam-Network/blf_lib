@@ -1,5 +1,3 @@
-use std::ffi::c_char;
-use std::fmt::{Display, Formatter, Result};
 use bincode::{Decode, Encode};
 
 #[derive(Clone, Copy, Encode, Decode, Debug, PartialEq)]

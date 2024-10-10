@@ -1,24 +1,23 @@
 use std::ffi::c_char;
-use bincode::Encode;
-use blf_lib_derive::TestSize;
-use blf_lib_derive::{BlfChunk, BytePackedSerializable};
+use crate::blf_chunk;
 use crate::types::byte_order_mark::byte_order_mark;
 use crate::types::c_string::from_string;
 
 const k_tag_string_length: usize = 32;
 
-#[derive(BlfChunk, Default, BytePackedSerializable, TestSize, PartialEq, Debug)]
-#[Signature("_blf")]
-#[Version(1.2)]
-#[Size(0x24)]
-#[LittleEndian]
-#[Pack(1)]
-pub struct s_blf_chunk_start_of_file
-{
-    pub byte_order_mark: byte_order_mark,
-    pub name: [c_char; k_tag_string_length],
-    pub __data: [c_char; 2],
-}
+blf_chunk!(
+    #[Signature("_blf")]
+    #[Version(1.2)]
+    #[Size(0x24)]
+    #[LittleEndian]
+    #[PackedEncode(1)]
+    pub struct s_blf_chunk_start_of_file
+    {
+        pub byte_order_mark: byte_order_mark,
+        pub name: [c_char; k_tag_string_length],
+        pub __data: [c_char; 2],
+    }
+);
 
 impl s_blf_chunk_start_of_file {
     pub fn new(name: &str, byte_order_mark: byte_order_mark) -> s_blf_chunk_start_of_file {
@@ -34,9 +33,8 @@ impl s_blf_chunk_start_of_file {
 mod tests {
     use super::*;
     use crate::types::byte_order_mark;
-    use crate::types::c_string::{from_string, to_string};
+    use crate::types::c_string::{to_string};
     use blf_lib_derivable::blf::chunks::BlfChunk;
-    use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
     use blf_lib_derivable::types::chunk_signature::chunk_signature;
     use blf_lib_derivable::types::chunk_version::chunk_version;
 

@@ -5,6 +5,8 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+extern crate self as blf_lib;
+
 pub mod blam;
 pub mod blf;
 pub mod types;

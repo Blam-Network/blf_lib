@@ -1,4 +1,3 @@
-use std::fmt::format;
 use crate::bincode_packed::attribute::{ContainerAttributes, FieldAttributes};
 use virtue::generate::Generator;
 use virtue::parse::Fields;
@@ -111,7 +110,7 @@ impl DeriveStruct {
                     const fn size_of_raw<T>(_: *const T) -> usize {{\
                         core::mem::size_of::<T>()\
                     }}"
-                ));
+                )).unwrap();
                 // Ok(Self {
                 fn_body.ident_str("Ok");
                 fn_body.group(Delimiter::Parenthesis, |ok_group| {
@@ -125,7 +124,7 @@ impl DeriveStruct {
                         // }
                         if let Some(fields) = self.fields.as_ref() {
                             for field in fields.names() {
-                                let attributes = field.attributes().get_attribute::<FieldAttributes>()?.unwrap_or_default();
+                                // let attributes = field.attributes().get_attribute::<FieldAttributes>()?.unwrap_or_default();
                                 // if attributes.with_serde {
                                 //     struct_body
                                 //         .push_parsed(format!(

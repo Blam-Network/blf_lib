@@ -1,8 +1,6 @@
 use std::fs::File;
 use std::io::Write;
-use std::ops::{Deref, DerefMut};
-use bincode::Encode;
-use blf_lib_derivable::blf::chunks::{BlfChunk, SerializableBlfChunk};
+use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
 
 pub mod chunks;
 pub mod versions;
@@ -33,12 +31,20 @@ impl BlfFile for BlfFileBuilder {
     fn write(&mut self, path: &str) {
         let mut data: Vec<u8> = Vec::new();
 
-        for mut chunk in &mut self.chunks.iter_mut()  {
-            data.append(&mut chunk.deref_mut().write(&data));
+        for chunk in &mut self.chunks.iter_mut()  {
+            data.append(&mut chunk.write(&data));
         }
 
         let file = File::create(path)
             .unwrap()
             .write_all(&data);
+    }
+}
+
+#[macro_export]
+macro_rules! blf_chunk {
+    ($i:item) => {
+        #[derive(blf_lib::derive::BlfChunk, Default, PartialEq, Debug, Clone)]
+        $i
     }
 }

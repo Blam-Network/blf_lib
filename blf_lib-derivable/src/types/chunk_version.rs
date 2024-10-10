@@ -1,5 +1,3 @@
-use std::ffi::c_char;
-use std::fmt::{Display, Formatter, Result};
 use bincode::{Decode, Encode};
 
 #[derive(Clone, Copy, Default, Debug, Encode, Decode, PartialEq)]
@@ -10,7 +8,7 @@ pub struct chunk_version {
 
 impl chunk_version {
     pub fn new(version_float: f32) -> chunk_version {
-        if (version_float >= 100f32) {
+        if version_float >= 100f32 {
             panic!("Invalid chunk version!")
         }
         let version_int = (version_float * 10.0) as u32;
@@ -23,3 +21,4 @@ impl chunk_version {
         }
     }
 }
+

@@ -18,33 +18,36 @@ pub trait SerializableBlfChunk: DynamicBlfChunk {
 
     fn write(&mut self, previously_written: &Vec<u8>) -> Vec<u8> {
         let mut encoded_chunk = self.encode_body(previously_written);
-        let header = crate::blf::s_blf_header::s_blf_header {
+        let header = s_blf_header {
             signature: self.signature(),
             version: self.version(),
-            chunk_size: encoded_chunk.len() as u32,
+            chunk_size: (encoded_chunk.len() + s_blf_header::size()) as u32,
         };
 
         let bincode_config = bincode::config::standard()
             .with_fixed_int_encoding()
             .with_big_endian();
 
-        let mut encoded_header = bincode::encode_to_vec(header, bincode_config).unwrap();
-        encoded_header.append(&mut encoded_chunk);
+        let mut encoded = Vec::with_capacity(s_blf_header::size() + encoded_chunk.len());
+        encoded.append(&mut bincode::encode_to_vec(header, bincode_config).unwrap());
+        encoded.append(&mut encoded_chunk);
 
-        encoded_header
+        encoded
     }
 }
 
-pub trait ReadableBlfChunk: BlfChunk + Sized + SerializableBlfChunk {
-    fn read(buffer: Vec<u8>, skip_header: bool) -> Self {
-        let mut m = unsafe { core::mem::MaybeUninit::<Self>::uninit().assume_init() };
-        let skip_bytes: usize = if skip_header { s_blf_header::size() } else { 0 };
-        m.decode_body(&buffer[skip_bytes..]);
-        m
+pub trait ReadableBlfChunk: BlfChunk + Sized + SerializableBlfChunk + Default {
+    fn read(buffer: Vec<u8>, header: Option<s_blf_header>) -> Self {
+        let offset = if header.is_some() { 0 } else { s_blf_header::size() };
+        let header = header.unwrap_or_else(|| s_blf_header::decode(buffer.as_slice()) );
+        let end = (header.chunk_size as usize - s_blf_header::size()) - offset;
+        let mut chunk = Self::default();
+        chunk.decode_body(&buffer[offset..end]);
+        chunk
     }
 }
 
-impl<T: BlfChunk + Sized + SerializableBlfChunk> ReadableBlfChunk for T {
+impl<T: BlfChunk + Sized + SerializableBlfChunk + Default> ReadableBlfChunk for T {
 
 }
 
@@ -55,5 +58,5 @@ pub trait TitleAndBuild {
 }
 
 pub trait ChunkFactory {
-    fn decode(&self, signature: &chunk_signature, version: chunk_version, buffer: &[u8]) -> Result<Box<dyn DynamicBlfChunk>, &'static str>;
+    fn decode(&self, signature: chunk_signature, version: chunk_version, buffer: Vec<u8>) -> Result<Box<dyn DynamicBlfChunk>, &str>;
 }

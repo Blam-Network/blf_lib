@@ -1,9 +1,7 @@
 use proc_macro::TokenStream;
-use proc_macro2::Ident;
 use syn::{parse_macro_input, Data, DeriveInput, LitInt, Meta, Token};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
-use virtue::parse::{Body, Parse};
 use crate::helpers::DeriveInputHelpers;
 
 pub fn test_size_macro(input: TokenStream) -> TokenStream {
@@ -15,18 +13,18 @@ pub fn test_size_macro(input: TokenStream) -> TokenStream {
     let expected_size: usize;
 
     let size_attribute = input.get_required_attribute("Size");
-    let pack_attribute = input.get_required_attribute("Pack");
+    let pack_attribute = input.get_required_attribute("PackedEncode");
 
     let alignment: usize;
     match &pack_attribute.meta {
         // Consider switching to a NameValue attribute.
         Meta::List(list) => {
             let parsed_ints: Punctuated<LitInt, Comma> = list.parse_args_with(Punctuated::<LitInt, Token![,]>::parse_terminated)
-                .expect("Pack not provided.");
+                .expect("PackedEncode not provided.");
 
             let pack_int_literal = parsed_ints.first().unwrap();
 
-            alignment = pack_int_literal.base10_parse().expect("Pack value is invalid");
+            alignment = pack_int_literal.base10_parse().expect("PackedEncode value is invalid");
         }
         _ => {
             panic!("Unsupported attribute type for Version. Please use the #[Version(1.2)] syntax.");

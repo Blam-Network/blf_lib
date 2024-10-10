@@ -1,9 +1,8 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::ToTokens;
-use syn::{parse_macro_input, Data, DeriveInput, Meta, Ident, parenthesized, LitInt, Token, LitStr};
+use syn::{parse_macro_input, Data, DeriveInput, Meta, LitInt, Token, LitStr};
 use syn::punctuated::Punctuated;
-use syn::token::{Comma, Group};
+use syn::token::Comma;
 use crate::bincode_packed::derive_lib::{derive_decode_inner, derive_encode_inner};
 use crate::helpers::{DeriveInputHelpers};
 
@@ -18,7 +17,7 @@ pub fn byte_packed_serializable_macro(token_stream: TokenStream) -> TokenStream 
     let little_endian_attribute = input.get_attribute("LittleEndian");
 
     if big_endian_attribute.is_none() && little_endian_attribute.is_none() {
-        panic!("Please provide an Endian attribute for BytePackedSerializable.")
+        panic!("Please provide an Endian attribute for BytePackedEncodeedSerializable.")
     }
 
     if big_endian_attribute.is_some() && little_endian_attribute.is_some() {
@@ -36,9 +35,9 @@ pub fn byte_packed_serializable_macro(token_stream: TokenStream) -> TokenStream 
     let endian_string = if big_endian { "big" } else { "little" };
     let with_endian = format_ident!("with_{}_endian", endian_string);
 
-    let mut alignment: usize = 4; // not sure if this is actually the default
+    let alignment: usize;
 
-    let pack_attribute = input.get_required_attribute("Pack");
+    let pack_attribute = input.get_required_attribute("PackedEncode");
 
     match &pack_attribute.meta {
         // Consider switching to a NameValue attribute.
@@ -48,10 +47,10 @@ pub fn byte_packed_serializable_macro(token_stream: TokenStream) -> TokenStream 
 
             let pack_int_literal = parsed_ints.first().unwrap();
 
-            alignment = pack_int_literal.base10_parse().expect("Pack value is invalid");
+            alignment = pack_int_literal.base10_parse().expect("PackedEncode value is invalid");
         }
         _ => {
-            panic!("Unsupported attribute type for Version. Please use the #[Pack(4)] syntax.");
+            panic!("Unsupported attribute type for Version. Please use the #[PackedEncode(4)] syntax.");
         }
     }
 
@@ -79,15 +78,16 @@ pub fn byte_packed_serializable_macro(token_stream: TokenStream) -> TokenStream 
 
     // hacky
     let eof_update = if signature_string.unwrap_or_default() == "_eof" {
-        (quote! {
+        quote! {
             self.update_eof(&previously_written);
-        })
+        }
     } else { quote! {}};
 
     match input.data {
         Data::Struct(_s) => {
             quote! {
-                use bincode::de::read::Reader;
+                use bincode::de::read::Reader as DeriveReader;
+                use std::ops::Deref as DeriveDeref;
                 #encode_packed_tokens
                 #decode_packed_tokens
                 impl blf_lib_derivable::blf::chunks::SerializableBlfChunk for #name {
@@ -102,20 +102,18 @@ pub fn byte_packed_serializable_macro(token_stream: TokenStream) -> TokenStream 
                         encode_to_vec(self)
                     }
 
-                    // TODO: Rewrite to consider byte-order.
-                    // Probably need to fetch all fields and write in sequence...
-                    // And many implement a writable trait...
                     fn decode_body(&mut self, buffer: &[u8]) {
                         let config = bincode::config::standard()
                             .with_fixed_int_encoding()
                             .#with_endian();
 
+                        let chunk: #name = bincode::decode_from_slice(buffer, config).unwrap().0;
 
-                        bincode::decode_from_slice(buffer, config).unwrap().0
+                        self.clone_from(&chunk);
                     }
                 }
             }
         }
-        _ => { panic!("#[derive(BytePackedSerializable)] is only defined for structs!")}
+        _ => { panic!("#[derive(BytePackedEncodeedSerializable)] is only defined for structs!")}
     }.into()
 }

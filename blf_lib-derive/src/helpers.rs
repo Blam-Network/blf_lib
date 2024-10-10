@@ -1,6 +1,4 @@
-use syn::{Attribute, DeriveInput, Meta, Token};
-use syn::punctuated::Punctuated;
-use syn::token::Comma;
+use syn::{Attribute, DeriveInput};
 
 pub trait DeriveInputHelpers {
     fn get_required_attribute(&self, name: &str) -> &Attribute;

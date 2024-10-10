@@ -2,7 +2,7 @@ use std::ffi::c_char;
 use std::fmt::{Display, Formatter, Result};
 use bincode::{Decode, Encode};
 
-#[derive(Clone, Copy, Default, Debug, Encode, Decode)]
+#[derive(Clone, Copy, Default, Debug, Encode, Decode, PartialEq)]
 pub struct chunk_signature {
     value: [c_char; 4],
 }
@@ -43,17 +43,6 @@ impl Display for chunk_signature {
             string.push(self.value[i] as u8 as char);
         }
         write!(f, "{}", string)
-    }
-}
-
-impl PartialEq for chunk_signature {
-    fn eq(&self, other: &Self) -> bool {
-        for i in 0..4 {
-            if self.value[i] != other.value[i] {
-                return false;
-            }
-        }
-        true
     }
 }
 

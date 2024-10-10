@@ -11,7 +11,7 @@ const k_3d_count: usize = 3;
 
 #[derive(Clone, Copy, TestSize)]
 #[Size(0xC)]
-#[Pack(1)]
+#[PackedEncode(1)]
 struct vector3d_coordinates {
     i: f32,
     j: f32,

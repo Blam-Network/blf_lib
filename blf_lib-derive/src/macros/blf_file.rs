@@ -1,6 +1,5 @@
 use proc_macro::TokenStream;
-use quote::ToTokens;
-use syn::{parse_macro_input, Data, DeriveInput, Ident};
+use syn::{parse_macro_input, Data, DeriveInput};
 
 pub fn blf_file_macro(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

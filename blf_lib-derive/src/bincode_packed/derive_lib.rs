@@ -79,6 +79,7 @@ pub fn derive_decode_inner(input: TokenStream, alignment: usize) -> Result<Token
 //     derive_borrow_decode_inner(input).unwrap_or_else(|e| e.into_token_stream())
 // }
 
+#[allow(dead_code)]
 pub fn derive_borrow_decode_inner(input: TokenStream) -> Result<TokenStream> {
     let parse = Parse::new(input)?;
     let (mut generator, attributes, body) = parse.into_generator();

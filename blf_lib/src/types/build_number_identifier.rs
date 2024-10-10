@@ -1,8 +1,7 @@
-use std::ffi::c_char;
 use std::fmt::{Display, Formatter, Result};
 use bincode::{Decode, Encode};
 
-#[derive(Clone, Copy, Encode, Decode, Debug, PartialEq)]
+#[derive(Clone, Copy, Encode, Decode, Debug, PartialEq, Default)]
 pub struct build_number_identifier {
     pub build_number_version: u32,
     pub build_number: u32,

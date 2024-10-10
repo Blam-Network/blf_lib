@@ -61,10 +61,8 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
 
     let if_statements = chunk_idents.iter().map(|chunk_ident| {
         quote! {
-            if signature == &#chunk_ident::get_signature() && version == #chunk_ident::get_version() {
-                let mut m = unsafe { core::mem::MaybeUninit::<#chunk_ident>::uninit().assume_init() };
-                m.decode_body(buffer);
-                return Ok(Box::new(m));
+            if signature == #chunk_ident::get_signature() && version == #chunk_ident::get_version() {
+                return Ok(Box::new(#chunk_ident::read(buffer, None)));
             }
         }
     });
@@ -72,7 +70,9 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
     match input.data {
         Data::Struct(_s) => {
             quote! {
-                impl blf_lib_derivable::blf::chunks::TitleAndBuild for #name {
+                use blf_lib::blf::chunks::ReadableBlfChunk as DeriveReadableBlfChunk;
+                use blf_lib::blf::chunks::BlfChunk as DeriveBlfChunk;
+                impl blf_lib::blf::chunks::TitleAndBuild for #name {
                     fn get_build_string() -> &'static str {
                         #build_string
                     }
@@ -81,8 +81,13 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
                         #title_string
                     }
                 }
-                impl blf_lib_derivable::blf::chunks::ChunkFactory for #name {
-                    fn decode(&self, signature: &blf_lib_derivable::types::chunk_signature::chunk_signature, version: blf_lib_derivable::types::chunk_version::chunk_version, buffer: &[u8]) -> Result<Box<dyn blf_lib_derivable::blf::chunks::DynamicBlfChunk>, &'static str> {
+                impl blf_lib::blf::chunks::ChunkFactory for #name {
+                    fn decode(
+                        &self,
+                        signature: blf_lib::types::chunk_signature::chunk_signature,
+                        version: blf_lib::types::chunk_version::chunk_version,
+                        buffer: Vec<u8>
+                    ) -> Result<Box<dyn blf_lib::blf::chunks::DynamicBlfChunk>, &str> {
                         #(#if_statements)*
 
                         Err("Chunk not found!")

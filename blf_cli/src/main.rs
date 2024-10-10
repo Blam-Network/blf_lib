@@ -35,28 +35,32 @@ fn main() {
         _eof: s_blf_chunk_end_of_file::default(),
     };
 
-    blf_file.write("C:\\Users\\stell\\Desktop\\test.bin");
+    blf_file.write("C:\\Users\\stell\\Desktop\\test_3.bin");
 
     let mut blf_file_builder = BlfFileBuilder::new();
     let blf_file_2 = blf_file_builder
-        .add_chunk(Box::new(s_blf_chunk_start_of_file::new(
+        .add_chunk(s_blf_chunk_start_of_file::new(
             "Test BLF File 2",
             byte_order_mark::default()
-        )))
-        .add_chunk(Box::new(s_blf_chunk_author::new(
+        ))
+        .add_chunk(s_blf_chunk_author::new(
             "",
             build_number_identifier::new(1, 12070),
             "12070.08.09.05.2031.halo3_ship",
             "blf_lib"
-        )))
-        .add_chunk(Box::new(s_blf_chunk_end_of_file::default()));
+        ))
+        .add_chunk(s_blf_chunk_end_of_file::default());
 
     blf_file_2.write("C:\\Users\\stell\\Desktop\\test_2.bin");
 
     // TODO: Fix read
-    let mut athr = find_chunk_in_file::<s_blf_chunk_author>("C:\\Users\\stell\\Desktop\\test_3.bin");
+    let _blf = find_chunk_in_file::<s_blf_chunk_start_of_file>("C:\\Users\\stell\\Desktop\\test_3.bin").unwrap();
+    let athr = find_chunk_in_file::<s_blf_chunk_author>("C:\\Users\\stell\\Desktop\\test_3.bin").unwrap();
+    let _eof = find_chunk_in_file::<s_blf_chunk_end_of_file>("C:\\Users\\stell\\Desktop\\test_3.bin").unwrap();
 
-    let athr = athr.write(&Vec::<u8>::new());
-
-    println!("{:X?}", athr);
+    let mut blf_file_builder_2 = BlfFileBuilder::new();
+    blf_file_builder_2.add_chunk(_blf);
+    blf_file_builder_2.add_chunk(athr);
+    blf_file_builder_2.add_chunk(_eof);
+    blf_file_builder_2.write("C:\\Users\\stell\\Desktop\\test_4.bin");
 }

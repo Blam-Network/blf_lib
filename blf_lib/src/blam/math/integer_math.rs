@@ -6,7 +6,7 @@
 #![allow(dead_code)]
 
 #[derive(Clone, Copy)]
-struct int32_point3d_coordinates {
+pub struct int32_point3d_coordinates {
     pub x: u32,
     pub y: u32,
     pub z: u32,
