@@ -1,3 +1,4 @@
+use crate::blf::s_blf_header::s_blf_header;
 use crate::types::chunk_signature::chunk_signature;
 use crate::types::chunk_version::chunk_version;
 
@@ -35,9 +36,10 @@ pub trait SerializableBlfChunk: DynamicBlfChunk {
 }
 
 pub trait ReadableBlfChunk: BlfChunk + Sized + SerializableBlfChunk {
-    fn read(buffer: Vec<u8>) -> Self {
+    fn read(buffer: Vec<u8>, skip_header: bool) -> Self {
         let mut m = unsafe { core::mem::MaybeUninit::<Self>::uninit().assume_init() };
-        m.decode_body(&buffer[0xC..]);
+        let skip_bytes: usize = if skip_header { s_blf_header::size() } else { 0 };
+        m.decode_body(&buffer[skip_bytes..]);
         m
     }
 }

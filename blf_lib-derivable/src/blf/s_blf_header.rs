@@ -36,7 +36,7 @@ impl s_blf_header {
         bincode::decode_from_slice(data, bincode_config).unwrap().0
     }
 
-    pub fn size() -> u32 {
-        return 0xC;
+    pub const fn size() -> usize {
+        0xC
     }
 }

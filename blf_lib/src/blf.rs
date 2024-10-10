@@ -23,8 +23,8 @@ impl BlfFileBuilder {
         }
     }
 
-    pub fn add_chunk(&mut self, chunk: Box<dyn SerializableBlfChunk>) -> &mut BlfFileBuilder {
-        self.chunks.push(chunk);
+    pub fn add_chunk(&mut self, chunk: impl SerializableBlfChunk + 'static) -> &mut BlfFileBuilder {
+        self.chunks.push(Box::new(chunk));
         self
     }
 }
