@@ -17,17 +17,12 @@ pub fn test_size_macro(input: TokenStream) -> TokenStream {
 
     let alignment: usize;
     match &pack_attribute.meta {
-        // Consider switching to a NameValue attribute.
         Meta::List(list) => {
-            let parsed_ints: Punctuated<LitInt, Comma> = list.parse_args_with(Punctuated::<LitInt, Token![,]>::parse_terminated)
-                .expect("PackedEncode not provided.");
-
-            let pack_int_literal = parsed_ints.first().unwrap();
-
-            alignment = pack_int_literal.base10_parse().expect("PackedEncode value is invalid");
+            let mut iterator = list.clone().tokens.into_iter();
+            alignment = iterator.next().unwrap().to_string().parse::<usize>().expect("Invalid pack value provided.");
         }
         _ => {
-            panic!("Unsupported attribute type for Version. Please use the #[Version(1.2)] syntax.");
+            panic!("Unsupported attribute type for PackedEncode. Please use the #[PackedEncode(4)] syntax.");
         }
     }
 

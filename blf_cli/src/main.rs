@@ -40,7 +40,7 @@ fn main() {
     let mut blf_file_builder = BlfFileBuilder::new();
     let blf_file_2 = blf_file_builder
         .add_chunk(s_blf_chunk_start_of_file::new(
-            "Test BLF File 2",
+            "Test BLF File 200",
             byte_order_mark::default()
         ))
         .add_chunk(s_blf_chunk_author::new(

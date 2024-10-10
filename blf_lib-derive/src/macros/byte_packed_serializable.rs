@@ -1,5 +1,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
+use quote::__private::ext::RepToTokensExt;
+use quote::ToTokens;
 use syn::{parse_macro_input, Data, DeriveInput, Meta, LitInt, Token, LitStr};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
@@ -13,44 +15,23 @@ pub fn byte_packed_serializable_macro(token_stream: TokenStream) -> TokenStream 
 
     let mut big_endian = cfg!(target_endian = "big");
 
-    let big_endian_attribute = input.get_attribute("BigEndian");
-    let little_endian_attribute = input.get_attribute("LittleEndian");
-
-    if big_endian_attribute.is_none() && little_endian_attribute.is_none() {
-        panic!("Please provide an Endian attribute for BytePackedEncodeedSerializable.")
-    }
-
-    if big_endian_attribute.is_some() && little_endian_attribute.is_some() {
-        panic!("Please provide only one Endian attribute.")
-    }
-
-    if big_endian_attribute.is_some() {
-        big_endian = true;
-    }
-
-    if little_endian_attribute.is_some() {
-        big_endian = false;
-    }
-
-    let endian_string = if big_endian { "big" } else { "little" };
-    let with_endian = format_ident!("with_{}_endian", endian_string);
-
     let alignment: usize;
 
     let pack_attribute = input.get_required_attribute("PackedEncode");
 
+
     match &pack_attribute.meta {
-        // Consider switching to a NameValue attribute.
         Meta::List(list) => {
-            let parsed_ints: Punctuated<LitInt, Comma> = list.parse_args_with(Punctuated::<LitInt, Token![,]>::parse_terminated)
-                .unwrap();
-
-            let pack_int_literal = parsed_ints.first().unwrap();
-
-            alignment = pack_int_literal.base10_parse().expect("PackedEncode value is invalid");
+            let mut iterator = list.clone().tokens.into_iter();
+            alignment = iterator.next().unwrap().to_string().parse::<usize>().expect("Invalid pack value provided.");
+            iterator.next(); // comma
+            let endian_ident = iterator.next().expect("Please provide an endian argument as BigEndian or LittleEndian").to_string();
+            if endian_ident == "BigEndian" {big_endian = true;}
+            else if endian_ident == "LittleEndian" {big_endian = false;}
+            else { panic!("Invalid Endian, Please provide an Endian argument as BigEndian or LittleEndian");}
         }
         _ => {
-            panic!("Unsupported attribute type for Version. Please use the #[PackedEncode(4)] syntax.");
+            panic!("Unsupported attribute type for PackedEncode. Please use the #[PackedEncode(4)] syntax.");
         }
     }
 
@@ -75,6 +56,9 @@ pub fn byte_packed_serializable_macro(token_stream: TokenStream) -> TokenStream 
 
     let encode_packed_tokens: TokenStream2 = derive_encode_inner(token_stream.clone(), alignment).expect("Failed to generate encoder!").into();
     let decode_packed_tokens: TokenStream2 = derive_decode_inner(token_stream.clone(), alignment).expect("Failed to generate decoder!").into();
+
+    let endian_string = if big_endian { "big" } else { "little" };
+    let with_endian = format_ident!("with_{}_endian", endian_string);
 
     // hacky
     let eof_update = if signature_string.unwrap_or_default() == "_eof" {

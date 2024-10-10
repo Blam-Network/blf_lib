@@ -5,13 +5,9 @@
 
 #![allow(dead_code)]
 
-use blf_lib_derive::TestSize;
-
 const k_3d_count: usize = 3;
 
-#[derive(Clone, Copy, TestSize)]
-#[Size(0xC)]
-#[PackedEncode(1)]
+#[derive(Clone, Copy)]
 struct vector3d_coordinates {
     i: f32,
     j: f32,

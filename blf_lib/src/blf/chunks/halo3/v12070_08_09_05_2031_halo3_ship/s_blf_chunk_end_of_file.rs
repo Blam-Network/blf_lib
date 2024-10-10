@@ -6,8 +6,7 @@ blf_chunk!(
     #[Signature("_eof")]
     #[Version(1.1)]
     #[Size(0x5)]
-    #[BigEndian]
-    #[PackedEncode(1)]
+    #[PackedEncode(1, BigEndian)]
     pub struct s_blf_chunk_end_of_file
     {
         pub file_size: u32,
