@@ -1,21 +1,9 @@
-use inline_colorization::{color_red, style_reset};
+use std::fs::exists;
+use inline_colorization::{bg_bright_yellow, bg_red, bg_yellow, color_black, color_bright_white, color_red, color_white, style_bold, style_reset};
 use blf_lib::blf::chunks::DynTitleAndBuild;
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::v12070_08_09_05_2031_halo3_ship;
 
 pub mod halo3;
-
-pub const LANGUAGE_CODES: [&str; 10] = [
-    "cht",
-    "de",
-    "en",
-    "fr",
-    "it",
-    "jpn",
-    "kor",
-    "mx",
-    "pt",
-    "sp",
-];
 
 pub trait TitleConverter: DynTitleAndBuild {
     fn build_blfs(&mut self, config_path: &String, blfs_path: &String);
@@ -49,4 +37,16 @@ pub fn get_title_converter (title: String, build: String) -> Option<Box<dyn Titl
 pub fn fail_step(message: String) {
     println!("{color_red}failed{style_reset}.");
     panic!("{}", message);
+}
+
+pub fn log_error(message: String) {
+    println!("❗{color_bright_white}{bg_red}{message} {style_reset}");
+}
+
+pub fn log_warning(message: String, indent: usize) {
+    println!("{}⚠ {style_bold}{color_black}{bg_bright_yellow} {message} {style_reset}", "   ".repeat(indent));
+}
+
+pub fn check_file_exists(path: &String) -> bool {
+    exists(path).is_ok_and(|res| res)
 }
