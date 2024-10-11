@@ -42,17 +42,17 @@ pub fn blf_file_macro(input: TokenStream) -> TokenStream {
                 use blf_lib::blf::chunks::BlfChunk;
                 use blf_lib::blf::s_blf_header as derive_s_blf_header;
                 impl blf_lib::blf::BlfFile for #name {
-                    fn write(&mut self, path: &str) {
+                    fn write(&mut self, path: &String) {
                         let mut data: Vec<u8> = Vec::new();
                         #(#writes)*
 
                         let mut file = File::create(path)
                             .unwrap();
 
-                        <File as std::io::Write>::write_all(&mut file, &data);
+                        <File as std::io::Write>::write_all(&mut file, &data).unwrap();
                     }
 
-                    fn read(path: &str) -> Self {
+                    fn read(path: &String) -> Self {
                         let mut headerBytes = [0u8; derive_s_blf_header::size()];
                         let mut header: derive_s_blf_header;
                         let mut file = File::open(path).unwrap();

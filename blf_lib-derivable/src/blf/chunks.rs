@@ -57,6 +57,12 @@ pub trait TitleAndBuild {
     fn get_build_string() -> &'static str;
 }
 
+pub trait DynTitleAndBuild {
+    fn title(&self) -> String;
+
+    fn build_string(&self) -> String;
+}
+
 pub trait ChunkFactory {
     fn decode(&self, signature: chunk_signature, version: chunk_version, buffer: Vec<u8>) -> Result<Box<dyn SerializableBlfChunk>, &str>;
 }

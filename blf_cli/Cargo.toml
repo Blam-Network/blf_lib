@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 blf_lib = { path = "../blf_lib" }
+inline_colorization = "0.1.6"
