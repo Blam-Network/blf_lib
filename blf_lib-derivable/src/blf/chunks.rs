@@ -58,5 +58,5 @@ pub trait TitleAndBuild {
 }
 
 pub trait ChunkFactory {
-    fn decode(&self, signature: chunk_signature, version: chunk_version, buffer: Vec<u8>) -> Result<Box<dyn DynamicBlfChunk>, &str>;
+    fn decode(&self, signature: chunk_signature, version: chunk_version, buffer: Vec<u8>) -> Result<Box<dyn SerializableBlfChunk>, &str>;
 }

@@ -13,7 +13,15 @@ pub fn to_string(chars: &[c_char]) -> String {
     res
 }
 
-pub fn from_string(string: String, length: usize) -> Vec<c_char> {
+pub fn from_string_with_length(string: String, length: usize) -> Vec<c_char> {
+    let mut vec = from_string(string);
+
+    vec.resize(length, 0);
+
+    vec
+}
+
+pub fn from_string(string: String) -> Vec<c_char> {
     let mut vec = Vec::new();
 
     let bytes = string.as_bytes();
@@ -25,8 +33,6 @@ pub fn from_string(string: String, length: usize) -> Vec<c_char> {
     for i in 0..bytes.len() {
         vec.push(bytes[i] as c_char);
     }
-
-    vec.resize(length, 0);
 
     vec
 }

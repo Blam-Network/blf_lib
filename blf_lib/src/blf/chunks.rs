@@ -2,8 +2,9 @@ pub(crate) mod halo3;
 
 use std::fs::File;
 use std::io::{Read, Seek};
+use blf_lib::blf::s_blf_header;
 pub use blf_lib_derivable::blf::chunks::*;
-use blf_lib_derivable::blf::s_blf_header::s_blf_header;
+
 
 pub fn find_chunk<'a, T: BlfChunk + SerializableBlfChunk + ReadableBlfChunk>(buffer: Vec<u8>) -> Result<T, &'a str> {
     let mut offset: usize = 0;

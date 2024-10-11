@@ -87,7 +87,7 @@ pub fn chunk_factory_macro(input: TokenStream) -> TokenStream {
                         signature: blf_lib::types::chunk_signature::chunk_signature,
                         version: blf_lib::types::chunk_version::chunk_version,
                         buffer: Vec<u8>
-                    ) -> Result<Box<dyn blf_lib::blf::chunks::DynamicBlfChunk>, &str> {
+                    ) -> Result<Box<dyn blf_lib::blf::chunks::SerializableBlfChunk>, &str> {
                         #(#if_statements)*
 
                         Err("Chunk not found!")

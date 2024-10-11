@@ -13,28 +13,30 @@ use blf_lib::blf::chunks::SerializableBlfChunk;
 use blf_lib::types::build_number_identifier::build_number_identifier;
 use blf_lib::types::byte_order_mark::byte_order_mark;
 
-#[derive(BlfFile)]
+#[derive(BlfFile, Default)]
 struct test_blf_file {
     _blf: s_blf_chunk_start_of_file,
     athr: s_blf_chunk_author,
+    motd: s_blf_chunk_message_of_the_day,
     _eof: s_blf_chunk_end_of_file,
 }
 
 fn main() {
-    let mut blf_file = test_blf_file {
-        _blf: s_blf_chunk_start_of_file::new(
-            "Test BLF File 1",
-            byte_order_mark::default()
-        ),
-        athr: s_blf_chunk_author::new(
-            "",
-            build_number_identifier::new(1, 12070),
-            "12070.08.09.05.2031.halo3_ship",
-            "blf_lib"
-        ),
-        _eof: s_blf_chunk_end_of_file::default(),
-    };
-
+    // let mut blf_file = test_blf_file {
+    //     _blf: s_blf_chunk_start_of_file::new(
+    //         "Test BLF File 1",
+    //         byte_order_mark::default()
+    //     ),
+    //     athr: s_blf_chunk_author::new(
+    //         "",
+    //         build_number_identifier::new(1, 12070),
+    //         "12070.08.09.05.2031.halo3_ship",
+    //         "blf_lib"
+    //     ),
+    //     motd: s_blf_chunk_message_of_the_day::new("Hello, World!".to_string()),
+    //     _eof: s_blf_chunk_end_of_file::default(),
+    // };
+    let mut blf_file = test_blf_file::read("C:\\Users\\stell\\Desktop\\test_5");
     blf_file.write("C:\\Users\\stell\\Desktop\\test_3.bin");
 
     let mut blf_file_builder = BlfFileBuilder::new();

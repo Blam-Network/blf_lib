@@ -3,4 +3,5 @@ pub mod s_blf_header;
 
 pub trait BlfFile {
     fn write(&mut self, path: &str);
+    fn read(path: &str) -> Self;
 }
