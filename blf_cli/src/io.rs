@@ -1,5 +1,4 @@
 use std::fs;
-use std::ops::Deref;
 use std::path::MAIN_SEPARATOR_STR;
 
 pub fn get_directories_in_folder(path: &String) -> Vec<String> {

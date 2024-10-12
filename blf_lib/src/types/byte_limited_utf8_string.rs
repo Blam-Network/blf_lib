@@ -31,3 +31,4 @@ impl<const N: usize> ByteLimitedUTF8String<N> {
         CStr::from_bytes_until_nul(self.buf.as_slice()).unwrap().to_str().unwrap().to_string()
     }
 }
+

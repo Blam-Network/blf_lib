@@ -115,8 +115,6 @@ impl v12070_08_09_05_2031_halo3_ship {
             else { String::from("Converting MOTDs") }
         );
 
-        let mut warnings: Vec<String> = Vec::new();
-
         let motd_messages_folder = build_path(vec![
             config_path,
             hopper_directory,

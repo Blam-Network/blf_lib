@@ -1,5 +1,3 @@
-use std::ops::{Rem, Sub};
-
 #[derive(Clone, Copy)]
 pub struct Packing {
     packing: usize
@@ -26,29 +24,19 @@ impl Packing {
         }
         Packing { packing }
     }
-}
 
-impl Rem for Packing {
-    type Output = ();
-
-    fn rem(self, rhs: Self) -> Self::Output {
-        self.packing % rhs.packing;
+    pub fn get_padding(&self, data_size: usize) -> usize {
+        (self.packing - (data_size % self.packing)) % self.packing
     }
-}
 
-
-impl Rem<Packing> for usize {
-    type Output = ();
-
-    fn rem(self, rhs: Packing) -> Self::Output {
-        self % rhs.packing;
+    pub fn create_buffer_for_type<T>(&self) -> Vec<u8> {
+        Vec::<u8>::with_capacity(self.get_padding(size_of::<T>()))
     }
-}
 
-impl Sub<()> for Packing {
-    type Output = ();
-
-    fn sub(self, rhs: ()) -> Self::Output {
-        todo!()
+    pub fn create_packed_buffer_from_slice(&self, slice: &[u8]) -> Vec<u8> {
+        let packed_length = slice.len() + self.get_padding(slice.len());
+        let mut buffer = Vec::<u8>::with_capacity(packed_length);
+        buffer.copy_from_slice(slice);
+        buffer
     }
 }
