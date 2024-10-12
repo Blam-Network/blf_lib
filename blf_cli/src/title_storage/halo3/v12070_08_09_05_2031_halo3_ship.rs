@@ -4,12 +4,13 @@ use std::fs::{create_dir_all, File};
 use std::io::Write;
 use crate::io::{build_path, get_directories_in_folder, FILE_SEPARATOR};
 use crate::title_converter;
-use crate::title_storage::{check_file_exists, fail_step, log_warning, TitleConverter};
+use crate::title_storage::{check_file_exists, TitleConverter};
 use inline_colorization::*;
-use blf_lib::blam::cseries::language::{get_language_string, k_language_suffixes};
+use blf_lib::blam::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::BlfFile;
 use blf_lib::blf::chunks::find_chunk_in_file;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_message_of_the_day};
+use crate::console::{console_task};
 
 title_converter! (
     #[Title("Halo 3")]
@@ -35,7 +36,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            println!("Converting {color_bright_white}{}{style_reset}...", hopper_directory);
+            println!("{style_bold}Converting {color_bright_white}{}{style_reset}...", hopper_directory);
             Self::build_config_banhammer_messages(blfs_path, &hopper_directory, config_path);
             Self::build_config_motds(blfs_path, &hopper_directory, config_path, false);
             Self::build_config_motds(blfs_path, &hopper_directory, config_path, true);
@@ -44,9 +45,24 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
     }
 }
 
+pub const k_language_suffixes: [&str; 10] = [
+    k_language_suffix_english,
+    k_language_suffix_japanese,
+    k_language_suffix_german,
+    k_language_suffix_french,
+    k_language_suffix_spanish,
+    k_language_suffix_mexican,
+    k_language_suffix_italian,
+    k_language_suffix_korean,
+    k_language_suffix_chinese_traditional,
+    // k_language_suffix_chinese_simplified,
+    k_language_suffix_portuguese,
+    // k_language_suffix_polish,
+];
+
 impl v12070_08_09_05_2031_halo3_ship {
     fn build_config_banhammer_messages(blfs_path: &String, hopper_directory: &String, config_path: &String) {
-        println!("● Converting banhammer messages... ");
+        let mut task = console_task::start(String::from("Converting Banhammer Messages"));
 
         let banhammer_messages_folder = build_path(vec![
             config_path,
@@ -61,10 +77,10 @@ impl v12070_08_09_05_2031_halo3_ship {
             let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
 
             if !check_file_exists(&file_path) {
-                log_warning(format!(
+                task.add_warning(format!(
                     "No {} banhammer messages are present.",
                     get_language_string(language_code),
-                ), 1);
+                ));
 
                 continue;
             }
@@ -73,7 +89,8 @@ impl v12070_08_09_05_2031_halo3_ship {
                 find_chunk_in_file::<s_blf_chunk_banhammer_messages>(&file_path);
 
             if banhammer_messages.is_err() {
-                fail_step(file_path)
+                task.fail(format!("Failed to read banhammer messages file at: {file_path}"));
+                return;
             }
 
             let output_text_file_path = build_path(vec![
@@ -89,11 +106,16 @@ impl v12070_08_09_05_2031_halo3_ship {
             text_file.write_all(messages_text.as_bytes()).unwrap()
         }
 
-        println!("{color_green}Done{style_reset}.");
+        task.complete();
     }
 
     fn build_config_motds(blfs_path: &String, hopper_directory: &String, config_path: &String, mythic: bool) {
-        println!("● Converting {}MOTDs... ", if mythic { "Mythic " } else { "" });
+        let mut task = console_task::start(
+            if mythic { String::from("Converting Mythic MOTDs") }
+            else { String::from("Converting MOTDs") }
+        );
+
+        let mut warnings: Vec<String> = Vec::new();
 
         let motd_messages_folder = build_path(vec![
             config_path,
@@ -109,20 +131,21 @@ impl v12070_08_09_05_2031_halo3_ship {
             let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
 
             if !check_file_exists(&file_path) {
-                log_warning(format!(
+                task.add_warning(format!(
                     "No {} {}MOTD is present.",
                     get_language_string(language_code),
                     if mythic { "Mythic " } else { "" }
-                ), 1);
+                ));
 
                 continue;
             }
 
-            let mut motd =
+            let motd =
                 find_chunk_in_file::<s_blf_chunk_message_of_the_day>(&file_path);
 
             if motd.is_err() {
-                fail_step(file_path)
+                task.fail(format!("Failed to read MOTD file at {file_path}"));
+                return;
             }
 
             let motd = motd.unwrap();
@@ -149,11 +172,11 @@ impl v12070_08_09_05_2031_halo3_ship {
             ]);
 
             if !check_file_exists(&file_path) {
-                log_warning(format!(
+                task.add_warning(format!(
                     "No {} {}MOTD image is present.",
                     get_language_string(language_code),
                     if mythic { "Mythic " } else { "" }
-                ), 1);
+                ));
 
                 continue;
             }
@@ -161,6 +184,6 @@ impl v12070_08_09_05_2031_halo3_ship {
             std::fs::copy(file_path, output_path).unwrap();
         }
 
-        println!("{color_green}Done{style_reset}.");
+        task.complete();
     }
 }

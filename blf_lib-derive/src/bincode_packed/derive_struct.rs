@@ -46,12 +46,12 @@ impl DeriveStruct {
                             .get_attribute::<FieldAttributes>()?
                             .unwrap_or_default();
 
-                        fn_body.push_parsed(format!(
-                            "let packed_backing = self.{field};",
-                        ))?;
+                        // fn_body.push_parsed(format!(
+                        //     "let packed_backing = self.{field};",
+                        // ))?;
 
                         fn_body.push_parsed(format!(
-                            "let pad_size = ({alignment} - (std::mem::size_of_val(&packed_backing) % {alignment})) % {alignment};",
+                            "let pad_size = ({alignment} - (std::mem::size_of_val(&self.{field}) % {alignment})) % {alignment};",
                         ))?;
 
                         // fn_body.push_parsed(format!(
@@ -61,12 +61,12 @@ impl DeriveStruct {
 
                         if attributes.with_serde {
                             fn_body.push_parsed(format!(
-                                "{0}::Encode::encode(&{0}::serde::Compat(&packed_backing), encoder)?;",
+                                "{0}::Encode::encode(&{0}::serde::Compat(&self.{field}), encoder)?;",
                                 crate_name
                             ))?;
                         } else {
                             fn_body.push_parsed(format!(
-                                "{}::Encode::encode(&packed_backing, encoder)?;",
+                                "{}::Encode::encode(&self.{field}, encoder)?;",
                                 crate_name
                             ))?;
                         }

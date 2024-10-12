@@ -1,7 +1,6 @@
 use std::ffi::c_char;
 use blf_lib::blf_chunk;
 use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
-use crate::types::c_string::{from_string, to_string};
 
 blf_chunk!(
     #[Signature("motd")]

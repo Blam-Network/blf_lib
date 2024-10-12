@@ -7,6 +7,7 @@
 
 mod title_storage;
 mod io;
+mod console;
 
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::*;
 use blf_lib::derive::BlfFile;

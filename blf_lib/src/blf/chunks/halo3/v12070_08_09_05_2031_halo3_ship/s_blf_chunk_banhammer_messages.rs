@@ -1,11 +1,10 @@
-use std::f32::INFINITY;
-use std::ffi::{c_char, CStr};
+use std::ffi::{c_char};
 use std::u32;
 use blf_lib::blf_chunk;
+use blf_lib::types::byte_limited_utf8_string::ByteLimitedUTF8String;
 use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
-use crate::types::c_string::from_string;
 
-const MAX_BANHAMMER_MESSAGE_COUNT: usize = 32 as usize; // TODO: Figure out what this is.
+const MAX_BANHAMMER_MESSAGE_COUNT: usize = 32usize;
 const BANHAMMER_MESSAGE_LENGTH: usize = 0x100;
 
 blf_chunk!(
@@ -14,17 +13,13 @@ blf_chunk!(
     pub struct s_blf_chunk_banhammer_messages
     {
         message_count: u32,
-        messages: Vec<[u8; BANHAMMER_MESSAGE_LENGTH]> // UTF bytes,
+        pub messages: Vec<ByteLimitedUTF8String<BANHAMMER_MESSAGE_LENGTH>> // UTF bytes,
     }
 );
 
 impl s_blf_chunk_banhammer_messages {
     pub fn get_messages(&self) -> Vec<String> {
-        let mut messages = Vec::<String>::with_capacity(self.message_count as usize);
-        for message in self.messages.iter() {
-            messages.push(CStr::from_bytes_until_nul(message).unwrap().to_str().unwrap().to_string());
-        }
-        messages
+        self.messages.iter().map(|mut message|message.get_string()).collect()
     }
 
     pub fn set_messages(&mut self, messages: Vec<String>) -> Result<(), String> {
@@ -32,17 +27,17 @@ impl s_blf_chunk_banhammer_messages {
             return Err(format!("Too many banhammer messages! {}/{MAX_BANHAMMER_MESSAGE_COUNT}", messages.len()))
         }
 
-        self.messages = Vec::with_capacity(messages.len() as usize);
+        self.messages = Vec::with_capacity(messages.len());
         for message in messages.iter() {
-            let mut message_vec = Vec::with_capacity(BANHAMMER_MESSAGE_LENGTH);
-            let message_bytes = message.as_bytes();
+            let message = ByteLimitedUTF8String::from_string(message);
 
-            if message_bytes.len() > BANHAMMER_MESSAGE_LENGTH {
-                return Err(format!("Banhammer message too long! {}/{MAX_BANHAMMER_MESSAGE_COUNT} bytes.\r\nBad Message: {message}", message_bytes.len()))
+            if !message.is_ok() {
+                return Err(format!("Banhammer message: {}", message.unwrap_err()))
             }
 
-            message_vec.copy_from_slice(message_bytes);
-            self.messages.push(<[u8; BANHAMMER_MESSAGE_LENGTH]>::try_from(message_vec).unwrap());
+            let message = message?;
+
+            self.messages.push(message);
         }
         self.message_count = self.messages.len() as u32;
         Ok(())
@@ -69,8 +64,8 @@ impl SerializableBlfChunk for s_blf_chunk_banhammer_messages {
         self.messages = Vec::with_capacity(self.message_count as usize);
 
         for i in 0..self.message_count as usize {
-            let mut message = [0u8; BANHAMMER_MESSAGE_LENGTH];
-            message = bincode::decode_from_slice(&buffer[4 + (i * BANHAMMER_MESSAGE_LENGTH)..], config).unwrap().0;
+            let message: ByteLimitedUTF8String<BANHAMMER_MESSAGE_LENGTH>
+                = bincode::decode_from_slice(&buffer[4 + (i * BANHAMMER_MESSAGE_LENGTH)..], config).unwrap().0;
             self.messages.push(message);
         }
     }

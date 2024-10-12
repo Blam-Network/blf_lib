@@ -34,19 +34,6 @@ pub fn get_title_converter (title: String, build: String) -> Option<Box<dyn Titl
     None
 }
 
-pub fn fail_step(message: String) {
-    println!("{color_red}failed{style_reset}.");
-    panic!("{}", message);
-}
-
-pub fn log_error(message: String) {
-    println!("❗{color_bright_white}{bg_red}{message} {style_reset}");
-}
-
-pub fn log_warning(message: String, indent: usize) {
-    println!("{}⚠ {style_bold}{color_black}{bg_bright_yellow} {message} {style_reset}", "   ".repeat(indent));
-}
-
 pub fn check_file_exists(path: &String) -> bool {
     exists(path).is_ok_and(|res| res)
 }

@@ -10,6 +10,7 @@ extern crate self as blf_lib;
 pub mod blam;
 pub mod blf;
 pub mod types;
+mod io;
 
 pub use blf_lib_derive::*;
 
