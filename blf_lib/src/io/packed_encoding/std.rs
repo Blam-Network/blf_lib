@@ -51,3 +51,13 @@ impl PackedEncoder for String {
         packing.create_packed_buffer_from_slice(self.as_bytes())
     }
 }
+
+impl<T: PackedEncoder> PackedEncoder for Vec<T> {
+    fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
+        let mut buffer = Vec::<u8>::new();
+        for element in self {
+            buffer.append(&mut element.encode_packed(endian, packing));
+        }
+        buffer
+    }
+}

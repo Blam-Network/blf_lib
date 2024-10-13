@@ -5,6 +5,14 @@ pub enum Endianness {
 }
 
 impl Endianness {
+    pub fn new(big: bool) -> Self {
+        if big {
+            Self::Big
+        }
+        else {
+            Self::Little
+        }
+    }
     pub fn swap(&self) -> Endianness {
         match self {
             Endianness::Little => Endianness::Big,

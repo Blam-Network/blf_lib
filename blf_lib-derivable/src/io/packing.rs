@@ -29,8 +29,8 @@ impl Packing {
         (self.packing - (data_size % self.packing)) % self.packing
     }
 
-    pub fn create_buffer_for_type<T>(&self) -> Vec<u8> {
-        Vec::<u8>::with_capacity(self.get_padding(size_of::<T>()))
+    pub fn create_buffer_for_data_size<T>(&self, data_size: usize) -> Vec<u8> {
+        Vec::<u8>::with_capacity(data_size + self.get_padding(data_size))
     }
 
     pub fn create_packed_buffer_from_slice(&self, slice: &[u8]) -> Vec<u8> {
