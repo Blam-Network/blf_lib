@@ -9,7 +9,7 @@ blf_chunk!(
     #[Signature("_blf")]
     #[Version(1.2)]
     #[Size(0x24)]
-    #[PackedEncode(1, LittleEndian)]
+    #[PackedSerialize(1, LittleEndian)]
     pub struct s_blf_chunk_start_of_file
     {
         pub byte_order_mark: byte_order_mark,

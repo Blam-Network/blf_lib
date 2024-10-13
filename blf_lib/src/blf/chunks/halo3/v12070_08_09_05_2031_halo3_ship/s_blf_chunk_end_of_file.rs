@@ -1,12 +1,13 @@
 use std::ffi::c_char;
 use bincode::{Decode, Encode};
+use blf_lib_derive::PackedSerialize;
 use crate::blf_chunk;
 
 blf_chunk!(
     #[Signature("_eof")]
     #[Version(1.1)]
     #[Size(0x5)]
-    #[PackedEncode(1, BigEndian)]
+    #[PackedSerialize(1, BigEndian)]
     pub struct s_blf_chunk_end_of_file
     {
         pub file_size: u32,
@@ -21,7 +22,7 @@ impl s_blf_chunk_end_of_file {
     }
 }
 
-#[derive(Encode, Decode, Debug, Clone, Copy, Default, PartialEq)]
+#[derive(Encode, Decode, Debug, Clone, Copy, Default, PartialEq, PackedSerialize)]
 pub struct e_blf_file_authentication_type {
     value: u8,
 }

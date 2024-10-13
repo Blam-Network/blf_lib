@@ -11,7 +11,7 @@ mod helpers;
 mod macros;
 mod bincode_packed;
 
-#[proc_macro_derive(BlfChunk, attributes(Signature, Version, PackedEncode, Size))]
+#[proc_macro_derive(BlfChunk, attributes(Signature, Version, PackedSerialize, Size))]
 pub fn blf_chunk(input: TokenStream) -> TokenStream {
     macros::blf_chunk::blf_chunk_macro(input)
 }
@@ -26,12 +26,17 @@ pub fn blf_file(input: TokenStream) -> TokenStream {
     macros::blf_file::blf_file_macro(input)
 }
 
-#[proc_macro_derive(BytePackedEncodeedSerializable, attributes(PackedEncode, Signature))]
+#[proc_macro_derive(BytePackedEncodeedSerializable, attributes(PackedSerialize, Signature))]
 pub fn byte_packed_serializable(input: TokenStream) -> TokenStream {
     macros::byte_packed_serializable::byte_packed_serializable_macro(input)
 }
 
-#[proc_macro_derive(TestSize, attributes(Size, PackedEncode))]
+#[proc_macro_derive(PackedSerialize)]
+pub fn packed_serialize(input: TokenStream) -> TokenStream {
+    macros::packed_serialize::packed_serialize_macro(input)
+}
+
+#[proc_macro_derive(TestSize, attributes(Size, PackedSerialize))]
 pub fn test_size(input: TokenStream) -> TokenStream {
     macros::test_size::test_size_macro(input)
 }

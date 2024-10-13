@@ -1,14 +1,8 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use syn::{parse_macro_input, Data, DeriveInput, Meta, Token, LitStr};
-use syn::punctuated::Punctuated;
-use syn::token::Comma;
+use syn::{parse_macro_input, Data, DeriveInput};
 use virtue::generate::Generator;
 use virtue::parse::{Body, Fields, Parse};
-use blf_lib_derive::bincode_packed::attribute::ContainerAttributes;
-use blf_lib_derive::bincode_packed::derive_struct;
-use crate::bincode_packed::derive_lib::{derive_decode_inner, derive_encode_inner};
-use crate::helpers::{DeriveInputHelpers};
 
 pub fn packed_serialize_macro(token_stream: TokenStream) -> TokenStream {
     let input = token_stream.clone();
@@ -21,8 +15,8 @@ pub fn packed_serialize_macro(token_stream: TokenStream) -> TokenStream {
     match input.data {
         Data::Struct(_s) => {
             quote! {
-                use bincode::de::read::Reader as DeriveReader;
-                use std::ops::Deref as DeriveDeref;
+                // use bincode::de::read::Reader as DeriveReader;
+                // use std::ops::Deref as DeriveDeref;
                 #encode_packed_tokens
                 // #decode_packed_tokens
             }
@@ -56,11 +50,12 @@ pub fn generate_encode(fields: Option<Fields>, generator: &mut Generator) {
             "Vec<u8>",
         )
         .body(|fn_body| {
-            fn_body.push_parsed("let buffer = Vec::<u8>::new();".to_string())?;
+            fn_body.push_parsed("use blf_lib::io::packed_encoding::PackedEncoder;".to_string())?;
+            fn_body.push_parsed("let mut buffer = Vec::<u8>::new();".to_string())?;
             if let Some(fields) = fields.as_ref() {
                 for field in fields.names() {
                     fn_body.push_parsed(format!(
-                        "buffer.append(self.{field}.encode(endian, packing));",
+                        "buffer.append(&mut self.{field}.encode_packed(endian, packing));",
                     ))?;
                 }
             }

@@ -13,7 +13,7 @@ pub fn test_size_macro(input: TokenStream) -> TokenStream {
     let expected_size: usize;
 
     let size_attribute = input.get_required_attribute("Size");
-    let pack_attribute = input.get_required_attribute("PackedEncode");
+    let pack_attribute = input.get_required_attribute("PackedSerialize");
 
     let alignment: usize;
     match &pack_attribute.meta {

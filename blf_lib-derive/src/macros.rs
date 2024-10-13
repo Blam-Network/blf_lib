@@ -6,4 +6,4 @@ pub mod version_factory;
 pub mod blf_file;
 
 pub mod title_and_build;
-mod packed_serialize;
+pub(crate) mod packed_serialize;

@@ -5,6 +5,7 @@ use syn::token::Comma;
 use crate::helpers::DeriveInputHelpers;
 use crate::macros::byte_packed_serializable::byte_packed_serializable_macro;
 use proc_macro2::TokenStream as TokenStream2;
+use blf_lib_derive::macros::packed_serialize::packed_serialize_macro;
 use crate::macros::test_size::test_size_macro;
 
 pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
@@ -17,7 +18,7 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
 
     let signature_attribute = input.get_required_attribute("Signature");
     let version_attribute = input.get_required_attribute("Version");
-    let pack_attribute = input.get_attribute("PackedEncode");
+    let pack_attribute = input.get_attribute("PackedSerialize");
     let size_attribute = input.get_attribute("Size");
 
     match &signature_attribute.meta {
@@ -54,13 +55,17 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
     let bytes = signature_string.as_bytes();
     assert_eq!(bytes.len(), 4, "Signature provided with invalid byte length! {signature_string}");
 
+    // old, to be removed
     let serializable_tokens: TokenStream2 = if pack_attribute.is_some() { byte_packed_serializable_macro(tokens.clone()).into() } else { quote! {} };
     let test_size_tokens: TokenStream2 = if size_attribute.is_some() { test_size_macro(tokens.clone()).into() } else { quote! {} };
+    let serialize_tokens: TokenStream2 = if pack_attribute.is_some() { packed_serialize_macro(tokens.clone()).into() } else { quote! {} };
+
 
     match input.data {
         Data::Struct(_s) => {
             quote! {
                 #serializable_tokens
+                #serialize_tokens
                 #test_size_tokens
 
                 impl blf_lib_derivable::blf::chunks::DynamicBlfChunk for #name {

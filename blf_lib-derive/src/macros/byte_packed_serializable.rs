@@ -15,7 +15,7 @@ pub fn byte_packed_serializable_macro(token_stream: TokenStream) -> TokenStream 
 
     let alignment: usize;
 
-    let pack_attribute = input.get_required_attribute("PackedEncode");
+    let pack_attribute = input.get_required_attribute("PackedSerialize");
 
 
     match &pack_attribute.meta {
@@ -29,7 +29,7 @@ pub fn byte_packed_serializable_macro(token_stream: TokenStream) -> TokenStream 
             else { panic!("Invalid Endian, Please provide an Endian argument as BigEndian or LittleEndian");}
         }
         _ => {
-            panic!("Unsupported attribute type for PackedEncode. Please use the #[PackedEncode(4)] syntax.");
+            panic!("Unsupported attribute type for PackedSerialize. Please use the #[PackedSerialize(4)] syntax.");
         }
     }
 
@@ -68,8 +68,8 @@ pub fn byte_packed_serializable_macro(token_stream: TokenStream) -> TokenStream 
     match input.data {
         Data::Struct(_s) => {
             quote! {
-                use bincode::de::read::Reader as DeriveReader;
-                use std::ops::Deref as DeriveDeref;
+                use bincode::de::read::Reader as DeriveReader2;
+                use std::ops::Deref as DeriveDeref2;
                 #encode_packed_tokens
                 #decode_packed_tokens
                 impl blf_lib_derivable::blf::chunks::SerializableBlfChunk for #name {
@@ -96,6 +96,6 @@ pub fn byte_packed_serializable_macro(token_stream: TokenStream) -> TokenStream 
                 }
             }
         }
-        _ => { panic!("#[derive(BytePackedEncodeedSerializable)] is only defined for structs!")}
+        _ => { panic!("#[derive(PackedSerialize)] is only defined for structs!")}
     }.into()
 }

@@ -7,7 +7,7 @@ blf_chunk!(
     #[Signature("athr")]
     #[Version(3.1)]
     #[Size(0x44)]
-    #[PackedEncode(1, BigEndian)]
+    #[PackedSerialize(1, BigEndian)]
     pub struct s_blf_chunk_author
     {
         pub build_name: [c_char; 16],

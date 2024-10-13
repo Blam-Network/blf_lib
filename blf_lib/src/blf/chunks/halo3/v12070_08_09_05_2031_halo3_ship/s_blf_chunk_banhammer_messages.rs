@@ -19,7 +19,7 @@ blf_chunk!(
 
 impl s_blf_chunk_banhammer_messages {
     pub fn get_messages(&self) -> Vec<String> {
-        self.messages.iter().map(|mut message|message.get_string()).collect()
+        self.messages.iter().map(|message|message.get_string()).collect()
     }
 
     pub fn set_messages(&mut self, messages: Vec<String>) -> Result<(), String> {
