@@ -19,7 +19,7 @@ pub fn packed_serialize_macro(token_stream: TokenStream) -> TokenStream {
             let decode_statements = body.fields.iter().map(|field| {
                 let field = &field.ident;
                 quote! {
-                    #field: blf_lib::io::packed_decoding::PackedDecoder::decode_packed(cursor, endian, packing),
+                    #field: blf_lib::io::packed_decoding::PackedDecoder::decode_packed(cursor, endian, packing)?,
                 }
             });
 
@@ -40,10 +40,10 @@ pub fn packed_serialize_macro(token_stream: TokenStream) -> TokenStream {
                         cursor: &mut std::io::Cursor<&[u8]>,
                         endian: blf_lib::io::endian::Endianness,
                         packing: blf_lib::io::packing::Packing
-                    ) -> Self {
-                        Self {
+                    ) -> core::result::Result<#name, String> {
+                        Ok(Self {
                             #(#decode_statements)*
-                        }
+                        })
                     }
                 }
             }).into()

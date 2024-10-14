@@ -134,7 +134,7 @@ pub fn generate_serializable_chunk(input: TokenStream, big_endian: bool, packing
                             &mut std::io::Cursor::new(buffer),
                             blf_lib::io::endian::Endianness::new(#big_endian),
                             blf_lib::io::packing::Packing::new(#packing)
-                        ));
+                        ).unwrap());
                     }
                 }
             }).into()

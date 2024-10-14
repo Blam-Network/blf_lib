@@ -44,9 +44,9 @@ impl<const N: usize> PackedEncoder for ByteLimitedUTF8String<N> {
 }
 
 impl<const N: usize> PackedDecoder for ByteLimitedUTF8String<N> {
-    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Self {
-        Self {
-            buf: PackedDecoder::decode_packed(reader, endian, packing),
-        }
+    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String> {
+        Ok(Self {
+            buf: PackedDecoder::decode_packed(reader, endian, packing)?,
+        })
     }
 }
