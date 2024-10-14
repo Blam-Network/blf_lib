@@ -36,7 +36,7 @@ impl Packing {
     pub fn create_packed_buffer_from_slice(&self, slice: &[u8]) -> Vec<u8> {
         let packed_length = slice.len() + self.get_padding(slice.len());
         let mut buffer = vec![0u8; packed_length];
-        buffer.copy_from_slice(slice);
+        buffer[0..slice.len()].copy_from_slice(slice);
         buffer
     }
 }

@@ -1,11 +1,12 @@
 use std::ffi::CStr;
+use std::io::Cursor;
 use bincode::{Decode, Encode};
+use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::Packing;
-use blf_lib_derive::PackedSerialize;
 use crate::io::packed_encoding::PackedEncoder;
 
-#[derive(PartialEq, Debug, Clone, Encode, Decode, Copy, PackedSerialize)]
+#[derive(PartialEq, Debug, Clone, Encode, Decode, Copy)]
 pub struct ByteLimitedUTF8String<const N: usize> {
     buf: [u8; N],
 }
@@ -33,5 +34,19 @@ impl<const N: usize> ByteLimitedUTF8String<N> {
 
     pub fn get_string(&self) -> String {
         CStr::from_bytes_until_nul(self.buf.as_slice()).unwrap().to_str().unwrap().to_string()
+    }
+}
+
+impl<const N: usize> PackedEncoder for ByteLimitedUTF8String<N> {
+    fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
+        self.buf.encode_packed(endian, packing)
+    }
+}
+
+impl<const N: usize> PackedDecoder for ByteLimitedUTF8String<N> {
+    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Self {
+        Self {
+            buf: PackedDecoder::decode_packed(reader, endian, packing),
+        }
     }
 }

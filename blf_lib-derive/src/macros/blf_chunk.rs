@@ -3,12 +3,7 @@ use syn::{parse_macro_input, Data, DeriveInput, LitFloat, LitStr, Meta, Token};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use crate::helpers::DeriveInputHelpers;
-use crate::macros::byte_packed_serializable::byte_packed_serializable_macro;
 use proc_macro2::TokenStream as TokenStream2;
-use virtue::parse::{Body, Parse};
-use blf_lib_derivable::io::endian::Endianness;
-use blf_lib_derivable::io::packing::Packing;
-use blf_lib_derivable::types::chunk_signature::chunk_signature;
 use blf_lib_derive::macros::packed_serialize::packed_serialize_macro;
 use crate::macros::test_size::test_size_macro;
 
@@ -76,8 +71,6 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
     let bytes = signature_string.as_bytes();
     assert_eq!(bytes.len(), 4, "Signature provided with invalid byte length! {signature_string}");
 
-    // old, to be removed
-    let serializable_tokens: TokenStream2 = if pack_attribute.is_some() { byte_packed_serializable_macro(tokens.clone()).into() } else { quote! {} };
     let test_size_tokens: TokenStream2 = if size_attribute.is_some() { test_size_macro(tokens.clone()).into() } else { quote! {} };
     let serialize_tokens: TokenStream2 = if pack_attribute.is_some() { packed_serialize_macro(tokens.clone()).into() } else { quote! {} };
     let serializable_chunk_tokens: TokenStream2 = if pack_attribute.is_some() { generate_serializable_chunk(tokens.clone(), big_endian, packing, &signature_string).into() } else { quote! {} };
@@ -123,7 +116,7 @@ pub fn generate_serializable_chunk(input: TokenStream, big_endian: bool, packing
     }} else { quote! {} };
 
     match input.data {
-        Data::Struct(body) => {
+        Data::Struct(..) => {
             (quote! {
                 impl blf_lib::blf::chunks::SerializableBlfChunk for #name {
                     fn encode_body(&mut self, previously_written: &Vec<u8>) -> Vec<u8> {
@@ -137,7 +130,11 @@ pub fn generate_serializable_chunk(input: TokenStream, big_endian: bool, packing
                     }
 
                     fn decode_body(&mut self, buffer: &[u8]) {
-                        todo!();
+                        self.clone_from(&<Self as blf_lib::io::packed_decoding::PackedDecoder>::decode_packed(
+                            &mut std::io::Cursor::new(buffer),
+                            blf_lib::io::endian::Endianness::new(#big_endian),
+                            blf_lib::io::packing::Packing::new(#packing)
+                        ));
                     }
                 }
             }).into()

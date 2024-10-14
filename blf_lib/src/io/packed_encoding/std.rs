@@ -4,7 +4,10 @@ use blf_lib::io::packing::Packing;
 
 impl PackedEncoder for u8 {
     fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
-        packing.create_packed_buffer_from_slice(self.to_ne_bytes().as_slice())
+        match endian {
+            Endianness::Little => { packing.create_packed_buffer_from_slice(self.to_le_bytes().as_slice()) }
+            Endianness::Big => { packing.create_packed_buffer_from_slice(self.to_be_bytes().as_slice()) }
+        }
     }
 }
 

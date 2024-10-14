@@ -1,6 +1,9 @@
+mod std;
+
+use ::std::io::Cursor;
 use crate::io::endian::Endianness;
 use crate::io::packing::Packing;
 
-pub trait DecodePacked {
-    fn decode_packed<T>(bytes: &[u8], endian: Endianness, packing: Packing) -> T;
+pub trait PackedDecoder {
+    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Self;
 }

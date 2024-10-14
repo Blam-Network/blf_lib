@@ -2,7 +2,6 @@ use std::ffi::{c_char};
 use std::u32;
 use blf_lib::blf_chunk;
 use blf_lib::types::byte_limited_utf8_string::ByteLimitedUTF8String;
-use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
 
 const MAX_BANHAMMER_MESSAGE_COUNT: usize = 32usize;
 const BANHAMMER_MESSAGE_LENGTH: usize = 0x100;
@@ -30,7 +29,7 @@ impl s_blf_chunk_banhammer_messages {
 
         self.messages = Vec::with_capacity(messages.len());
         for message in messages.iter() {
-            let message = ByteLimitedUTF8String::from_string(message);
+            let message = ByteLimitedUTF8String::<BANHAMMER_MESSAGE_LENGTH>::from_string(message);
 
             if !message.is_ok() {
                 return Err(format!("Banhammer message: {}", message.unwrap_err()))
