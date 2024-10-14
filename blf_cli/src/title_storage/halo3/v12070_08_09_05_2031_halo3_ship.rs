@@ -1,7 +1,6 @@
 mod matchmaking_banhammer_messages;
 mod motd;
 
-use std::fmt::format;
 use std::fs::{create_dir_all, File};
 use std::io::{Read, Write};
 use crate::io::{build_path, get_directories_in_folder, FILE_SEPARATOR};

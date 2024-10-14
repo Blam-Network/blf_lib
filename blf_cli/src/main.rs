@@ -5,28 +5,44 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+use clap::{command, Parser, Subcommand};
+
 mod title_storage;
 mod io;
 mod console;
 
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::*;
-use blf_lib::derive::BlfFile;
-use blf_lib::blf::chunks::SerializableBlfChunk;
+#[derive(Debug, Parser)]
+#[command(name = "blf_cli")]
+#[command(about = "blam! engine file editor", long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
 
-#[derive(BlfFile, Default)]
-struct test_blf_file {
-    _blf: s_blf_chunk_start_of_file,
-    athr: s_blf_chunk_author,
-    motd: s_blf_chunk_message_of_the_day,
-    _eof: s_blf_chunk_end_of_file,
+#[derive(Debug, Subcommand)]
+enum Commands {
+    #[command(arg_required_else_help = true)]
+    BuildTitleStorage {
+        input: String,
+        output: String,
+        title: String,
+        version: String,
+    },
 }
 
 fn main() {
-    let mut title_converter =
-        title_storage::get_title_converter("Halo 3".to_string(), "12070.08.09.05.2031.halo3_ship".to_string()).unwrap();
+    let args = Cli::parse();
 
-    title_converter.build_config(
-        &"C:\\Users\\stell\\Downloads\\RawGames-Halo\\RawGames-Halo\\Halo 3\\11855.07.08.20.2317.halo3_ship\\title storage\\title2".to_string(),
-        &"C:\\Users\\stell\\Desktop\\Blam-Title-Storage\\Halo 3\\Release".to_string()
-    );
+    match args.command {
+        Commands::BuildTitleStorage { input, output, title, version } => {
+            let mut title_converter =
+                title_storage::get_title_converter(title, version)
+                    .expect("No title converter was found for the provided title and version.");
+
+            title_converter.build_blfs(
+                &input,
+                &output
+            );
+        }
+    }
 }

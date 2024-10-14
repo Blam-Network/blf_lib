@@ -1,8 +1,7 @@
-use blf_lib::blf::chunks::TitleAndBuild;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_author, s_blf_chunk_banhammer_messages, s_blf_chunk_end_of_file, s_blf_chunk_message_of_the_day, s_blf_chunk_start_of_file};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_author, s_blf_chunk_end_of_file, s_blf_chunk_message_of_the_day, s_blf_chunk_start_of_file};
 use blf_lib::blf::versions::v12070_08_09_05_2031_halo3_ship;
 use blf_lib::blf_file;
-use blf_lib::types::byte_order_mark::{byte_order_mark, little_endian};
+use blf_lib::types::byte_order_mark::little_endian;
 
 blf_file! {
     pub struct motd {

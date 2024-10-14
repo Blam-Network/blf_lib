@@ -31,6 +31,9 @@ impl s_blf_chunk_author {
         let parsed_build_number = T::get_build_string()[..5].parse::<u32>();
         if parsed_build_number.is_ok() { build_number = parsed_build_number.unwrap(); }
 
+        let version = env!("CARGO_PKG_VERSION");
+        let name = env!("CARGO_PKG_NAME");
+
         Self {
             build_name: Default::default(),
             build_identifier: build_number_identifier {
@@ -39,7 +42,7 @@ impl s_blf_chunk_author {
             },
             build_string: from_string_with_length(T::get_build_string().to_string(), 28).try_into().unwrap(),
             // TODO: Add Version
-            author_name: from_string_with_length("blf_lib".to_string(), 16).try_into().unwrap(),
+            author_name: from_string_with_length(format!("{name} v{version}"), 16).try_into().unwrap(),
         }
     }
 }

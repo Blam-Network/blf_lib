@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 blf_lib = { path = "../blf_lib" }
+clap = { version = "4.5.20", features = ["cargo", "derive"] }
 inline_colorization = "0.1.6"
