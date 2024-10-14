@@ -1,5 +1,4 @@
-use std::ffi::CStr;
-use std::io::{Cursor, Read, Seek};
+use std::io::{Cursor, Read};
 use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::Packing;
