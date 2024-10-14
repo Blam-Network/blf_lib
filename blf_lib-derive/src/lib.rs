@@ -9,7 +9,6 @@ use proc_macro::TokenStream;
 
 mod helpers;
 mod macros;
-mod bincode_packed;
 
 #[proc_macro_derive(BlfChunk, attributes(Signature, Version, PackedSerialize, Size))]
 pub fn blf_chunk(input: TokenStream) -> TokenStream {
@@ -24,11 +23,6 @@ pub fn title_and_build(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(BlfFile)]
 pub fn blf_file(input: TokenStream) -> TokenStream {
     macros::blf_file::blf_file_macro(input)
-}
-
-#[proc_macro_derive(BytePackedEncodeedSerializable, attributes(PackedSerialize, Signature))]
-pub fn byte_packed_serializable(input: TokenStream) -> TokenStream {
-    macros::byte_packed_serializable::byte_packed_serializable_macro(input)
 }
 
 #[proc_macro_derive(PackedSerialize)]
