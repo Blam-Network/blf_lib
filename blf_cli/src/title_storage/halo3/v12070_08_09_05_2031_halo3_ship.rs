@@ -13,6 +13,8 @@ use blf_lib::blf::chunks::find_chunk_in_file;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day};
 use crate::console::{console_task};
 
+pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
+
 title_converter! (
     #[Title("Halo 3")]
     #[Build("12070.08.09.05.2031.halo3_ship")]

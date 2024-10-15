@@ -6,10 +6,13 @@
 #![allow(unused_variables)]
 
 use clap::{command, Parser, Subcommand};
+use crate::commands::Commands;
+use crate::commands::import_rsa_signature::import_rsa_signature;
 
 mod title_storage;
 mod io;
 mod console;
+mod commands;
 
 #[derive(Debug, Parser)]
 #[command(name = "blf_cli")]
@@ -19,30 +22,22 @@ struct Cli {
     command: Commands,
 }
 
-#[derive(Debug, Subcommand)]
-enum Commands {
-    #[command(arg_required_else_help = true)]
-    BuildTitleStorage {
-        input: String,
-        output: String,
-        title: String,
-        version: String,
-    },
-}
-
 fn main() {
     let args = Cli::parse();
 
     match args.command {
-        Commands::BuildTitleStorage { input, output, title, version } => {
+        Commands::BuildTitleStorage { config_input_path, blf_output_path, title, version } => {
             let mut title_converter =
                 title_storage::get_title_converter(title, version)
                     .expect("No title converter was found for the provided title and version.");
 
             title_converter.build_blfs(
-                &input,
-                &output
+                &config_input_path,
+                &blf_output_path
             );
+        },
+        Commands::ImportRsaSignature { config_path, map_file_path, title, version } => {
+            import_rsa_signature(config_path, map_file_path, title, version);
         }
     }
 }
