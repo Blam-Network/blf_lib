@@ -372,8 +372,10 @@ impl v12070_08_09_05_2031_halo3_ship {
             &String::from("rsa_manifest.bin"),
         ]);
 
-        let mut rsa_manifest = rsa_manifest::rsa_manifest::create(map_manifest);
+        let mut rsa_manifest = rsa_manifest::rsa_manifest::create(&map_manifest);
         rsa_manifest.write(&output_file_path);
+
+        task.add_message(format!("Added {} RSA signatures.", map_manifest.get_rsa_signatures().len()));
 
         task.complete();
     }

@@ -21,4 +21,8 @@ impl s_blf_chunk_map_manifest {
         self.map_count = self.data.len() as u32;
         Ok(())
     }
+
+    pub fn get_rsa_signatures(&self) -> &Vec<[u8; 0x100]> {
+        &self.data
+    }
 }

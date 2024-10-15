@@ -1,6 +1,7 @@
 use inline_colorization::*;
 
 pub struct console_task {
+    messages: Vec<String>,
     warnings: Vec<String>,
     errors: Vec<String>
 }
@@ -9,6 +10,7 @@ impl console_task {
     pub fn start(task: String) -> Self {
         print!("● {}... ", task);
         console_task {
+            messages: vec![],
             warnings: vec![],
             errors: vec![]
         }
@@ -29,10 +31,21 @@ impl console_task {
         for warning in &self.warnings {
             Self::log_warning(warning);
         }
+        for error in &self.messages {
+            Self::log_message(error);
+        }
+    }
+
+    fn log_message(message: &String) {
+        println!("  ⓘ {message}");
     }
 
     fn log_error(message: &String) {
-        println!("  ⛔ {color_bright_white} {bg_red}{message} {style_reset}");
+        println!("  ⛔ {color_bright_white}{bg_red}{message}{style_reset}");
+    }
+
+    pub fn add_message(&mut self, message: String) {
+        self.messages.push(message);
     }
 
     pub fn add_warning(&mut self, message: String) {
@@ -44,6 +57,6 @@ impl console_task {
     }
 
     fn log_warning(message: &String) {
-        println!("  ⚠ {style_bold}{color_black}{bg_bright_yellow} {message} {style_reset}");
+        println!("  ⚠ {style_bold}{color_black}{bg_bright_yellow}{message}{style_reset}");
     }
 }

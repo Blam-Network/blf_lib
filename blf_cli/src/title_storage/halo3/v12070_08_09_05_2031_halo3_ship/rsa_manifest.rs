@@ -12,11 +12,11 @@ blf_file! {
 }
 
 impl rsa_manifest {
-    pub fn create(mapm: s_blf_chunk_map_manifest) -> Self {
+    pub fn create(mapm: &s_blf_chunk_map_manifest) -> Self {
         Self {
             _blf: s_blf_chunk_start_of_file::default(),
             athr: s_blf_chunk_author::for_build::<v12070_08_09_05_2031_halo3_ship>(),
-            mapm,
+            mapm: mapm.clone(),
             _eof: s_blf_chunk_end_of_file::default(),
         }
     }
