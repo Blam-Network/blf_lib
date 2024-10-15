@@ -15,24 +15,24 @@ impl console_task {
     }
     pub fn fail(&self, error: String) {
         println!("{color_red}failed{style_reset}.");
-        Self::log_error(error)
+        Self::log_error(&error)
     }
 
     pub fn complete(&self){
         println!("{color_green}done{style_reset}.{} {}",
-                 if self.errors.len() > 0 { format!(" ❗ {} Errors", self.errors.len()) } else { String::new() },
+                 if self.errors.len() > 0 { format!(" ⛔  {} Errors", self.errors.len()) } else { String::new() },
                  if self.warnings.len() > 0 { format!(" ⚠ {} Warnings", self.warnings.len()) } else { String::new() }
         );
         for error in &self.errors {
-            Self::log_warning(error);
+            Self::log_error(error);
         }
         for warning in &self.warnings {
             Self::log_warning(warning);
         }
     }
 
-    fn log_error(message: String) {
-        println!("❗{color_bright_white}{bg_red}{message} {style_reset}");
+    fn log_error(message: &String) {
+        println!("  ⛔ {color_bright_white} {bg_red}{message} {style_reset}");
     }
 
     pub fn add_warning(&mut self, message: String) {

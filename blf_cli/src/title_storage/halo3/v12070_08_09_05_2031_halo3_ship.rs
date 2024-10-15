@@ -1,16 +1,17 @@
 mod matchmaking_banhammer_messages;
 mod motd;
+mod rsa_manifest;
 
 use std::fs::{create_dir_all, File};
 use std::io::{Read, Write};
-use crate::io::{build_path, get_directories_in_folder, FILE_SEPARATOR};
+use crate::io::{build_path, get_directories_in_folder, get_files_in_folder, FILE_SEPARATOR};
 use crate::title_converter;
 use crate::title_storage::{check_file_exists, TitleConverter};
 use inline_colorization::*;
 use blf_lib::blam::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::BlfFile;
 use blf_lib::blf::chunks::find_chunk_in_file;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day};
 use crate::console::{console_task};
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
@@ -38,6 +39,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             println!("{style_bold}Converting {color_bright_white}{}{style_reset}...", hopper_directory);
             Self::build_blf_motds(config_path, &hopper_directory, blfs_path, false);
             Self::build_blf_motds(config_path, &hopper_directory, blfs_path, true);
+            Self::build_blf_map_manifest(config_path, &hopper_directory, blfs_path);
         }
     }
 
@@ -318,6 +320,60 @@ impl v12070_08_09_05_2031_halo3_ship {
 
             std::fs::copy(jpeg_file_path, output_jpeg_path).unwrap();
         }
+
+        task.complete();
+    }
+
+    fn build_blf_map_manifest(config_path: &String, hopper_directory: &String, blfs_path: &String) {
+        let mut task = console_task::start(String::from("Building Map Manifest"));
+
+        let rsa_folder = build_path(vec![
+            config_path,
+            hopper_directory,
+            &String::from("rsa_signatures")
+        ]);
+
+        let rsa_files = get_files_in_folder(&rsa_folder);
+
+        if rsa_files.len() < 1 {
+            task.add_error(String::from("No RSA signatures found."));
+            task.complete();
+            return;
+        }
+
+        let mut map_manifest = s_blf_chunk_map_manifest::default();
+
+        for rsa_file_name in rsa_files {
+            let rsa_file_path = build_path(vec![
+                &rsa_folder,
+                &rsa_file_name,
+            ]);
+            let rsa_file = File::open(&rsa_file_path);
+            if rsa_file.is_err() {
+                task.add_error(format!("Failed to open RSA signature: {rsa_file_path}"));
+                task.complete();
+                return;
+            }
+            let mut rsa_file = rsa_file.unwrap();
+            let mut rsa_signature = Vec::<u8>::with_capacity(0x100);
+            rsa_file.read_to_end(&mut rsa_signature).unwrap();
+
+            let result = map_manifest.add_rsa_signature(rsa_signature.as_slice());
+            if result.is_err() {
+                task.add_error(format!("Failed to add RSA signature {rsa_file_name} to manifest: {}", result.unwrap_err()));
+                task.complete();
+                return;
+            }
+        }
+
+        let output_file_path = build_path(vec![
+            blfs_path,
+            hopper_directory,
+            &String::from("rsa_manifest.bin"),
+        ]);
+
+        let mut rsa_manifest = rsa_manifest::rsa_manifest::create(map_manifest);
+        rsa_manifest.write(&output_file_path);
 
         task.complete();
     }

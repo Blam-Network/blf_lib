@@ -5,7 +5,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use clap::{command, Parser, Subcommand};
+use clap::{command, Parser};
 use crate::commands::Commands;
 use crate::commands::import_rsa_signature::import_rsa_signature;
 

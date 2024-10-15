@@ -1,12 +1,10 @@
 use std::fs::File;
 use std::io::{Cursor, Read};
-use bincode::config::BigEndian;
 use libc::c_char;
 use blf_lib::types::array::Array;
-use blf_lib::types::c_string::from_string;
 use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::PACK1;
-use blf_lib_derive::{PackedSerialize, TestSize};
+use blf_lib_derive::{PackedSerialize};
 use crate::io::packed_decoding::PackedDecoder;
 use crate::types::byte_limited_utf8_string::ByteLimitedUTF8String;
 use crate::types::c_string::to_string;

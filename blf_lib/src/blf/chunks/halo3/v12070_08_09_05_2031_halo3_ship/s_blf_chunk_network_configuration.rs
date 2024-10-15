@@ -1,8 +1,6 @@
 use std::ffi::c_char;
 use blf_lib::types::array::Array;
 use crate::blf_chunk;
-use crate::types::byte_order_mark::byte_order_mark;
-use crate::types::c_string::from_string_with_length;
 
 blf_chunk!(
     #[Signature("netc")]

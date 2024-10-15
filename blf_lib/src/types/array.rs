@@ -35,7 +35,7 @@ impl<E: Default + Copy + PackedDecoder + PackedEncoder, const N: usize> PackedDe
         }
 
         Ok(Self {
-            _data: <[E; N]>::try_from(vector.as_slice().clone()).unwrap()
+            _data: <[E; N]>::try_from(vector.as_slice()).unwrap()
         })
     }
 }
