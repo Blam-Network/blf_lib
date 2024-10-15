@@ -1,6 +1,8 @@
 use std::ffi::c_char;
 use crate::blf_chunk;
 
+pub const k_map_manifest_max_signatures: usize = 128; // we're never hitting this...
+
 blf_chunk!(
     #[Signature("mapm")]
     #[Version(1.1)]
@@ -14,6 +16,10 @@ blf_chunk!(
 
 impl s_blf_chunk_map_manifest {
     pub fn add_rsa_signature(&mut self, signature: &[u8]) -> Result<(), String> {
+        if self.map_count >= k_map_manifest_max_signatures as u32 {
+            return Err(format!("The map manifest is full! {} maps max", k_map_manifest_max_signatures));
+        }
+
         if signature.len() != 0x100 {
             return Err(String::from("signature length must be 0x100"));
         }
