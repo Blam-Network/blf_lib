@@ -36,6 +36,16 @@ fn main() {
                 &blf_output_path
             );
         },
+        Commands::BuildTitleStorageConfig { blf_input_path, config_output_path, title, version } => {
+            let mut title_converter =
+                title_storage::get_title_converter(title, version)
+                    .expect("No title converter was found for the provided title and version.");
+
+            title_converter.build_config(
+                &blf_input_path,
+                &config_output_path
+            );
+        },
         Commands::ImportRsaSignature { config_path, map_file_path, title, version } => {
             import_rsa_signature(config_path, map_file_path, title, version);
         }

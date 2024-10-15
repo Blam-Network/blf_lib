@@ -12,6 +12,13 @@ pub enum Commands {
         version: String,
     },
     #[command(arg_required_else_help = true)]
+    BuildTitleStorageConfig {
+        blf_input_path: String,
+        config_output_path: String,
+        title: String,
+        version: String,
+    },
+    #[command(arg_required_else_help = true)]
     ImportRsaSignature {
         config_path: String,
         map_file_path: String,
