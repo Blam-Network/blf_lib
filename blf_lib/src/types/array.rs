@@ -18,8 +18,8 @@ impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> 
          &self._data
     }
 
-    pub fn get_mut(&mut self) -> [E; N] {
-        self._data
+    pub fn get_mut(&mut self) -> &mut [E; N] {
+        &mut self._data
     }
 
     pub fn from_slice(slice: &[E]) -> Result<Self, String> {

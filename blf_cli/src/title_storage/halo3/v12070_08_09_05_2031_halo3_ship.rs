@@ -10,7 +10,9 @@ use blf_lib::blf::chunks::find_chunk_in_file;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup};
 use crate::console::console_task;
 use crate::title_storage::halo3::release::blf_files::{motd, rsa_manifest};
-use crate::title_storage::halo3::release::config_files::motd_popup::motd_popup;
+use crate::title_storage::halo3::release::config_files::motd_popup::motd_popup as motd_popup_config;
+use crate::title_storage::halo3::release::blf_files::motd_popup::motd_popup as motd_popup_blf;
+
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
 
@@ -40,6 +42,8 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             println!("{style_bold}Converting {color_bright_white}{}{style_reset}...", hopper_directory);
             Self::build_blf_motds(config_path, &hopper_directory, blfs_path, false);
             Self::build_blf_motds(config_path, &hopper_directory, blfs_path, true);
+            Self::build_blf_motd_popups(config_path, &hopper_directory, blfs_path, false);
+            Self::build_blf_motd_popups(config_path, &hopper_directory, blfs_path, true);
             Self::build_blf_map_manifest(config_path, &hopper_directory, blfs_path);
         }
     }
@@ -329,6 +333,79 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
+    fn build_blf_motd_popups(config_path: &String, hopper_directory: &String, blfs_path: &String, mythic: bool) {
+        let mut task = console_task::start(
+            if mythic { String::from("Converting Mythic MOTD Popups") }
+            else { String::from("Converting MOTD Popups") }
+        );
+
+        let config_motds_folder = build_path(vec![
+            config_path,
+            hopper_directory,
+            &String::from(if mythic { "popup_mythic" } else { "popup" }),
+        ]);
+
+        let blf_hoppers_folder = build_path(vec![
+            blfs_path,
+            hopper_directory,
+        ]);
+
+        for language_code in k_language_suffixes {
+            let relative_file_path = format!("{language_code}.json");
+            let config_file_path = format!("{config_motds_folder}{FILE_SEPARATOR}{relative_file_path}");
+
+            let output_file_name = if mythic { "blue_motd_popup.bin" } else { "motd_popup.bin" };
+            let output_hopper_folder = format!("{blf_hoppers_folder}{FILE_SEPARATOR}{language_code}");
+            let output_blf_path = format!("{output_hopper_folder}{FILE_SEPARATOR}{output_file_name}");
+
+            create_dir_all(&output_hopper_folder).unwrap();
+
+            if !check_file_exists(&config_file_path) {
+                task.add_warning(format!(
+                    "No {} {}MOTD Popup is present.",
+                    get_language_string(language_code),
+                    if mythic { "Mythic " } else { "" }
+                ));
+
+                continue;
+            }
+
+            let mut config_file = File::open(&config_file_path).unwrap();
+            let mut motd_json: String = String::new();
+            config_file.read_to_string(&mut motd_json).unwrap();
+            let motd_popup_config: motd_popup_config = serde_json::from_str(&motd_json).unwrap();
+            let mut motd_popup_blf = motd_popup_blf::create(motd_popup_config.to_chunk().unwrap());
+
+            motd_popup_blf.write(&output_blf_path);
+        }
+
+        for language_code in k_language_suffixes {
+            let relative_file_path = format!("{language_code}.jpg");
+            let jpeg_file_path = format!("{config_motds_folder}{FILE_SEPARATOR}{relative_file_path}");
+
+            let output_file_name = if mythic { "blue_motd_popup_image.jpg" } else { "motd_popup_image.jpg" };
+            let output_hopper_folder = format!("{blf_hoppers_folder}{FILE_SEPARATOR}{language_code}");
+
+            let output_jpeg_path = format!("{output_hopper_folder}{FILE_SEPARATOR}{output_file_name}");
+
+            create_dir_all(&output_hopper_folder).unwrap();
+
+            if !check_file_exists(&jpeg_file_path) {
+                task.add_warning(format!(
+                    "No {} {}MOTD Image is present.",
+                    get_language_string(language_code),
+                    if mythic { "Mythic " } else { "" }
+                ));
+
+                continue;
+            }
+
+            std::fs::copy(jpeg_file_path, output_jpeg_path).unwrap();
+        }
+
+        task.complete();
+    }
+
     fn build_config_motd_popups(blfs_path: &String, hopper_directory: &String, config_path: &String, mythic: bool) {
         let mut task = console_task::start(
             if mythic { String::from("Converting Mythic MOTD Popups") }
@@ -367,14 +444,14 @@ impl v12070_08_09_05_2031_halo3_ship {
             }
 
             let motd_popup_chunk = motd_popup_chunk.unwrap();
-            let motd_popup = motd_popup::from_chunk(motd_popup_chunk);
+            let motd_popup_config = motd_popup_config::from_chunk(motd_popup_chunk);
 
             let output_text_file_path = build_path(vec![
                 &motd_messages_folder,
                 &format!("{language_code}.json")
             ]);
 
-            let motd_json = serde_json::to_string_pretty(&motd_popup).unwrap();
+            let motd_json = serde_json::to_string_pretty(&motd_popup_config).unwrap();
 
             let mut json_file = File::create(output_text_file_path).unwrap();
 
