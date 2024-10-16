@@ -1,13 +1,16 @@
 use std::ffi::CStr;
 use std::io::Cursor;
 use bincode::{Decode, Encode};
+use serde::{Deserialize, Serialize};
 use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::Packing;
 use crate::io::packed_encoding::PackedEncoder;
+use serde_big_array::BigArray;
 
-#[derive(PartialEq, Debug, Clone, Encode, Decode, Copy)]
+#[derive(PartialEq, Debug, Clone, Encode, Decode, Copy, Serialize, Deserialize)]
 pub struct ByteLimitedUTF8String<const N: usize> {
+    #[serde(with = "BigArray")]
     buf: [u8; N],
 }
 

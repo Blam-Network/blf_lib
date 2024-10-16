@@ -1,7 +1,3 @@
-mod matchmaking_banhammer_messages;
-mod motd;
-mod rsa_manifest;
-
 use std::fs::{create_dir_all, File};
 use std::io::{Read, Write};
 use crate::io::{build_path, get_directories_in_folder, get_files_in_folder, FILE_SEPARATOR};
@@ -11,8 +7,10 @@ use inline_colorization::*;
 use blf_lib::blam::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::BlfFile;
 use blf_lib::blf::chunks::find_chunk_in_file;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day};
-use crate::console::{console_task};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup};
+use crate::console::console_task;
+use crate::title_storage::halo3::release::blf_files::{motd, rsa_manifest};
+use crate::title_storage::halo3::release::config_files::motd_popup::motd_popup;
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
 
@@ -28,7 +26,10 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
     fn build_blfs(&mut self, config_path: &String, blfs_path: &String) {
         println!("{style_bold}Writing Title Storage BLFs to {blfs_path} {style_reset}");
 
-        let hopper_directories = get_directories_in_folder(&config_path);
+        let hopper_directories = get_directories_in_folder(&config_path).unwrap_or_else(|err|{
+            println!("{}", err);
+            panic!()
+        });
 
         for hopper_directory in hopper_directories {
             if hopper_directory.len() > HOPPER_DIRECTORY_NAME_MAX_LENGTH {
@@ -46,7 +47,10 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
     fn build_config(&mut self, blfs_path: &String, config_path: &String) {
         println!("{style_bold}Writing Title Storage config to {config_path} {style_reset}");
 
-        let hopper_directories = get_directories_in_folder(&blfs_path);
+        let hopper_directories = get_directories_in_folder(&blfs_path).unwrap_or_else(|err|{
+            println!("{}", err);
+            panic!();
+        });
 
         for hopper_directory in hopper_directories {
             if hopper_directory.len() > HOPPER_DIRECTORY_NAME_MAX_LENGTH {
@@ -56,10 +60,11 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
 
             println!("{style_bold}Converting {color_bright_white}{}{style_reset}...", hopper_directory);
             Self::build_config_banhammer_messages(blfs_path, &hopper_directory, config_path);
+            Self::build_config_matchmaking_tips(blfs_path, &hopper_directory, config_path);
             Self::build_config_motds(blfs_path, &hopper_directory, config_path, false);
             Self::build_config_motds(blfs_path, &hopper_directory, config_path, true);
-            Self::build_config_matchmaking_tips(blfs_path, &hopper_directory, config_path);
-
+            Self::build_config_motd_popups(blfs_path, &hopper_directory, config_path, false);
+            Self::build_config_motd_popups(blfs_path, &hopper_directory, config_path, true);
         }
     }
 }
@@ -324,6 +329,83 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
+    fn build_config_motd_popups(blfs_path: &String, hopper_directory: &String, config_path: &String, mythic: bool) {
+        let mut task = console_task::start(
+            if mythic { String::from("Converting Mythic MOTD Popups") }
+            else { String::from("Converting MOTD Popups") }
+        );
+
+        let motd_messages_folder = build_path(vec![
+            config_path,
+            hopper_directory,
+            &String::from(if mythic { "popup_mythic" } else { "popup" }),
+        ]);
+
+        create_dir_all(&motd_messages_folder).unwrap();
+
+        // BLFs
+        for language_code in k_language_suffixes {
+            let relative_file_path = format!("{language_code}{FILE_SEPARATOR}{}motd_popup.bin", if mythic { "blue_" } else { "" });
+            let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
+
+            if !check_file_exists(&file_path) {
+                task.add_warning(format!(
+                    "No {} {}MOTD Popup is present.",
+                    get_language_string(language_code),
+                    if mythic { "Mythic " } else { "" }
+                ));
+
+                continue;
+            }
+
+            let motd_popup_chunk =
+                find_chunk_in_file::<s_blf_chunk_message_of_the_day_popup>(&file_path);
+
+            if motd_popup_chunk.is_err() {
+                task.fail(format!("Failed to read MOTD Popup file at {file_path}"));
+                return;
+            }
+
+            let motd_popup_chunk = motd_popup_chunk.unwrap();
+            let motd_popup = motd_popup::from_chunk(motd_popup_chunk);
+
+            let output_text_file_path = build_path(vec![
+                &motd_messages_folder,
+                &format!("{language_code}.json")
+            ]);
+
+            let motd_json = serde_json::to_string_pretty(&motd_popup).unwrap();
+
+            let mut json_file = File::create(output_text_file_path).unwrap();
+
+            json_file.write_all(motd_json.as_bytes()).unwrap()
+        }
+
+        // JPEGs
+        for language_code in k_language_suffixes {
+            let relative_file_path = format!("{language_code}{FILE_SEPARATOR}{}motd_popup_image.jpg", if mythic { "blue_" } else { "" });
+            let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
+            let output_path = build_path(vec![
+                &motd_messages_folder,
+                &format!("{language_code}.jpg")
+            ]);
+
+            if !check_file_exists(&file_path) {
+                task.add_warning(format!(
+                    "No {} {}MOTD Popup image is present.",
+                    get_language_string(language_code),
+                    if mythic { "Mythic " } else { "" }
+                ));
+
+                continue;
+            }
+
+            std::fs::copy(file_path, output_path).unwrap();
+        }
+
+        task.complete();
+    }
+
     fn build_blf_map_manifest(config_path: &String, hopper_directory: &String, blfs_path: &String) {
         let mut task = console_task::start(String::from("Building Map Manifest"));
 
@@ -333,11 +415,14 @@ impl v12070_08_09_05_2031_halo3_ship {
             &String::from("rsa_signatures")
         ]);
 
-        let rsa_files = get_files_in_folder(&rsa_folder);
+        let rsa_files = get_files_in_folder(&rsa_folder).unwrap_or_else(|err|{
+            task.add_error(err);
+            task.complete();
+            panic!();
+        });
 
         if rsa_files.len() < 1 {
-            task.add_error(String::from("No RSA signatures found."));
-            task.complete();
+            task.fail(String::from("No RSA signatures found."));
             return;
         }
 

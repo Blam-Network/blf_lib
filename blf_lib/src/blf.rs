@@ -67,7 +67,15 @@ impl BlfFileBuilder {
 #[macro_export]
 macro_rules! blf_chunk {
     ($i:item) => {
-        #[derive(blf_lib::derive::BlfChunk, Default, PartialEq, Debug, Clone)]
+        #[derive(
+            blf_lib::derive::BlfChunk,
+            Default,
+            PartialEq,
+            Debug,
+            Clone,
+            serde::Serialize,
+            serde::Deserialize,
+        )]
         $i
     }
 }

@@ -17,14 +17,16 @@ pub fn import_rsa_signature(
     if version == k_build_string_halo3_ship_12070 && title == k_title_halo3 {
         let cache_file = s_cache_file_header_v11::read(map_file_path);
         if cache_file.is_err() {
-            task.add_error(cache_file.unwrap_err());
-            task.complete();
+            task.fail(cache_file.unwrap_err());
             return;
         }
 
-        let mut cache_file = cache_file.unwrap();
+        let cache_file = cache_file.unwrap();
 
-        let hopper_directories = get_directories_in_folder(&config_path);
+        let hopper_directories = get_directories_in_folder(&config_path).unwrap_or_else(|err|{
+            task.fail(err);
+            panic!()
+        });
 
         for hopper_directory in hopper_directories {
             let output_folder_path = build_path(vec![
@@ -43,9 +45,6 @@ pub fn import_rsa_signature(
             let mut output_file = File::create(output_file_path).unwrap();
             output_file.write_all(cache_file.rsa_signature.get()).unwrap();
         }
-
-
-
     } else {
         task.add_error("Unsupported title and version.".to_string());
     }

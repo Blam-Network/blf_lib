@@ -1,5 +1,6 @@
 use std::ffi::c_char;
 use bincode::{Decode, Encode};
+use serde::{Deserialize, Serialize};
 use blf_lib_derive::PackedSerialize;
 use crate::blf_chunk;
 
@@ -22,7 +23,7 @@ impl s_blf_chunk_end_of_file {
     }
 }
 
-#[derive(Encode, Decode, Debug, Clone, Copy, Default, PartialEq, PackedSerialize)]
+#[derive(Encode, Decode, Debug, Clone, Copy, Default, PartialEq, PackedSerialize, Serialize, Deserialize)]
 pub struct e_blf_file_authentication_type {
     value: u8,
 }

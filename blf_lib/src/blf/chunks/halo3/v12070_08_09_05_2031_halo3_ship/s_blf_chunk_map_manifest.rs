@@ -1,5 +1,6 @@
 use std::ffi::c_char;
 use crate::blf_chunk;
+use crate::types::array::Array;
 
 pub const k_map_manifest_max_signatures: usize = 128; // we're never hitting this...
 
@@ -10,7 +11,7 @@ blf_chunk!(
     pub struct s_blf_chunk_map_manifest
     {
         map_count: u32,
-        data: Vec<[u8; 0x100]>,
+        data: Vec<Array<u8, 0x100>>,
     }
 );
 
@@ -23,12 +24,15 @@ impl s_blf_chunk_map_manifest {
         if signature.len() != 0x100 {
             return Err(String::from("signature length must be 0x100"));
         }
-        self.data.push(signature.try_into().unwrap());
+
+        let arr = Array::from_slice(signature)?;
+
+        self.data.push(arr);
         self.map_count = self.data.len() as u32;
         Ok(())
     }
 
-    pub fn get_rsa_signatures(&self) -> &Vec<[u8; 0x100]> {
+    pub fn get_rsa_signatures(&self) -> &Vec<Array<u8, 0x100>> {
         &self.data
     }
 }
