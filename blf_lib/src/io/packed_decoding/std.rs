@@ -17,6 +17,19 @@ impl PackedDecoder for u8 {
     }
 }
 
+impl PackedDecoder for bool {
+    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>  {
+        let mut bytes = [0u8; 1];
+        reader.read_exact(&mut bytes).map_err(|_|"Failed to read bytes.")?;
+        seek_pad(reader, &bytes, packing)?;
+
+        Ok(match endian {
+            Endianness::Little => { u8::from_le_bytes(bytes) != 0 }
+            Endianness::Big => { u8::from_be_bytes(bytes) != 0 }
+        })
+    }
+}
+
 impl PackedDecoder for u16 {
     fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>  {
         let mut bytes = [0u8; 2];
@@ -39,6 +52,32 @@ impl PackedDecoder for u32 {
         Ok(match endian {
             Endianness::Little => { u32::from_le_bytes(bytes) }
             Endianness::Big => { u32::from_be_bytes(bytes) }
+        })
+    }
+}
+
+impl PackedDecoder for u64 {
+    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>  {
+        let mut bytes = [0u8; 8];
+        reader.read_exact(&mut bytes).map_err(|_|"Failed to read bytes.")?;
+        seek_pad(reader, &bytes, packing)?;
+
+        Ok(match endian {
+            Endianness::Little => { u64::from_le_bytes(bytes) }
+            Endianness::Big => { u64::from_be_bytes(bytes) }
+        })
+    }
+}
+
+impl PackedDecoder for f32 {
+    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>  {
+        let mut bytes = [0u8; 4];
+        reader.read_exact(&mut bytes).map_err(|_|"Failed to read bytes.")?;
+        seek_pad(reader, &bytes, packing)?;
+
+        Ok(match endian {
+            Endianness::Little => { f32::from_le_bytes(bytes) }
+            Endianness::Big => { f32::from_be_bytes(bytes) }
         })
     }
 }

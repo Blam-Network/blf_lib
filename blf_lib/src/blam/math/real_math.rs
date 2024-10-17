@@ -5,37 +5,34 @@
 
 #![allow(dead_code)]
 
+use bincode::Encode;
+use serde::{Deserialize, Serialize};
+use blf_lib_derive::PackedSerialize;
+
 const k_3d_count: usize = 3;
 
-#[derive(Clone, Copy)]
-struct vector3d_coordinates {
-    i: f32,
-    j: f32,
-    k: f32,
-}
-
-#[derive(Default, PartialEq, Debug, Clone)]
-pub union vector3d {
+#[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
+pub struct vector3d {
     i: f32,
     j: f32,
     k: f32,
 }
 
 
-#[derive(Default, PartialEq, Debug, Clone)]
+#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
 pub struct real_bounds {
     lower: f32,
     upper: f32,
 }
 
-#[derive(Default, PartialEq, Debug, Clone)]
+#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
 pub struct real_rectangle3d {
     x: real_bounds,
     y: real_bounds,
     z: real_bounds,
 }
 
-#[derive(Default, PartialEq, Debug, Clone)]
+#[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
 pub struct real_point3d {
     pub x: f32,
     pub y: f32,

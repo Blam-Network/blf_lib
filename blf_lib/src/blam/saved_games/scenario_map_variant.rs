@@ -1,8 +1,9 @@
+use serde::{Deserialize, Serialize};
 use blf_lib::blam::math::real_math::real_point3d;
 use blf_lib_derive::PackedSerialize;
 use crate::blam::math::real_math::vector3d;
 
-#[derive(Default, PartialEq, Debug, Clone)]
+#[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
 pub struct s_variant_multiplayer_object_properties_definition {
     symmetry_placement_flags: u16,
     game_engine_flags: u16,
@@ -17,7 +18,7 @@ pub struct s_variant_multiplayer_object_properties_definition {
     boundary_negative_height: f32,
 }
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize)]
+#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Copy, Serialize, Deserialize)]
 pub struct s_variant_object_datum {
     flags: u16,
     // pad 16
@@ -31,7 +32,7 @@ pub struct s_variant_object_datum {
     multiplayer_game_object_properties: s_variant_multiplayer_object_properties_definition,
 }
 
-#[derive(Default, PartialEq, Debug, Clone)]
+#[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
 pub struct c_object_identifier {
     m_unique_id: u32,
     m_origin_bsp_index: u16,

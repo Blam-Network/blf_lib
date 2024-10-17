@@ -28,20 +28,33 @@ pub fn packed_serialize_macro(token_stream: TokenStream) -> TokenStream {
         }
     }
 
+    // helpers for token generation
+    let pack_override_provided = packing.is_some();
+    let endian_override_provided = endian.is_some();
+    let big_endian_override_value = if endian_override_provided { endian.unwrap() == Endianness::Big } else { false };
+    let pack_override_value = if pack_override_provided { packing.unwrap() } else { 0usize };
+
     match input.data {
         Data::Struct(body) => {
             let encode_statements = body.fields.iter().map(|field| {
                 let field = &field.ident;
 
                 quote! {
-                    buffer.append(&mut self.#field.encode_packed(endian, packing));
+                    buffer.append(&mut self.#field.encode_packed(
+                        if #endian_override_provided { blf_lib::io::endian::Endianness::new(#big_endian_override_value) } else { endian },
+                        if #pack_override_provided { blf_lib::io::packing::Packing::new(#pack_override_value) } else { packing }
+                    ));
                 }
             });
 
             let decode_statements = body.fields.iter().map(|field| {
                 let field = &field.ident;
                 quote! {
-                    #field: blf_lib::io::packed_decoding::PackedDecoder::decode_packed(cursor, #endian.or_else(endian), #packing.or_else(packing))?,
+                    #field: blf_lib::io::packed_decoding::PackedDecoder::decode_packed(
+                        cursor,
+                        if #endian_override_provided { blf_lib::io::endian::Endianness::new(#big_endian_override_value) } else { endian },
+                        if #pack_override_provided { blf_lib::io::packing::Packing::new(#pack_override_value) } else { packing }
+                    )?,
                 }
             });
 
