@@ -7,7 +7,6 @@ use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::Packing;
 use crate::io::packed_encoding::PackedEncoder;
 use serde_big_array::BigArray;
-use blf_lib::types::byte_limited_wchar_string::ByteLimitedWcharString;
 
 #[derive(PartialEq, Debug, Clone, Encode, Decode, Copy, Deserialize)]
 pub struct ByteLimitedUTF8String<const N: usize> {

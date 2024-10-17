@@ -1,7 +1,7 @@
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::io::Cursor;
 use bincode::{Decode, Encode};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::{Packing, PACK1};
