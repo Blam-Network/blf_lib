@@ -10,9 +10,9 @@
 use std::cmp::min;
 use std::mem;
 use libc::wchar_t;
-use crate::blam::math::integer_math::int32_point3d;
-use crate::blam::math::real_math::vector3d;
-use crate::blam::networking::transport::transport_security::s_transport_secure_address;
+use crate::blam::common::math::integer_math::int32_point3d;
+use crate::blam::common::math::real_math::vector3d;
+use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
 
 #[derive(Default, PartialEq, Eq, Debug)]
 enum e_bitstream_state

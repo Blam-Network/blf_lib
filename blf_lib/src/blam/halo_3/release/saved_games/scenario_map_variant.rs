@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
-use blf_lib::blam::math::real_math::{real_point3d, real_rectangle3d};
-use blf_lib::blam::saved_games::saved_game_files::s_content_item_metadata;
+use crate::blam::common::math::real_math::{real_point3d, real_rectangle3d};
+use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
 use blf_lib::types::array::Array;
 use blf_lib_derive::PackedSerialize;
-use crate::blam::math::real_math::vector3d;
+use crate::blam::common::math::real_math::vector3d;
 
 const k_object_type_count: usize = 14;
 const k_number_of_map_variant_simulation_entities: usize = 80;
@@ -45,11 +45,12 @@ pub struct s_variant_quota {
 #[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
 #[PackedSerialize(1, BigEndian)]
 pub struct s_variant_multiplayer_object_properties_definition {
-    // I'm not sure on these names, take them with a pinch of salt.
-    symmetry_placement_flags: u16,
     game_engine_flags: u16,
-    owner_team: u16,
+    symmetry_placement_flags: u8, // foo
+    owner_team: i8, // byte?
     shared_storage: u8, // spare_clips, teleporter_channel, spawn_rate
+    spawn_time: u8,
+    object_type: i8,
     boundary_shape: u8,
     boundary_size: f32, // width or radius
     boundary_box_length: f32,

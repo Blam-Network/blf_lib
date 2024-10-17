@@ -1,4 +1,4 @@
-use blf_lib::blam::saved_games::scenario_map_variant::c_map_variant;
+use crate::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
 use blf_lib::blf_chunk;
 
 blf_chunk!(
