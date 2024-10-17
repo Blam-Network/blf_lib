@@ -45,6 +45,7 @@ pub struct s_variant_quota {
 #[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
 #[PackedSerialize(1, BigEndian)]
 pub struct s_variant_multiplayer_object_properties_definition {
+    // I'm not sure on these names, take them with a pinch of salt.
     symmetry_placement_flags: u16,
     game_engine_flags: u16,
     owner_team: u16,
