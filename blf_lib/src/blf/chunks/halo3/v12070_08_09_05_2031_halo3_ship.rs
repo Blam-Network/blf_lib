@@ -7,4 +7,4 @@ pub mod s_blf_chunk_matchmaking_tips;
 pub mod s_blf_chunk_network_configuration;
 pub mod s_blf_chunk_map_manifest;
 pub mod s_blf_chunk_message_of_the_day_popup;
-mod s_blf_chunk_map_variant;
+pub mod s_blf_chunk_map_variant;

@@ -1,4 +1,3 @@
-use std::ffi::c_char;
 use crate::blf_chunk;
 use crate::types::array::Array;
 

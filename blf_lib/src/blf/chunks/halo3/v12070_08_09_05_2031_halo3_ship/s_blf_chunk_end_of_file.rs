@@ -1,4 +1,3 @@
-use std::ffi::c_char;
 use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use blf_lib_derive::PackedSerialize;

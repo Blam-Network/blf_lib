@@ -5,7 +5,6 @@
 
 #![allow(dead_code)]
 
-use bincode::Encode;
 use serde::{Deserialize, Serialize};
 use blf_lib_derive::PackedSerialize;
 

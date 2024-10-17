@@ -10,6 +10,7 @@ pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_matchmaking_tips::s_
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_network_configuration::s_blf_chunk_network_configuration;
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_map_manifest::s_blf_chunk_map_manifest;
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_message_of_the_day_popup::s_blf_chunk_message_of_the_day_popup;
+pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_map_variant::s_blf_chunk_map_variant;
 
 #[derive(ChunkFactory)]
 #[Title("Halo 3")]
@@ -24,5 +25,6 @@ pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_message_of_the_day_p
     s_blf_chunk_network_configuration,
     s_blf_chunk_map_manifest,
     s_blf_chunk_message_of_the_day_popup,
+    s_blf_chunk_map_variant,
 )]
 pub struct v12070_08_09_05_2031_halo3_ship {}

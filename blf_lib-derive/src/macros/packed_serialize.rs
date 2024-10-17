@@ -48,13 +48,17 @@ pub fn packed_serialize_macro(token_stream: TokenStream) -> TokenStream {
             });
 
             let decode_statements = body.fields.iter().map(|field| {
+                // let field_name = field.clone().ident.unwrap().to_string();
                 let field = &field.ident;
                 quote! {
-                    #field: blf_lib::io::packed_decoding::PackedDecoder::decode_packed(
-                        cursor,
-                        if #endian_override_provided { blf_lib::io::endian::Endianness::new(#big_endian_override_value) } else { endian },
-                        if #pack_override_provided { blf_lib::io::packing::Packing::new(#pack_override_value) } else { packing }
-                    )?,
+                    #field: {
+                        // println!("Reading {}", #field_name);
+                        blf_lib::io::packed_decoding::PackedDecoder::decode_packed(
+                            cursor,
+                            if #endian_override_provided { blf_lib::io::endian::Endianness::new(#big_endian_override_value) } else { endian },
+                            if #pack_override_provided { blf_lib::io::packing::Packing::new(#pack_override_value) } else { packing }
+                        )
+                    }?,
                 }
             });
 

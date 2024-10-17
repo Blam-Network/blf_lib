@@ -1,14 +1,15 @@
 use std::ffi::CStr;
 use std::io::Cursor;
 use bincode::{Decode, Encode};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::Packing;
 use crate::io::packed_encoding::PackedEncoder;
 use serde_big_array::BigArray;
+use blf_lib::types::byte_limited_wchar_string::ByteLimitedWcharString;
 
-#[derive(PartialEq, Debug, Clone, Encode, Decode, Copy, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Encode, Decode, Copy, Deserialize)]
 pub struct ByteLimitedUTF8String<const N: usize> {
     #[serde(with = "BigArray")]
     buf: [u8; N],
@@ -59,5 +60,14 @@ impl<const N: usize> Default for ByteLimitedUTF8String<N>  {
         Self{
             buf: [0; N],
         }
+    }
+}
+
+impl<const N: usize> Serialize for ByteLimitedUTF8String<N> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        serializer.serialize_str(&format!("{}", self.get_string()))
     }
 }

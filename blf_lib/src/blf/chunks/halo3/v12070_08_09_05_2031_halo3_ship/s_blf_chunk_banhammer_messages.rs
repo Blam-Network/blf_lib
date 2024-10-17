@@ -1,4 +1,3 @@
-use std::ffi::{c_char};
 use std::u32;
 use blf_lib::blf_chunk;
 use blf_lib::types::byte_limited_utf8_string::ByteLimitedUTF8String;

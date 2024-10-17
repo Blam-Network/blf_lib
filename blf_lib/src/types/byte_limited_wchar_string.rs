@@ -1,10 +1,10 @@
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::io::Cursor;
 use bincode::{Decode, Encode};
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib_derivable::io::endian::Endianness;
-use blf_lib_derivable::io::packing::Packing;
+use blf_lib_derivable::io::packing::{Packing, PACK1};
 use crate::io::packed_encoding::PackedEncoder;
 use widestring::U16CString;
 use crate::types::array::Array;
@@ -57,7 +57,7 @@ impl<const N: usize> PackedDecoder for ByteLimitedWcharString<N> {
     fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String> {
         let mut buf = [u16::default(); N];
         for i in 0..N {
-            buf[i] = u16::decode_packed(reader, endian, packing)?;
+            buf[i] = u16::decode_packed(reader, endian, PACK1)?;
         }
         Ok(Self {
             buf: Array::from_slice(&buf).unwrap(),

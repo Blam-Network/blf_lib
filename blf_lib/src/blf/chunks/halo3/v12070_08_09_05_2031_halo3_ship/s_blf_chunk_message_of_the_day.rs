@@ -1,4 +1,3 @@
-use std::ffi::c_char;
 use blf_lib::blf_chunk;
 
 blf_chunk!(

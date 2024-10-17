@@ -47,14 +47,14 @@ impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> 
     where
         Self: Sized
     {
-        let mut vector = Vec::<E>::with_capacity(N);
+        let mut vector = [E::default(); N];
 
         for i in 0..N {
-            vector.push(E::decode_packed(reader, endian, packing)?);
+            vector[i] = E::decode_packed(reader, endian, packing)?;
         }
 
         Ok(Self {
-            _data: <[E; N]>::try_from(vector.as_slice()).unwrap()
+            _data: vector,
         })
     }
 }

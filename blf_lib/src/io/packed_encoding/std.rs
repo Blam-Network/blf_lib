@@ -20,6 +20,15 @@ impl PackedEncoder for u8 {
     }
 }
 
+impl PackedEncoder for i8 {
+    fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
+        match endian {
+            Endianness::Little => { packing.create_packed_buffer_from_slice(self.to_le_bytes().as_slice()) }
+            Endianness::Big => { packing.create_packed_buffer_from_slice(self.to_be_bytes().as_slice()) }
+        }
+    }
+}
+
 impl PackedEncoder for u16 {
     fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
         match endian {
@@ -29,7 +38,25 @@ impl PackedEncoder for u16 {
     }
 }
 
+impl PackedEncoder for i16 {
+    fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
+        match endian {
+            Endianness::Little => { packing.create_packed_buffer_from_slice(self.to_le_bytes().as_slice()) }
+            Endianness::Big => { packing.create_packed_buffer_from_slice(self.to_be_bytes().as_slice()) }
+        }
+    }
+}
+
 impl PackedEncoder for u32 {
+    fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
+        match endian {
+            Endianness::Little => { packing.create_packed_buffer_from_slice(self.to_le_bytes().as_slice()) }
+            Endianness::Big => { packing.create_packed_buffer_from_slice(self.to_be_bytes().as_slice()) }
+        }
+    }
+}
+
+impl PackedEncoder for i32 {
     fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
         match endian {
             Endianness::Little => { packing.create_packed_buffer_from_slice(self.to_le_bytes().as_slice()) }

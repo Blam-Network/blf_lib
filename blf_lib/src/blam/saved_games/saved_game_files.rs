@@ -21,23 +21,22 @@ pub const e_saved_game_file_type_screenshot: u32 = 12;
 pub const k_saved_game_file_type_count: u32 = 13;
 
 #[derive(PackedSerialize, Default, PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[PackedSerialize(4, BigEndian)]
 pub struct s_content_item_metadata {
     unique_id: u64,
-    name: ByteLimitedWcharString<16>,
+    name: ByteLimitedWcharString<0x10>,
     description: ByteLimitedUTF8String<128>,
     author: ByteLimitedUTF8String<16>,
     file_type: u32,
-    author_is_xuid_online: bool,
+    author_is_xuid_online: bool, // padded by 3 bytes, must be pack4
     author_id: u64,
     size_in_bytes: u64,
-    date: u64,
+    date: u64, // time_t probs
     length_seconds: u32,
-    campaign_id: u32,
+    campaign_id: i32,
     map_id: u32,
     game_engine_type: u32,
-    campaign_difficulty: u32,
-    campaign_insertion_point: u8,
-    // campaign_survival_enabled: bool,
+    campaign_difficulty: i32,
+    campaign_insertion_point: i8,
     game_id: u64,
-
 }

@@ -17,6 +17,19 @@ impl PackedDecoder for u8 {
     }
 }
 
+impl PackedDecoder for i8 {
+    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>  {
+        let mut bytes = [0u8; 1];
+        reader.read_exact(&mut bytes).map_err(|_|"Failed to read bytes.")?;
+        seek_pad(reader, &bytes, packing)?;
+
+        Ok(match endian {
+            Endianness::Little => { i8::from_le_bytes(bytes) }
+            Endianness::Big => { i8::from_be_bytes(bytes) }
+        })
+    }
+}
+
 impl PackedDecoder for bool {
     fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>  {
         let mut bytes = [0u8; 1];
@@ -43,6 +56,19 @@ impl PackedDecoder for u16 {
     }
 }
 
+impl PackedDecoder for i16 {
+    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>  {
+        let mut bytes = [0u8; 2];
+        reader.read_exact(&mut bytes).map_err(|_|"Failed to read bytes.")?;
+        seek_pad(reader, &bytes, packing)?;
+
+        Ok(match endian {
+            Endianness::Little => { i16::from_le_bytes(bytes) }
+            Endianness::Big => { i16::from_be_bytes(bytes) }
+        })
+    }
+}
+
 impl PackedDecoder for u32 {
     fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>  {
         let mut bytes = [0u8; 4];
@@ -52,6 +78,19 @@ impl PackedDecoder for u32 {
         Ok(match endian {
             Endianness::Little => { u32::from_le_bytes(bytes) }
             Endianness::Big => { u32::from_be_bytes(bytes) }
+        })
+    }
+}
+
+impl PackedDecoder for i32 {
+    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>  {
+        let mut bytes = [0u8; 4];
+        reader.read_exact(&mut bytes).map_err(|_|"Failed to read bytes.")?;
+        seek_pad(reader, &bytes, packing)?;
+
+        Ok(match endian {
+            Endianness::Little => { i32::from_le_bytes(bytes) }
+            Endianness::Big => { i32::from_be_bytes(bytes) }
         })
     }
 }
