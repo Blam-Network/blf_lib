@@ -22,7 +22,7 @@ impl s_blf_chunk_matchmaking_tips {
         self.tips.iter().map(|tip|tip.get_string()).collect()
     }
 
-    pub fn set_tips(&mut self, tips: Vec<String>) -> Result<(), String> {
+    fn set_tips(&mut self, tips: Vec<String>) -> Result<(), String> {
         if tips.len() > MAX_MATCHMAKING_TIP_COUNT {
             return Err(format!("Too many tips! {}/{MAX_MATCHMAKING_TIP_COUNT}", tips.len()))
         }
@@ -41,5 +41,11 @@ impl s_blf_chunk_matchmaking_tips {
         }
         self.tip_count = self.tips.len() as u32;
         Ok(())
+    }
+
+    pub fn create(tips: Vec<String>) -> s_blf_chunk_matchmaking_tips {
+        let mut new = Self::default();
+        new.set_tips(tips);
+        new
     }
 }

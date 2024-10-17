@@ -14,8 +14,30 @@ struct vector3d_coordinates {
     k: f32,
 }
 
-pub union vector3d  {
+#[derive(Default, PartialEq, Debug, Clone)]
+pub union vector3d {
+    i: f32,
+    j: f32,
+    k: f32,
+}
 
-    coordinates: vector3d_coordinates,
-    n: [f32; k_3d_count]
+
+#[derive(Default, PartialEq, Debug, Clone)]
+pub struct real_bounds {
+    lower: f32,
+    upper: f32,
+}
+
+#[derive(Default, PartialEq, Debug, Clone)]
+pub struct real_rectangle3d {
+    x: real_bounds,
+    y: real_bounds,
+    z: real_bounds,
+}
+
+#[derive(Default, PartialEq, Debug, Clone)]
+pub struct real_point3d {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
 }

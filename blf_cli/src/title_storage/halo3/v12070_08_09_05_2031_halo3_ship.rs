@@ -12,6 +12,8 @@ use crate::console::console_task;
 use crate::title_storage::halo3::release::blf_files::{motd, rsa_manifest};
 use crate::title_storage::halo3::release::config_files::motd_popup::motd_popup as motd_popup_config;
 use crate::title_storage::halo3::release::blf_files::motd_popup::motd_popup as motd_popup_blf;
+use crate::title_storage::halo3::release::blf_files::matchmaking_banhammer_messages::{matchmaking_banhammer_messages as matchmaking_banhammer_messages_blf};
+use crate::title_storage::halo3::release::blf_files::matchmaking_tips::matchmaking_tips as matchmaking_tips_blf;
 
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
@@ -40,6 +42,8 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             }
 
             println!("{style_bold}Converting {color_bright_white}{}{style_reset}...", hopper_directory);
+            Self::build_blf_banhammer_messages(config_path, &hopper_directory, blfs_path);
+            Self::build_blf_matchmaking_tips(config_path, &hopper_directory, blfs_path);
             Self::build_blf_motds(config_path, &hopper_directory, blfs_path, false);
             Self::build_blf_motds(config_path, &hopper_directory, blfs_path, true);
             Self::build_blf_motd_popups(config_path, &hopper_directory, blfs_path, false);
@@ -143,7 +147,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         let banhammer_messages_folder = build_path(vec![
             config_path,
             hopper_directory,
-            &String::from("tips"),
+            &String::from("matchmaking_tips"),
         ]);
 
         create_dir_all(&banhammer_messages_folder).unwrap();
@@ -256,6 +260,173 @@ impl v12070_08_09_05_2031_halo3_ship {
             }
 
             std::fs::copy(file_path, output_path).unwrap();
+        }
+
+        task.complete();
+    }
+
+    fn build_config_motd_popups(blfs_path: &String, hopper_directory: &String, config_path: &String, mythic: bool) {
+        let mut task = console_task::start(
+            if mythic { String::from("Converting Mythic MOTD Popups") }
+            else { String::from("Converting MOTD Popups") }
+        );
+
+        let motd_messages_folder = build_path(vec![
+            config_path,
+            hopper_directory,
+            &String::from(if mythic { "popup_mythic" } else { "popup" }),
+        ]);
+
+        create_dir_all(&motd_messages_folder).unwrap();
+
+        // BLFs
+        for language_code in k_language_suffixes {
+            let relative_file_path = format!("{language_code}{FILE_SEPARATOR}{}motd_popup.bin", if mythic { "blue_" } else { "" });
+            let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
+
+            if !check_file_exists(&file_path) {
+                task.add_warning(format!(
+                    "No {} {}MOTD Popup is present.",
+                    get_language_string(language_code),
+                    if mythic { "Mythic " } else { "" }
+                ));
+
+                continue;
+            }
+
+            let motd_popup_chunk =
+                find_chunk_in_file::<s_blf_chunk_message_of_the_day_popup>(&file_path);
+
+            if motd_popup_chunk.is_err() {
+                task.fail(format!("Failed to read MOTD Popup file at {file_path}"));
+                return;
+            }
+
+            let motd_popup_chunk = motd_popup_chunk.unwrap();
+            let motd_popup_config = motd_popup_config::from_chunk(motd_popup_chunk);
+
+            let output_text_file_path = build_path(vec![
+                &motd_messages_folder,
+                &format!("{language_code}.json")
+            ]);
+
+            let motd_json = serde_json::to_string_pretty(&motd_popup_config).unwrap();
+
+            let mut json_file = File::create(output_text_file_path).unwrap();
+
+            json_file.write_all(motd_json.as_bytes()).unwrap()
+        }
+
+        // JPEGs
+        for language_code in k_language_suffixes {
+            let relative_file_path = format!("{language_code}{FILE_SEPARATOR}{}motd_popup_image.jpg", if mythic { "blue_" } else { "" });
+            let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
+            let output_path = build_path(vec![
+                &motd_messages_folder,
+                &format!("{language_code}.jpg")
+            ]);
+
+            if !check_file_exists(&file_path) {
+                task.add_warning(format!(
+                    "No {} {}MOTD Popup image is present.",
+                    get_language_string(language_code),
+                    if mythic { "Mythic " } else { "" }
+                ));
+
+                continue;
+            }
+
+            std::fs::copy(file_path, output_path).unwrap();
+        }
+
+        task.complete();
+    }
+
+    fn build_blf_banhammer_messages(config_path: &String, hopper_directory: &String, blfs_path: &String) {
+        let mut task = console_task::start(String::from("Converting Banhammer Messages"));
+
+        let config_banhammer_messages_folder = build_path(vec![
+            config_path,
+            hopper_directory,
+            &String::from("banhammer_messages"),
+        ]);
+
+        let blf_hoppers_folder = build_path(vec![
+            blfs_path,
+            hopper_directory,
+        ]);
+
+        for language_code in k_language_suffixes {
+            let relative_file_path = format!("{language_code}.txt");
+            let config_file_path = format!("{config_banhammer_messages_folder}{FILE_SEPARATOR}{relative_file_path}");
+
+            let output_file_name = "matchmaking_banhammer_messages.bin";
+            let output_hopper_folder = format!("{blf_hoppers_folder}{FILE_SEPARATOR}{language_code}");
+            let output_blf_path = format!("{output_hopper_folder}{FILE_SEPARATOR}{output_file_name}");
+
+            create_dir_all(&output_hopper_folder).unwrap();
+
+            if !check_file_exists(&config_file_path) {
+                task.add_warning(format!(
+                    "No {} banhammer messages are present.",
+                    get_language_string(language_code),
+                ));
+
+                continue;
+            }
+
+            let mut config_file = File::open(config_file_path).unwrap();
+            let mut matchmaking_banhammer_messages: String = String::new();
+            config_file.read_to_string(&mut matchmaking_banhammer_messages).unwrap();
+
+            let matchmaking_banhammer_messages = matchmaking_banhammer_messages.lines().map(String::from).collect();
+            let mut matchmaking_banhammer_messages = matchmaking_banhammer_messages_blf::create(matchmaking_banhammer_messages);
+            matchmaking_banhammer_messages.write(&output_blf_path);
+        }
+
+        task.complete();
+    }
+
+    fn build_blf_matchmaking_tips(config_path: &String, hopper_directory: &String, blfs_path: &String) {
+        let mut task = console_task::start(String::from("Converting Matchmaking Tips"));
+
+        let config_banhammer_messages_folder = build_path(vec![
+            config_path,
+            hopper_directory,
+            &String::from("matchmaking_tips"),
+        ]);
+
+        let blf_hoppers_folder = build_path(vec![
+            blfs_path,
+            hopper_directory,
+        ]);
+
+        for language_code in k_language_suffixes {
+            let relative_file_path = format!("{language_code}.txt");
+            let config_file_path = format!("{config_banhammer_messages_folder}{FILE_SEPARATOR}{relative_file_path}");
+
+            let output_file_name = "matchmaking_tips.bin";
+            let output_hopper_folder = format!("{blf_hoppers_folder}{FILE_SEPARATOR}{language_code}");
+            let output_blf_path = format!("{output_hopper_folder}{FILE_SEPARATOR}{output_file_name}");
+
+            create_dir_all(&output_hopper_folder).unwrap();
+
+            if !check_file_exists(&config_file_path) {
+                task.add_warning(format!(
+                    "No {} matchmaking tips are present.",
+                    get_language_string(language_code),
+                ));
+
+                continue;
+            }
+
+            let mut config_file = File::open(config_file_path).unwrap();
+            let mut matchmaking_tips: String = String::new();
+            config_file.read_to_string(&mut matchmaking_tips).unwrap();
+
+            let matchmaking_tips = matchmaking_tips.lines().map(String::from).collect();
+            let mut matchmaking_tips = matchmaking_tips_blf::create(matchmaking_tips);
+            matchmaking_tips.write(&output_blf_path);
         }
 
         task.complete();
@@ -401,83 +572,6 @@ impl v12070_08_09_05_2031_halo3_ship {
             }
 
             std::fs::copy(jpeg_file_path, output_jpeg_path).unwrap();
-        }
-
-        task.complete();
-    }
-
-    fn build_config_motd_popups(blfs_path: &String, hopper_directory: &String, config_path: &String, mythic: bool) {
-        let mut task = console_task::start(
-            if mythic { String::from("Converting Mythic MOTD Popups") }
-            else { String::from("Converting MOTD Popups") }
-        );
-
-        let motd_messages_folder = build_path(vec![
-            config_path,
-            hopper_directory,
-            &String::from(if mythic { "popup_mythic" } else { "popup" }),
-        ]);
-
-        create_dir_all(&motd_messages_folder).unwrap();
-
-        // BLFs
-        for language_code in k_language_suffixes {
-            let relative_file_path = format!("{language_code}{FILE_SEPARATOR}{}motd_popup.bin", if mythic { "blue_" } else { "" });
-            let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
-
-            if !check_file_exists(&file_path) {
-                task.add_warning(format!(
-                    "No {} {}MOTD Popup is present.",
-                    get_language_string(language_code),
-                    if mythic { "Mythic " } else { "" }
-                ));
-
-                continue;
-            }
-
-            let motd_popup_chunk =
-                find_chunk_in_file::<s_blf_chunk_message_of_the_day_popup>(&file_path);
-
-            if motd_popup_chunk.is_err() {
-                task.fail(format!("Failed to read MOTD Popup file at {file_path}"));
-                return;
-            }
-
-            let motd_popup_chunk = motd_popup_chunk.unwrap();
-            let motd_popup_config = motd_popup_config::from_chunk(motd_popup_chunk);
-
-            let output_text_file_path = build_path(vec![
-                &motd_messages_folder,
-                &format!("{language_code}.json")
-            ]);
-
-            let motd_json = serde_json::to_string_pretty(&motd_popup_config).unwrap();
-
-            let mut json_file = File::create(output_text_file_path).unwrap();
-
-            json_file.write_all(motd_json.as_bytes()).unwrap()
-        }
-
-        // JPEGs
-        for language_code in k_language_suffixes {
-            let relative_file_path = format!("{language_code}{FILE_SEPARATOR}{}motd_popup_image.jpg", if mythic { "blue_" } else { "" });
-            let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
-            let output_path = build_path(vec![
-                &motd_messages_folder,
-                &format!("{language_code}.jpg")
-            ]);
-
-            if !check_file_exists(&file_path) {
-                task.add_warning(format!(
-                    "No {} {}MOTD Popup image is present.",
-                    get_language_string(language_code),
-                    if mythic { "Mythic " } else { "" }
-                ));
-
-                continue;
-            }
-
-            std::fs::copy(file_path, output_path).unwrap();
         }
 
         task.complete();

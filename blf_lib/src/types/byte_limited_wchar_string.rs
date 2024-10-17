@@ -31,7 +31,7 @@ impl<const N: usize> ByteLimitedWcharString<N> {
         if u16s.len() > N {
             return Err(format!("String too long ({} > {}) bytes", N, u16s.len()));
         }
-        let mut buf = &mut self.buf.get_mut();
+        let buf = &mut self.buf.get_mut();
         buf.fill(0);
         buf.as_mut_slice()[0..u16s.len()].copy_from_slice(&u16s);
         Ok(())

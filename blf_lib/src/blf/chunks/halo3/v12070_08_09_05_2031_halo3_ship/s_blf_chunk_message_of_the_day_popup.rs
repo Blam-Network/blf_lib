@@ -2,8 +2,6 @@ use std::ffi::{c_char};
 use std::u32;
 use blf_lib::blf_chunk;
 use blf_lib::types::byte_limited_wchar_string::ByteLimitedWcharString;
-
-const MAX_BANHAMMER_MESSAGE_COUNT: usize = 32usize;
 const k_motd_popup_title_max_length: usize = 48;
 const k_motd_popup_header_max_length: usize = 48;
 const k_motd_popup_button_key_max_length: usize = 48;

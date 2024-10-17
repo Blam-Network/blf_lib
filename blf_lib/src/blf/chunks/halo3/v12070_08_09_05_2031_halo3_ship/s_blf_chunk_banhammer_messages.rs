@@ -22,7 +22,7 @@ impl s_blf_chunk_banhammer_messages {
         self.messages.iter().map(|message|message.get_string()).collect()
     }
 
-    pub fn set_messages(&mut self, messages: Vec<String>) -> Result<(), String> {
+    fn set_messages(&mut self, messages: Vec<String>) -> Result<(), String> {
         if messages.len() > MAX_BANHAMMER_MESSAGE_COUNT {
             return Err(format!("Too many banhammer messages! {}/{MAX_BANHAMMER_MESSAGE_COUNT}", messages.len()))
         }
@@ -41,5 +41,11 @@ impl s_blf_chunk_banhammer_messages {
         }
         self.message_count = self.messages.len() as u32;
         Ok(())
+    }
+
+    pub fn create(messages: Vec<String>) -> s_blf_chunk_banhammer_messages {
+        let mut new = Self::default();
+        new.set_messages(messages).unwrap();
+        new
     }
 }

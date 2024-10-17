@@ -25,7 +25,7 @@ pub fn blf_file(input: TokenStream) -> TokenStream {
     macros::blf_file::blf_file_macro(input)
 }
 
-#[proc_macro_derive(PackedSerialize)]
+#[proc_macro_derive(PackedSerialize, attributes(PackedSerialize))]
 pub fn packed_serialize(input: TokenStream) -> TokenStream {
     macros::packed_serialize::packed_serialize_macro(input)
 }

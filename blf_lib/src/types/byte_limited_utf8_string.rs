@@ -53,3 +53,11 @@ impl<const N: usize> PackedDecoder for ByteLimitedUTF8String<N> {
         })
     }
 }
+
+impl<const N: usize> Default for ByteLimitedUTF8String<N>  {
+    fn default() -> Self {
+        Self{
+            buf: [0; N],
+        }
+    }
+}
