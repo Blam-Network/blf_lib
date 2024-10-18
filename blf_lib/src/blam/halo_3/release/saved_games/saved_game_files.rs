@@ -37,6 +37,12 @@ pub struct s_content_item_metadata {
     map_id: u32,
     game_engine_type: u32,
     campaign_difficulty: i32,
-    campaign_insertion_point: i8,
+    hopper_id: i8,
     game_id: u64,
+}
+
+impl s_content_item_metadata {
+    // pub fn encode(&self) -> Vec<u8> {
+    //
+    // }
 }

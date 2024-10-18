@@ -53,6 +53,9 @@ pub struct c_bitstream<'a>
     m_position_stack: [s_bitstream_data; k_bitstream_maximum_position_stack_size],
     __unknown98: u32,
     __unknown9C: u32,
+
+    // RUST WRITE
+
 }
 
 impl<'a> c_bitstream<'a> {
@@ -112,7 +115,7 @@ impl<'a> c_bitstream<'a> {
             panic!("Tried to read zero bits.")
         }
 
-        let mut windows_to_read = (size_in_bits / 64) + 1;
+        let mut windows_to_read = (size_in_bits as f32 / 64f32).ceil() as usize;
         let mut remaining_bits_to_read = size_in_bits;
         while windows_to_read > 0 {
             let mut window_bits_to_read = min(remaining_bits_to_read, 64);
@@ -278,8 +281,22 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    pub fn write_bits_internal(data: &[u8], size_in_bits: u32) {
-        unimplemented!()
+    pub fn write_bits_internal(&mut self, data: &[u8], size_in_bits: u32) {
+
+        if data.len() < (size_in_bits as f32 / 8f32).ceil() as usize {
+            panic!("Tried to write {size_in_bits} bits but only {} were provided!", data.len())
+        }
+
+        let mut writing_current_bit_offset = 0;
+        let writing_start_bit_offset = 8 - (size_in_bits % 8);
+        // 1. Write remaining bits at the current byte.
+        let remaining_bits_at_position = 8 - self.m_bitstream_data.current_stream_bit_position;
+
+
+        // 2. Write full bytes.
+
+        // 3. Write remaining bits.
+
     }
 
     pub fn write_identifier(identifier: String) {
@@ -398,9 +415,9 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    fn read_accumulator_from_memory(a1: u32) -> u64 {
-        unimplemented!()
-    }
+    // fn read_accumulator_from_memory(a1: u32) -> u64 {
+    //     unimplemented!()
+    // }
 
     fn reset(&mut self, state: e_bitstream_state) {
         self.m_state = state;
@@ -432,9 +449,9 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    fn write_accumulator_to_memory(a1: u64, a2: u32) {
-        unimplemented!()
-    }
+    // fn write_accumulator_to_memory(a1: u64, a2: u32) {
+    //     unimplemented!()
+    // }
 }
 
 
@@ -460,7 +477,6 @@ mod tests {
         bitstream.read_bits_internal(&mut output, 9);
         assert_eq!(output[0], 0b10110011);
         assert_eq!(output[1], 0b00000000);
-
     }
 
     #[test]
