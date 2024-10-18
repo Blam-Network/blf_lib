@@ -41,7 +41,7 @@ struct s_bitstream_data {
 
 pub struct c_bitstream<'a>
 {
-    m_data: &'a [u8],
+    m_data: &'a mut [u8],
     // m_data_max: u32, REMOVED
     m_data_size_bytes: usize,
     m_data_size_alignment: u32,
@@ -265,8 +265,8 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    pub fn write_integer(value: u32, size_in_bits: u8) {
-        unimplemented!()
+    pub fn write_integer(&mut self, value: u32, size_in_bits: usize) {
+        self.write_bits_internal(&value.to_le_bytes(), size_in_bits);
     }
 
     pub fn write_raw_data(value: &[u8], size_in_bits: u8) {
@@ -281,22 +281,52 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    pub fn write_bits_internal(&mut self, data: &[u8], size_in_bits: u32) {
-
+    pub fn write_bits_internal(&mut self, data: &[u8], size_in_bits: usize) {
         if data.len() < (size_in_bits as f32 / 8f32).ceil() as usize {
             panic!("Tried to write {size_in_bits} bits but only {} were provided!", data.len())
         }
 
-        let mut writing_current_bit_offset = 0;
-        let writing_start_bit_offset = 8 - (size_in_bits % 8);
-        // 1. Write remaining bits at the current byte.
-        let remaining_bits_at_position = 8 - self.m_bitstream_data.current_stream_bit_position;
+        let bits_available
+            = ((self.m_data.len() - self.m_bitstream_data.current_stream_byte_position) * 8)
+            - self.m_bitstream_data.current_stream_bit_position;
 
+        // Make a mutable clone of the data to work with.
+        let mut data = data.clone();
+
+        // If we were given surplus bits, shift them off.
+        let surplus_bits = size_in_bits - (data.len() * 8);
+        left_shift_array(&mut data, surplus_bits);
+
+        let mut remaining_bits_to_write = size_in_bits;
+
+        // 1. Write remaining bits at the current byte.
+        let remaining_bits_at_output_position
+            = 8 - self.m_bitstream_data.current_stream_bit_position;
+        let writing_byte = data[0];
+        self.m_data[self.m_bitstream_data.current_stream_byte_position]
+            |= writing_byte >> 8 - remaining_bits_at_output_position;
+
+        remaining_bits_to_write -= remaining_bits_at_output_position;
+        self.m_bitstream_data.current_stream_bit_position = 0;
+        self.m_bitstream_data.current_stream_byte_position += 1;
+
+        left_shift_array(&mut data, remaining_bits_at_output_position);
 
         // 2. Write full bytes.
+        let bytes_remaining = remaining_bits_to_write / 8;
+        for i in 0..bytes_remaining {
+            self.m_data[self.m_bitstream_data.current_stream_byte_position] = data[i];
+
+            self.m_bitstream_data.current_stream_byte_position += 1;
+            remaining_bits_to_write -= 8;
+        }
 
         // 3. Write remaining bits.
-
+        if remaining_bits_to_write > 0 {
+            self.m_data[self.m_bitstream_data.current_stream_byte_position] = data[bytes_remaining];
+            self.m_bitstream_data.current_memory_bit_position
+                += remaining_bits_to_write;
+        }
     }
 
     pub fn write_identifier(identifier: String) {
@@ -435,7 +465,7 @@ impl<'a> c_bitstream<'a> {
         }
     }
 
-    fn set_data(&mut self, data: &'a [u8]) {
+    fn set_data(&mut self, data: &'a mut [u8]) {
         self.m_data = data;
         self.m_data_size_bytes = data.len();
         self.reset(e_bitstream_state::_bitstream_state_initial);
@@ -491,5 +521,35 @@ mod tests {
         assert_eq!(bitstream.read_integer(3), 5);
         assert_eq!(bitstream.read_integer(24), 2695157);
         assert_eq!(bitstream.read_integer(32), 1712474431)
+    }
+}
+
+// Not from blam
+fn left_shift_array(data: &mut [u8], shift: usize) {
+    if shift == 0 || data.is_empty() {
+        return;
+    }
+
+    let len = data.len();
+    let byte_shift = (shift / 8) as usize;  // Full byte shifts
+    let bit_shift = shift % 8;              // Remaining bit shift
+    let mut carry = 0u8;                    // Carry from previous byte
+
+    // Shift each byte in the array
+    for i in 0..len {
+        let current = data[i];
+        data[i] = (current << bit_shift) | carry;
+        carry = if bit_shift != 0 {
+            current >> (8 - bit_shift)
+        } else {
+            0
+        };
+    }
+
+    // Set the remaining bytes after the byte shift (if any)
+    for i in 0..byte_shift {
+        if i < len {
+            data[len - i - 1] = 0;
+        }
     }
 }
