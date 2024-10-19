@@ -1,10 +1,16 @@
+use bincode::config::BigEndian;
 use serde::{Deserialize, Serialize};
 use blf_lib::blam::common::memory::bitstream::c_bitstream;
+use blf_lib::TEST_BIT;
 use crate::blam::common::math::real_math::{real_point3d, real_rectangle3d};
 use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
 use blf_lib::types::array::Array;
+use blf_lib_derivable::io::endian::Endianness;
+use blf_lib_derivable::io::packing::PACK1;
 use blf_lib_derive::PackedSerialize;
 use crate::blam::common::math::real_math::vector3d;
+use crate::blam::common::simulation::simulation_encoding::simulation_write_quantized_position;
+use crate::io::packed_encoding::PackedEncoder;
 
 const k_object_type_count: usize = 14;
 const k_number_of_map_variant_simulation_entities: usize = 80;
@@ -35,6 +41,52 @@ pub struct c_map_variant {
 impl c_map_variant {
     pub fn encode(&self, bitstream: &mut c_bitstream) {
         self.m_metadata.encode(bitstream);
+        bitstream.write_integer(self.m_map_variant_version as u32, 8);
+        bitstream.write_integer(self.m_map_variant_checksum, 32);
+        bitstream.write_integer(self.m_number_of_scenario_objects as u32, 10);
+        bitstream.write_integer(self.m_number_of_variant_objects as u32, 10);
+        bitstream.write_integer(self.m_number_of_placeable_object_quotas as u32, 9);
+        bitstream.write_integer(self.m_map_id, 32);
+        bitstream.write_integer(if self.m_built_in { 1 } else { 0 }, 1);
+        bitstream.write_raw_data(self.m_world_bounds.encode_packed(Endianness::Big, PACK1).as_slice(), 0xC0);
+        bitstream.write_integer(self.m_game_engine_subtype, 4);
+        bitstream.write_float(self.m_maximum_budget, 32);
+        bitstream.write_float(self.m_spent_budget, 32);
+
+        for i in 0..self.m_number_of_variant_objects as usize {
+            let variant_object = self.m_variant_objects[i];
+
+            if variant_object.flags & 0x3FF == 0 // 0x3FF is 10 bits, there's 10 flags. If none are set...
+            {
+                bitstream.write_integer(0, 1); // variant_object_exists
+            }
+            else
+            {
+                bitstream.write_integer(1, 1);
+                bitstream.write_integer(variant_object.object_datum_index as u32, 32);
+
+                if !TEST_BIT!(variant_object.flags, 8) // spawns relative
+                {
+                    bitstream.write_integer(0, 1); // parent-object-exists
+                }
+                else
+                {
+                    bitstream.write_integer(1, 1);
+                    bitstream.write_raw_data(variant_object.parent_object_identifier.encode_packed(Endianness::Big, PACK1).as_slice(), 64);
+                }
+
+                if !TEST_BIT!(variant_object.flags, 1) && i < self.m_number_of_scenario_objects as usize  //edited
+                {
+                    bitstream.write_integer(0, 1);
+                }
+                else
+                {
+                    bitstream.write_integer(1, 1);
+                    simulation_write_quantized_position(bitstream, &variant_object.position, 16, false, &self.m_world_bounds);
+                }
+            }
+        }
+
     }
 }
 

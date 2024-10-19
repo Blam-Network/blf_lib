@@ -1,4 +1,5 @@
 use std::io::Cursor;
+use std::ops::Index;
 use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use blf_lib::io::packed_decoding::PackedDecoder;
@@ -65,5 +66,13 @@ impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> 
         });
 
         buffer
+    }
+}
+
+impl<E, const N: usize> Index<usize> for Array<E, N> {
+    type Output = E;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self._data[index]
     }
 }

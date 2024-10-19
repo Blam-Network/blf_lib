@@ -11,6 +11,7 @@ use std::cmp::min;
 use std::mem;
 use libc::wchar_t;
 use widestring::U16CString;
+use blf_lib::io::packed_encoding::PackedEncoder;
 use crate::blam::common::math::integer_math::int32_point3d;
 use crate::blam::common::math::real_math::vector3d;
 use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
@@ -291,8 +292,21 @@ impl<'a> c_bitstream<'a> {
         }
     }
 
-    pub fn write_raw_data(value: &[u8], size_in_bits: u8) {
-        unimplemented!()
+    // Be careful using this.
+    pub fn write_float(&mut self, value: f32, size_in_bits: usize) {
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
+                self.write_bits_internal(&value.to_le_bytes(), size_in_bits);
+            }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
+                self.write_bits_internal(&value.to_be_bytes(), size_in_bits);
+            }
+        }
+    }
+
+    pub fn write_raw_data(&mut self, value: &[u8], size_in_bits: usize) {
+        assert!(value.len() >= size_in_bits / 8);
+        self.write_bits_internal(value, size_in_bits);
     }
 
     pub fn write_signed_integer(value: i32, size_in_bits: u8) {
@@ -380,8 +394,16 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    pub fn write_point3d(point: int32_point3d, axis_encoding_size_in_bits: u8) {
-        unimplemented!()
+    pub fn write_point3d(&mut self, point: &int32_point3d, axis_encoding_size_in_bits: usize) {
+        assert!(axis_encoding_size_in_bits > 0 && axis_encoding_size_in_bits <= 32);
+
+        assert!(point.x < 1 << axis_encoding_size_in_bits);
+        assert!(point.y < 1 << axis_encoding_size_in_bits);
+        assert!(point.z < 1 << axis_encoding_size_in_bits);
+
+        self.write_integer(point.x as u32, axis_encoding_size_in_bits);
+        self.write_integer(point.y as u32, axis_encoding_size_in_bits);
+        self.write_integer(point.z as u32, axis_encoding_size_in_bits);
     }
 
     pub fn write_quantized_real(value: f32, min_value: f32, max_value: f32, size_in_bits: u8, exact_midpoint: bool, exact_endpoints: bool) {

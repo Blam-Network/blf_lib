@@ -5,14 +5,9 @@
 
 #![allow(dead_code)]
 
-#[derive(Clone, Copy)]
-pub struct int32_point3d_coordinates {
-    pub x: u32,
-    pub y: u32,
-    pub z: u32,
-}
-
-pub union int32_point3d  {
-    pub coordinates: int32_point3d_coordinates,
-    pub n: [u32; 3]
+#[derive(Clone, Copy, Default)]
+pub struct int32_point3d  {
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
 }
