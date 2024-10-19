@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use blf_lib::blam::common::memory::bitstream::c_bitstream;
 use blf_lib_derive::PackedSerialize;
 use crate::types::byte_limited_utf8_string::ByteLimitedUTF8String;
 use crate::types::byte_limited_wchar_string::ByteLimitedWcharString;
@@ -42,7 +43,22 @@ pub struct s_content_item_metadata {
 }
 
 impl s_content_item_metadata {
-    // pub fn encode(&self) -> Vec<u8> {
-    //
-    // }
+    pub fn encode(&self, bitstream: &mut c_bitstream) {
+        bitstream.write_qword(self.unique_id, 0);
+        bitstream.write_string_wchar(&self.name.get_string(), 32);
+        bitstream.write_string_utf8(&self.description.get_string(), 128);
+        bitstream.write_string_utf8(&self.author.get_string(), 16);
+        bitstream.write_integer(self.file_type, 5);
+        bitstream.write_integer(if self.author_is_xuid_online { 1 } else { 0 }, 1);
+        bitstream.write_qword(self.author_id , 64);
+        bitstream.write_qword(self.size_in_bytes, 64);
+        bitstream.write_qword(self.date, 64);
+        bitstream.write_integer(self.length_seconds, 32);
+        bitstream.write_integer(self.campaign_id as u32, 32);
+        bitstream.write_integer(self.map_id, 32);
+        bitstream.write_integer(self.game_engine_type, 4);
+        bitstream.write_integer(self.campaign_difficulty as u32, 3);
+        bitstream.write_integer(self.hopper_id as u32, 16);
+        bitstream.write_qword(self.game_id, 64);
+    }
 }

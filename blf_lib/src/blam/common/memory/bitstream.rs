@@ -337,16 +337,26 @@ impl<'a> c_bitstream<'a> {
             8 - self.m_bitstream_data.current_stream_bit_position;
 
         if remaining_bits_at_output_position < 8 {
+            // of the remaining bits at this byte, how many are we writing?
+            let bits_to_write_at_position = min(remaining_bits_to_write, remaining_bits_at_output_position);
             let writing_byte = data[0];
             // TODO: Check this part.
             self.m_data[self.m_bitstream_data.current_stream_byte_position]
                 |= writing_byte >> 8 - remaining_bits_at_output_position;
 
             remaining_bits_to_write -= min(remaining_bits_at_output_position, remaining_bits_to_write);
-            self.m_bitstream_data.current_stream_bit_position = 0;
-            self.m_bitstream_data.current_stream_byte_position += 1;
+            // after writing, how many bits are now left at this byte?
+            let remaining_bits_at_output_position = remaining_bits_at_output_position - bits_to_write_at_position;
+            let more_space_at_current_byte = remaining_bits_at_output_position > 0;
 
-            left_shift_array(&mut data, remaining_bits_at_output_position);
+            if !more_space_at_current_byte {
+                self.m_bitstream_data.current_stream_bit_position = 0;
+                self.m_bitstream_data.current_stream_byte_position += 1;
+            } else {
+                self.m_bitstream_data.current_stream_bit_position = 8 - remaining_bits_at_output_position;
+            }
+
+            left_shift_array(&mut data, bits_to_write_at_position);
         }
 
         // 2. Write full bytes.
@@ -600,25 +610,29 @@ fn left_shift_array(data: &mut Vec<u8>, shift: usize) {
     }
 
     let len = data.len();
-    let byte_shift = (shift / 8) as usize;  // Full byte shifts
-    let bit_shift = shift % 8;              // Remaining bit shift
-    let mut carry = 0u8;                    // Carry from previous byte
+    let byte_shift = shift / 8;
+    let bit_shift = shift % 8;
 
-    // Shift each byte in the array
-    for i in 0..len {
-        let current = data[i];
-        data[i] = (current << bit_shift) | carry;
-        carry = if bit_shift != 0 {
-            current >> (8 - bit_shift)
-        } else {
-            0
-        };
+    // Shift bytes
+    if byte_shift != 0 {
+        for i in 0..len {
+            if i + byte_shift < len {
+                data[i] = data[i + byte_shift]
+            } else {
+                data[i] = 0;
+            }
+        }
     }
 
-    // Set the remaining bytes after the byte shift (if any)
-    for i in 0..byte_shift {
-        if i < len {
-            data[len - i - 1] = 0;
-        }
+    // Shift bits
+    data[0] = data[0] << bit_shift;
+    for i in 1..(len - byte_shift) {
+        // use a short for shifting
+        let current_byte = data[i];
+        let shift_window = current_byte as u16;
+        let shift_window = shift_window << bit_shift;
+        let [carry_bits, shifted_byte] = shift_window.to_be_bytes();
+        data[i - 1] |= carry_bits;
+        data[i] = shifted_byte;
     }
 }

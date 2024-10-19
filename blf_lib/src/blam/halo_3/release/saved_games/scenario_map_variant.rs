@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use blf_lib::blam::common::memory::bitstream::c_bitstream;
 use crate::blam::common::math::real_math::{real_point3d, real_rectangle3d};
 use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
 use blf_lib::types::array::Array;
@@ -29,6 +30,12 @@ pub struct c_map_variant {
     m_object_type_start_index: Array<i16, k_object_type_count>,
     m_quotas: Array<s_variant_quota, 256>,
     m_chunk_simulation_object_glue_indices: Array<u32, k_number_of_map_variant_simulation_entities>,
+}
+
+impl c_map_variant {
+    pub fn encode(&self, bitstream: &mut c_bitstream) {
+        self.m_metadata.encode(bitstream);
+    }
 }
 
 #[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
