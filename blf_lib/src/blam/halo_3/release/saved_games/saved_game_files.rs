@@ -44,7 +44,7 @@ pub struct s_content_item_metadata {
 
 impl s_content_item_metadata {
     pub fn encode(&self, bitstream: &mut c_bitstream) {
-        bitstream.write_qword(self.unique_id, 0);
+        bitstream.write_qword(self.unique_id, 64);
         bitstream.write_string_wchar(&self.name.get_string(), 32);
         bitstream.write_string_utf8(&self.description.get_string(), 128);
         bitstream.write_string_utf8(&self.author.get_string(), 16);

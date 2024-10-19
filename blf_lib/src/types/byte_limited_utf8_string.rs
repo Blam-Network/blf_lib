@@ -1,16 +1,15 @@
 use std::ffi::CStr;
 use std::io::Cursor;
 use bincode::{Decode, Encode};
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserializer, Serialize, Serializer};
+use serde::de::Error;
 use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::Packing;
 use crate::io::packed_encoding::PackedEncoder;
-use serde_big_array::BigArray;
 
-#[derive(PartialEq, Debug, Clone, Encode, Decode, Copy, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Encode, Decode, Copy)]
 pub struct ByteLimitedUTF8String<const N: usize> {
-    #[serde(with = "BigArray")]
     buf: [u8; N],
 }
 
@@ -68,5 +67,17 @@ impl<const N: usize> Serialize for ByteLimitedUTF8String<N> {
         S: Serializer
     {
         serializer.serialize_str(&format!("{}", self.get_string()))
+    }
+}
+
+impl<'de, const N: usize> serde::Deserialize<'de> for ByteLimitedUTF8String<N> {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let s = String::deserialize(d)?;
+        let res = Self::from_string(&s);
+        if res.is_err() {
+            Err(D::Error::custom(res.unwrap_err()))
+        } else {
+            Ok(res.unwrap())
+        }
     }
 }
