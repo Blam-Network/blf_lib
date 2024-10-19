@@ -39,7 +39,6 @@ impl SerializableBlfChunk for s_blf_chunk_packed_map_variant {
         bitstream.finish_writing(&mut bits_remaining);
         let mut data_length: usize = 0;
         let data = bitstream.get_data(&mut data_length);
-        let mut vector = Vec::<u8>::with_capacity(data_length);
         data[0..data_length].to_vec()
     }
 
