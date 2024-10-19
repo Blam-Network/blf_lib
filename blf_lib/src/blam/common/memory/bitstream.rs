@@ -10,9 +10,18 @@
 use std::cmp::min;
 use std::mem;
 use libc::wchar_t;
+use widestring::U16CString;
 use crate::blam::common::math::integer_math::int32_point3d;
 use crate::blam::common::math::real_math::vector3d;
 use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
+
+#[derive(Default, PartialEq, Eq, Debug)]
+pub enum e_bitstream_byte_order
+{
+    #[default]
+    _bitstream_byte_order_little_endian,
+    _bitstream_byte_order_big_endian
+}
 
 #[derive(Default, PartialEq, Eq, Debug)]
 enum e_bitstream_state
@@ -44,7 +53,7 @@ pub struct c_bitstream<'a>
     m_data: &'a mut [u8],
     // m_data_max: u32, REMOVED
     m_data_size_bytes: usize,
-    m_data_size_alignment: u32,
+    m_data_size_alignment: u32, // not sure if this is used
     m_state: e_bitstream_state,
     __unknown14: u32, // might be debug mode
     m_bitstream_data: s_bitstream_data,
@@ -54,7 +63,7 @@ pub struct c_bitstream<'a>
     __unknown98: u32,
     __unknown9C: u32,
 
-    // RUST WRITE
+    m_byte_order: e_bitstream_byte_order // new
 
 }
 
@@ -62,10 +71,11 @@ impl<'a> c_bitstream<'a> {
 
     // pub fn new() {}
 
-    pub fn new(data: &mut [u8]) -> c_bitstream {
+    pub fn new(data: &mut [u8], byte_order: e_bitstream_byte_order) -> c_bitstream {
+        let length = data.len();
         c_bitstream {
             m_data: data,
-            m_data_size_bytes: data.len(),
+            m_data_size_bytes: length,
             m_data_size_alignment: 1,
             m_state: e_bitstream_state::_bitstream_state_initial,
             __unknown14: Default::default(),
@@ -75,6 +85,7 @@ impl<'a> c_bitstream<'a> {
             m_position_stack: Default::default(),
             __unknown98: Default::default(),
             __unknown9C: Default::default(),
+            m_byte_order: byte_order,
         }
     }
 
@@ -216,7 +227,11 @@ impl<'a> c_bitstream<'a> {
         assert!(size_in_bits <= mem::size_of::<u32>() * 8);
         let mut bytes = [0u8; 4];
         self.read_bits_internal(&mut bytes, size_in_bits);
-        u32::from_le_bytes(bytes)
+
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => { u32::from_le_bytes(bytes) }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => { u32::from_be_bytes(bytes) }
+        }
     }
 
     pub fn read_identifier(identifier: String) { // param may be wrong.
@@ -247,7 +262,7 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    pub fn read_string_whar(_string: &mut [wchar_t], max_string_size: u8) {
+    pub fn read_string_whar(&mut self, write_string: &mut [wchar_t], max_string_size: u8) {
         unimplemented!()
     }
 
@@ -266,7 +281,14 @@ impl<'a> c_bitstream<'a> {
     }
 
     pub fn write_integer(&mut self, value: u32, size_in_bits: usize) {
-        self.write_bits_internal(&value.to_le_bytes(), size_in_bits);
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
+                self.write_bits_internal(&value.to_le_bytes(), size_in_bits);
+            }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
+                self.write_bits_internal(&value.to_be_bytes(), size_in_bits);
+            }
+        }
     }
 
     pub fn write_raw_data(value: &[u8], size_in_bits: u8) {
@@ -277,13 +299,24 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    pub fn write_qword(value: u64, size_in_bits: u8) {
-        unimplemented!()
+    pub fn write_qword(&mut self, value: u64, size_in_bits: usize) {
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
+                self.write_bits_internal(&value.to_le_bytes(), size_in_bits);
+            }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
+                self.write_bits_internal(&value.to_be_bytes(), size_in_bits);
+            }
+        }
     }
 
-    pub fn write_bits_internal(&mut self, data: &[u8], size_in_bits: usize) {
+    fn write_value_internal(&mut self, data: &[u8], size_in_bits: usize) {
+        self.write_bits_internal(data, size_in_bits);
+    }
+
+    fn write_bits_internal(&mut self, data: &[u8], size_in_bits: usize) {
         if data.len() < (size_in_bits as f32 / 8f32).ceil() as usize {
-            panic!("Tried to write {size_in_bits} bits but only {} were provided!", data.len())
+            panic!("Tried to write {size_in_bits} bits but only {} were provided!", (data.len() * 8))
         }
 
         let bits_available
@@ -291,26 +324,30 @@ impl<'a> c_bitstream<'a> {
             - self.m_bitstream_data.current_stream_bit_position;
 
         // Make a mutable clone of the data to work with.
-        let mut data = data.clone();
+        let mut data = Vec::from(data);
 
         // If we were given surplus bits, shift them off.
-        let surplus_bits = size_in_bits - (data.len() * 8);
+        let surplus_bits = (data.len() * 8) - size_in_bits;
         left_shift_array(&mut data, surplus_bits);
 
         let mut remaining_bits_to_write = size_in_bits;
 
         // 1. Write remaining bits at the current byte.
-        let remaining_bits_at_output_position
-            = 8 - self.m_bitstream_data.current_stream_bit_position;
-        let writing_byte = data[0];
-        self.m_data[self.m_bitstream_data.current_stream_byte_position]
-            |= writing_byte >> 8 - remaining_bits_at_output_position;
+        let remaining_bits_at_output_position =
+            8 - self.m_bitstream_data.current_stream_bit_position;
 
-        remaining_bits_to_write -= remaining_bits_at_output_position;
-        self.m_bitstream_data.current_stream_bit_position = 0;
-        self.m_bitstream_data.current_stream_byte_position += 1;
+        if remaining_bits_at_output_position < 8 {
+            let writing_byte = data[0];
+            // TODO: Check this part.
+            self.m_data[self.m_bitstream_data.current_stream_byte_position]
+                |= writing_byte >> 8 - remaining_bits_at_output_position;
 
-        left_shift_array(&mut data, remaining_bits_at_output_position);
+            remaining_bits_to_write -= min(remaining_bits_at_output_position, remaining_bits_to_write);
+            self.m_bitstream_data.current_stream_bit_position = 0;
+            self.m_bitstream_data.current_stream_byte_position += 1;
+
+            left_shift_array(&mut data, remaining_bits_at_output_position);
+        }
 
         // 2. Write full bytes.
         let bytes_remaining = remaining_bits_to_write / 8;
@@ -324,7 +361,7 @@ impl<'a> c_bitstream<'a> {
         // 3. Write remaining bits.
         if remaining_bits_to_write > 0 {
             self.m_data[self.m_bitstream_data.current_stream_byte_position] = data[bytes_remaining];
-            self.m_bitstream_data.current_memory_bit_position
+            self.m_bitstream_data.current_stream_bit_position
                 += remaining_bits_to_write;
         }
     }
@@ -349,12 +386,40 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    pub fn write_string_utf8(_string: &String, max_string_size: u32) {
-        unimplemented!()
+    pub fn write_string_utf8(&mut self, char_string: &String, max_string_size: u32) {
+        assert!(self.writing());
+        assert!(max_string_size > 0);
+        assert!(char_string.len() <= max_string_size as usize);
+
+        for byte in char_string.as_bytes() {
+            self.write_value_internal(&[*byte], 8);
+        }
+
+        // null terminate
+        self.write_value_internal(&0u8.to_ne_bytes(), 8);
     }
 
-    pub fn write_string_whar(_string: &[wchar_t], max_string_size: u32) {
-        unimplemented!()
+    pub fn write_string_wchar(&mut self, value: &String, max_string_size: usize) {
+        assert!(self.writing());
+        assert!(value.len() <= max_string_size);
+        assert!(max_string_size > 0);
+
+        let wchar_string = U16CString::from_str(value).unwrap();
+        let characters = wchar_string.as_slice();
+
+        for char in characters {
+            match self.m_byte_order {
+                e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
+                    self.write_value_internal(&char.to_le_bytes(), 16);
+                }
+                e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
+                    self.write_value_internal(&char.to_be_bytes(), 16);
+                }
+            }
+        }
+
+        // null terminate
+        self.write_value_internal(&0u16.to_ne_bytes(), 16);
     }
 
     pub fn write_unit_vector(unit_vector: &vector3d, size_in_bits: u8) {
@@ -377,8 +442,9 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    pub fn begin_writing(data_size_alignment: u32) {
-        unimplemented!()
+    pub fn begin_writing(&mut self, data_size_alignment: u32) {
+        self.m_data_size_alignment = data_size_alignment;
+        self.reset(e_bitstream_state::_bitstream_state_writing);
     }
 
     pub fn data_is_untrusted(is_untrusted: bool) {
@@ -418,8 +484,10 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    pub fn finish_writing(out_bits_remaining: &mut u32) {
-        unimplemented!()
+    pub fn finish_writing(&mut self, out_bits_remaining: &mut usize) {
+        self.m_state = e_bitstream_state::_bitstream_state_write_finished;
+        self.m_data_size_bytes = (((self.m_bitstream_data.current_stream_byte_position * 8) + self.m_bitstream_data.current_stream_bit_position) as f32 / 8f32).ceil() as usize;
+        *out_bits_remaining = (8 * self.m_data.len()) - self.m_data_size_bytes;
     }
 
     pub fn get_current_stream_bit_position() -> u32 {
@@ -466,8 +534,9 @@ impl<'a> c_bitstream<'a> {
     }
 
     fn set_data(&mut self, data: &'a mut [u8]) {
+        let length = data.len();
         self.m_data = data;
-        self.m_data_size_bytes = data.len();
+        self.m_data_size_bytes = length;
         self.reset(e_bitstream_state::_bitstream_state_initial);
     }
 
@@ -494,7 +563,7 @@ mod tests {
         let data: &mut [u8] = &mut [
             0b10101010, 0b11001100, 0b11110000
         ];
-        let mut bitstream = c_bitstream::new(data);
+        let mut bitstream = c_bitstream::new(data, e_bitstream_byte_order::_bitstream_byte_order_little_endian);
 
         let mut output = [0u8; 2]; // Output buffer for storing results
 
@@ -515,7 +584,7 @@ mod tests {
             0x03, 0x29, 0x48, 0xFF, 0xAB, 0x30, 0x92, 0x49, 0xFF
         ];
 
-        let mut bitstream = c_bitstream::new(data);
+        let mut bitstream = c_bitstream::new(data, e_bitstream_byte_order::_bitstream_byte_order_little_endian);
 
         assert_eq!(bitstream.read_integer(10), 12);
         assert_eq!(bitstream.read_integer(3), 5);
@@ -525,7 +594,7 @@ mod tests {
 }
 
 // Not from blam
-fn left_shift_array(data: &mut [u8], shift: usize) {
+fn left_shift_array(data: &mut Vec<u8>, shift: usize) {
     if shift == 0 || data.is_empty() {
         return;
     }
