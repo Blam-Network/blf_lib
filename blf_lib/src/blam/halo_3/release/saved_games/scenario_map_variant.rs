@@ -83,8 +83,49 @@ impl c_map_variant {
                 {
                     bitstream.write_integer(1, 1);
                     simulation_write_quantized_position(bitstream, &variant_object.position, 16, false, &self.m_world_bounds);
+                    bitstream.write_axes(&variant_object.up, &variant_object.forward);
+                    bitstream.write_integer(variant_object.multiplayer_game_object_properties.object_type as u32, 8);
+                    bitstream.write_integer(variant_object.multiplayer_game_object_properties.symmetry_placement_flags as u32, 8);
+                    bitstream.write_integer(variant_object.multiplayer_game_object_properties.game_engine_flags as u32, 16);
+                    bitstream.write_integer(variant_object.multiplayer_game_object_properties.shared_storage as u32, 8);
+                    bitstream.write_integer(variant_object.multiplayer_game_object_properties.spawn_time as u32, 8);
+                    bitstream.write_integer(variant_object.multiplayer_game_object_properties.owner_team as u32, 8);
+                    bitstream.write_integer(variant_object.multiplayer_game_object_properties.boundary_shape as u32, 8);
+
+                    match variant_object.multiplayer_game_object_properties.boundary_shape {
+                        1 => { // sphere
+                            bitstream.write_integer(variant_object.multiplayer_game_object_properties.boundary_size as u32, 16);
+                            bitstream.write_integer(variant_object.multiplayer_game_object_properties.boundary_negative_height as u32, 16);
+                        }
+                        2 => { // cylinder
+                            bitstream.write_integer(variant_object.multiplayer_game_object_properties.boundary_size as u32, 16);
+                            bitstream.write_integer(variant_object.multiplayer_game_object_properties.boundary_box_length as u32, 16);
+                            bitstream.write_integer(variant_object.multiplayer_game_object_properties.boundary_positive_height as u32, 16);
+                        }
+                        3 => { // box
+                            bitstream.write_integer(variant_object.multiplayer_game_object_properties.boundary_size as u32, 16);
+                            bitstream.write_integer(variant_object.multiplayer_game_object_properties.boundary_box_length as u32, 16);
+                            bitstream.write_integer(variant_object.multiplayer_game_object_properties.boundary_positive_height as u32, 16);
+                            bitstream.write_integer(variant_object.multiplayer_game_object_properties.boundary_negative_height as u32, 16);
+                        }
+                        _ => { }
+                    }
                 }
             }
+        }
+
+        for i in 0..k_object_type_count {
+            bitstream.write_integer(self.m_object_type_start_index[i] as u32, 9);
+        }
+
+        for i in 0..self.m_number_of_placeable_object_quotas as usize {
+            let object_quota = self.m_quotas[i];
+            bitstream.write_integer(object_quota.object_definition_index as u32, 32);
+            bitstream.write_integer(object_quota.minimum_count as u32, 8);
+            bitstream.write_integer(object_quota.maximum_count as u32, 8);
+            bitstream.write_integer(object_quota.placed_on_map as u32, 8);
+            bitstream.write_integer(object_quota.maximum_allowed as u32, 8);
+            bitstream.write_float(object_quota.price_per_item, 32);
         }
 
     }
@@ -93,12 +134,12 @@ impl c_map_variant {
 #[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
 #[PackedSerialize(1, BigEndian)]
 pub struct s_variant_quota {
-    object_definition_index: i32,
-    minimum_count: u8,
-    maximum_count: u8,
-    placed_on_map: u8,
-    maximum_allowed: i8,
-    price_per_item: f32,
+    pub object_definition_index: i32,
+    pub minimum_count: u8,
+    pub maximum_count: u8,
+    pub placed_on_map: u8,
+    pub maximum_allowed: i8,
+    pub price_per_item: f32,
 }
 
 #[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]

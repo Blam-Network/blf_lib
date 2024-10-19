@@ -13,9 +13,9 @@ const k_3d_count: usize = 3;
 
 #[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
 pub struct vector3d {
-    i: f32,
-    j: f32,
-    k: f32,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
 }
 
 
@@ -89,4 +89,17 @@ pub fn quantize_real(value: f32, min_value: f32, max_value: f32, size_in_bits: u
     assert!(quantized_value >= 0 && quantized_value <= step_count, "quantized_value>=0 && quantized_value<=step_count");
 
     quantized_value
+}
+
+pub fn assert_valid_real_normal3d(vector: &vector3d) -> bool {
+    // Calculate the squared length of the vector and subtract 1.0
+    let squared_length = vector.x * vector.x + vector.y * vector.y + vector.z * vector.z - 1.0;
+
+    // Check if the result is not NaN or infinite
+    if squared_length.is_nan() || squared_length.is_infinite() {
+        return false;
+    }
+
+    // Check if the absolute value of the result is less than 0.001
+    squared_length.abs() < 0.001
 }

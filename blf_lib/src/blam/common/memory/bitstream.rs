@@ -11,6 +11,7 @@ use std::cmp::min;
 use std::mem;
 use libc::wchar_t;
 use widestring::U16CString;
+use blf_lib::blam::common::math::real_math::assert_valid_real_normal3d;
 use blf_lib::io::packed_encoding::PackedEncoder;
 use crate::blam::common::math::integer_math::int32_point3d;
 use crate::blam::common::math::real_math::vector3d;
@@ -277,10 +278,6 @@ impl<'a> c_bitstream<'a> {
 
     // WRITES
 
-    pub fn write_bool(value: bool) {
-        unimplemented!()
-    }
-
     pub fn write_integer(&mut self, value: u32, size_in_bits: usize) {
         match self.m_byte_order {
             e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
@@ -290,6 +287,10 @@ impl<'a> c_bitstream<'a> {
                 self.write_bits_internal(&value.to_be_bytes(), size_in_bits);
             }
         }
+    }
+
+    pub fn write_bool(&mut self, value: bool) {
+        self.write_integer(if value { 1 } else { 0 }, 1);
     }
 
     // Be careful using this.
@@ -583,6 +584,47 @@ impl<'a> c_bitstream<'a> {
     // fn write_accumulator_to_memory(a1: u64, a2: u32) {
     //     unimplemented!()
     // }
+
+    const epsilon: f32 = 0.000099999997;
+
+    pub fn write_axes(
+        &mut self,
+        forward: &vector3d,
+        up: &vector3d,
+    ) {
+        assert!(assert_valid_real_normal3d(up));
+        assert!(assert_valid_real_normal3d(forward));
+
+        // TODO: Implement
+        // TEMP
+        self.write_integer(1, 1);
+        self.write_integer(1, 8);
+        return;
+
+        let dequantized_up: vector3d;
+
+        // Compare the a4 vector with global_up3d
+        // if up.x.abs() >= c_bitstream::epsilon
+        //     || (up.y - 1).abs() >= c_bitstream::epsilon
+        //     || up.z.abs() >= c_bitstream::epsilon
+        // {
+        //     // let quantized_up = quantize_unit_vector3d(up);
+        //     // self.write_bool(false);
+        //     // self.write_integer(quantized_up, 12);
+        //     // dequantize_unit_vector3d(quantized_up, &dequantized_up);
+        //     // Ensure v11 is used properly as a reference or mutable reference if needed
+        // } else {
+        //     self.write_bool(true);
+        //     dequantized_up = vector3d {
+        //         x: 0,
+        //         y: 1,
+        //         z: 0,
+        //     }
+        // }
+        //
+        // let angle = self.axes_to_angle_internal(forward, &dequantized_up);
+        // self.write_quantized_real(angle, -std::f64::consts::PI, std::f64::consts::PI, 8, false, false);
+    }
 }
 
 

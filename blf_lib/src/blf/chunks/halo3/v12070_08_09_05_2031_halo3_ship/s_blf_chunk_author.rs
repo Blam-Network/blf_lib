@@ -41,7 +41,6 @@ impl s_blf_chunk_author {
                 build_number_version: 1,
             },
             build_string: from_string_with_length(T::get_build_string().to_string(), 28).try_into().unwrap(),
-            // TODO: Add Version
             author_name: from_string_with_length(format!("{name} v{version}"), 16).try_into().unwrap(),
         }
     }
