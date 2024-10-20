@@ -56,13 +56,13 @@ pub fn quantize_real_point3d(
         else if point.y < bounds.y.lower { bounds.y.lower }
         else { point.y };
     let bounded_z =
-        if point.y > bounds.z.upper { bounds.z.upper }
+        if point.z > bounds.z.upper { bounds.z.upper }
         else if point.z < bounds.z.lower { bounds.z.lower }
         else { point.z };
 
     quantized_point.x = quantize_real(bounded_x, bounds.x.lower, bounds.x.upper, axis_encoding_bit_count, false, false);
-    quantized_point.y = quantize_real(bounded_x, bounds.y.lower, bounds.y.upper, axis_encoding_bit_count, false, false);
-    quantized_point.z = quantize_real(bounded_x, bounds.z.lower, bounds.z.upper, axis_encoding_bit_count, false, false);
+    quantized_point.y = quantize_real(bounded_y, bounds.y.lower, bounds.y.upper, axis_encoding_bit_count, false, false);
+    quantized_point.z = quantize_real(bounded_z, bounds.z.lower, bounds.z.upper, axis_encoding_bit_count, false, false);
 }
 
 pub fn quantize_real(value: f32, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool, a6: bool) -> i32 {
@@ -91,7 +91,7 @@ pub fn quantize_real(value: f32, min_value: f32, max_value: f32, size_in_bits: u
     quantized_value
 }
 
-pub fn dequantize_real(value: u32, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool, a6: bool) -> f32 {
+pub fn dequantize_real(value: i32, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool, a6: bool) -> f32 {
     assert!(size_in_bits > 0, "size_in_bits>0");
     assert!(max_value > min_value, "max_value>min_value");
     assert!(!exact_midpoint || size_in_bits > 1, "!exact_midpoint || size_in_bits>1");
@@ -102,10 +102,11 @@ pub fn dequantize_real(value: u32, min_value: f32, max_value: f32, size_in_bits:
     }
     assert!(step_count > 0, "step_count>0");
 
-    let value_f32 = if value > 0 {
+    let value_f32 = if value != 0 {
         if value < step_count {
-            let ratio = value as f32 / step_count as f32;
-            min_value * (1.0 - ratio) + max_value * ratio
+            (((step_count - value) as f32 * min_value)
+                + (value as f32 * max_value))
+                / step_count as f32
         } else {
             max_value
         }
@@ -114,8 +115,7 @@ pub fn dequantize_real(value: u32, min_value: f32, max_value: f32, size_in_bits:
     };
 
     if exact_midpoint && 2 * value == step_count {
-        let midpoint = (min_value + max_value) * 0.5;
-        assert!(value_f32 != midpoint, "value==(max_value+min_value)/2");
+        assert!(value_f32 == (min_value + max_value) / 2.0, "value==(max_value+min_value)/2");
     }
 
     value_f32
@@ -236,7 +236,7 @@ pub fn normalize3d(a1: &mut vector3d) -> f32 {
     magnitude
 }
 
-pub fn dequantize_unit_vector3d(value: u32, vector: &mut vector3d) {
+pub fn dequantize_unit_vector3d(value: i32, vector: &mut vector3d) {
     let face = value & 7;
     let x = dequantize_real(value >> 3, -1.0, 1.0, 8, true, false);
     let y = dequantize_real(value >> 11, -1.0, 1.0, 8, true, false);
@@ -293,7 +293,7 @@ pub fn valid_real(value: f32) -> bool {
 }
 
 pub fn valid_realcmp(a1: f32, a2: f32) -> bool {
-    valid_real(a1 - a2) && (a1 - a2).abs() > k_test_real_epsilon
+    valid_real(a1 - a2) && (a1 - a2).abs() < k_test_real_epsilon
 }
 
 pub fn valid_real_vector3d_axes3(forward: &vector3d, left: &vector3d, up: &vector3d) -> bool {

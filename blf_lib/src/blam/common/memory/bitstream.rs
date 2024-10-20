@@ -289,6 +289,17 @@ impl<'a> c_bitstream<'a> {
         }
     }
 
+    pub fn write_signed_integer(&mut self, value: i32, size_in_bits: usize) {
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
+                self.write_bits_internal(&value.to_le_bytes(), size_in_bits);
+            }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
+                self.write_bits_internal(&value.to_be_bytes(), size_in_bits);
+            }
+        }
+    }
+
     pub fn write_bool(&mut self, value: bool) {
         self.write_integer(if value { 1 } else { 0 }, 1);
     }
@@ -308,10 +319,6 @@ impl<'a> c_bitstream<'a> {
     pub fn write_raw_data(&mut self, value: &[u8], size_in_bits: usize) {
         assert!(value.len() >= size_in_bits / 8);
         self.write_bits_internal(value, size_in_bits);
-    }
-
-    pub fn write_signed_integer(value: i32, size_in_bits: u8) {
-        unimplemented!()
     }
 
     pub fn write_qword(&mut self, value: u64, size_in_bits: usize) {
@@ -402,9 +409,9 @@ impl<'a> c_bitstream<'a> {
         assert!(point.y < 1 << axis_encoding_size_in_bits);
         assert!(point.z < 1 << axis_encoding_size_in_bits);
 
-        self.write_integer(point.x as u32, axis_encoding_size_in_bits);
-        self.write_integer(point.y as u32, axis_encoding_size_in_bits);
-        self.write_integer(point.z as u32, axis_encoding_size_in_bits);
+        self.write_signed_integer(point.x, axis_encoding_size_in_bits);
+        self.write_signed_integer(point.y, axis_encoding_size_in_bits);
+        self.write_signed_integer(point.z, axis_encoding_size_in_bits);
     }
 
     pub fn write_quantized_real(&mut self, value: f32, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool, exact_endpoints: bool) {
@@ -628,23 +635,31 @@ impl<'a> c_bitstream<'a> {
 
         let mut dequantized_up: vector3d = vector3d::default();
 
+        let i_abs = (up.i - global_up3d.i).abs();
+        let j_abs = (up.j - global_up3d.j).abs();
+        let k_abs = (up.k - global_up3d.k).abs();
+
         // Compare the a4 vector with global_up3d
-        if (up.i - global_up3d.i).abs() >= k_real_epsilon
-            || (up.j - global_up3d.j).abs() >= k_real_epsilon
-            || (up.k - global_up3d.k).abs() >= k_real_epsilon
+        if i_abs > k_real_epsilon
+            || j_abs > k_real_epsilon
+            || k_abs > k_real_epsilon
         {
             let quantized_up = quantize_unit_vector3d(up);
             self.write_bool(false); // up-is-global-up3d
-            self.write_integer(quantized_up as u32, 12);
-            dequantize_unit_vector3d(quantized_up as u32, &mut dequantized_up);
-            // Ensure v11 is used properly as a reference or mutable reference if needed
+            self.write_integer(quantized_up as u32, 19);
+            dequantize_unit_vector3d(quantized_up, &mut dequantized_up);
         } else {
-            self.write_bool(true);
+            self.write_bool(true); // up-is-global-up3d
             dequantized_up = global_up3d.clone();
         }
 
         let angle = c_bitstream::axes_to_angle_internal(forward, &dequantized_up);
         self.write_quantized_real(angle, -std::f32::consts::PI, std::f32::consts::PI, 8, false, false);
+    }
+
+    // not from blam
+    pub fn get_current_offset(&self) -> usize {
+        self.m_bitstream_data.current_stream_byte_position
     }
 }
 
