@@ -117,7 +117,7 @@ impl c_map_variant {
         }
 
         for i in 0..k_object_type_count {
-            bitstream.write_signed_integer(self.m_object_type_start_index[i] as i32, 9);
+            bitstream.write_signed_integer(self.m_object_type_start_index[i] as i32 + 1, 9);
         }
 
         for i in 0..self.m_number_of_placeable_object_quotas as usize {
