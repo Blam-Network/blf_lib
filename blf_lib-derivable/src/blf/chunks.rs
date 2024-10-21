@@ -24,12 +24,8 @@ pub trait SerializableBlfChunk: DynamicBlfChunk {
             chunk_size: (encoded_chunk.len() + s_blf_header::size()) as u32,
         };
 
-        let bincode_config = bincode::config::standard()
-            .with_fixed_int_encoding()
-            .with_big_endian();
-
         let mut encoded = Vec::with_capacity(s_blf_header::size() + encoded_chunk.len());
-        encoded.append(&mut bincode::encode_to_vec(header, bincode_config).unwrap());
+        encoded.append(&mut header.encode());
         encoded.append(&mut encoded_chunk);
 
         encoded

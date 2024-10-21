@@ -1,11 +1,10 @@
 #![allow(non_camel_case_types)]
 
-use bincode::{Decode, Encode};
-
+use std::ffi::c_char;
 use crate::types::chunk_signature::chunk_signature;
 use crate::types::chunk_version::chunk_version;
 
-#[derive(Default, Encode, Decode)]
+#[derive(Default)]
 pub struct s_blf_header
 {
     pub signature: chunk_signature,
@@ -23,19 +22,36 @@ impl s_blf_header {
     }
 
     pub fn encode(&self) -> Vec<u8> {
-        let bincode_config = bincode::config::standard()
-            .with_fixed_int_encoding()
-            .with_big_endian();
-
-        bincode::encode_to_vec(self, bincode_config).unwrap()
+        let mut result = Vec::<u8>::with_capacity(Self::size());
+        result.extend_from_slice(&self.signature.as_bytes());
+        result.extend_from_slice(&self.chunk_size.to_be_bytes());
+        result.extend_from_slice(&self.version.major.to_be_bytes());
+        result.extend_from_slice(&self.version.minor.to_be_bytes());
+        result
     }
 
     pub fn decode(data: &[u8]) -> s_blf_header {
-        let bincode_config = bincode::config::standard()
-            .with_fixed_int_encoding()
-            .with_big_endian();
+        assert_eq!(data.len(), Self::size());
 
-        bincode::decode_from_slice(data, bincode_config).unwrap().0
+        let signature = chunk_signature::new([
+            data[0] as c_char,
+            data[1] as c_char,
+            data[2] as c_char,
+            data[3] as c_char,
+        ]);
+
+        let chunk_size = u32::from_be_bytes(data[4..8].try_into().unwrap());
+
+        let version = chunk_version {
+            major: u16::from_be_bytes(data[8..10].try_into().unwrap()),
+            minor: u16::from_be_bytes(data[10..12].try_into().unwrap()),
+        };
+
+        Self {
+            signature,
+            chunk_size,
+            version
+        }
     }
 
     pub const fn size() -> usize {

@@ -1,6 +1,5 @@
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::io::Cursor;
-use bincode::{Decode, Encode};
 use serde::{Deserializer, Serialize, Serializer};
 use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib_derivable::io::endian::Endianness;
@@ -10,7 +9,7 @@ use widestring::U16CString;
 use crate::types::array::Array;
 use serde::de::Error;
 
-#[derive(PartialEq, Debug, Clone, Encode, Decode, Default)]
+#[derive(PartialEq, Debug, Clone, Default)]
 pub struct ByteLimitedWcharString<const N: usize> {
     buf: Array<u16, N>,
 }

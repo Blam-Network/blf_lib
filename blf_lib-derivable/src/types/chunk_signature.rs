@@ -1,8 +1,7 @@
 use std::ffi::c_char;
 use std::fmt::{Display, Formatter, Result};
-use bincode::{Decode, Encode};
 
-#[derive(Clone, Copy, Default, Debug, Encode, Decode, PartialEq)]
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct chunk_signature {
     value: [c_char; 4],
 }
@@ -12,6 +11,15 @@ impl chunk_signature {
         chunk_signature {
             value,
         }
+    }
+
+    pub fn as_bytes(&self) -> [u8; 4] {
+        [
+            self.value[0] as u8,
+            self.value[1] as u8,
+            self.value[2] as u8,
+            self.value[3] as u8,
+        ]
     }
 
     pub fn from_string(value: &str) -> chunk_signature {

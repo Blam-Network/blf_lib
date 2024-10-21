@@ -1,6 +1,5 @@
-use bincode::{Decode, Encode};
 
-#[derive(Clone, Copy, Default, Debug, Encode, Decode, PartialEq)]
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct chunk_version {
     pub major: u16,
     pub minor: u16,

@@ -11,7 +11,7 @@ use std::cmp::min;
 use std::mem;
 use libc::wchar_t;
 use widestring::U16CString;
-use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, quantize_unit_vector3d, valid_real_vector3d_axes3, arctangent};
+use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, valid_real_vector3d_axes3, arctangent, quantize_normalized_vector3d, k_pi};
 use crate::blam::common::math::integer_math::int32_point3d;
 use crate::blam::common::math::real_math::{quantize_real, vector3d};
 use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
@@ -644,7 +644,7 @@ impl<'a> c_bitstream<'a> {
             || j_abs > k_real_epsilon
             || k_abs > k_real_epsilon
         {
-            let quantized_up = quantize_unit_vector3d(up);
+            let quantized_up = quantize_normalized_vector3d(up);
             self.write_bool(false); // up-is-global-up3d
             self.write_integer(quantized_up as u32, 19);
             dequantize_unit_vector3d(quantized_up, &mut dequantized_up);
@@ -654,7 +654,7 @@ impl<'a> c_bitstream<'a> {
         }
 
         let forward_angle = c_bitstream::axes_to_angle_internal(forward, &dequantized_up);
-        self.write_quantized_real(forward_angle, -3.1415927, 3.1415927, 8, true, false);
+        self.write_quantized_real(forward_angle, -k_pi, k_pi, 8, true, false);
     }
 
     // not from blam

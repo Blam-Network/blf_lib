@@ -1,6 +1,5 @@
 use std::ffi::CStr;
 use std::io::Cursor;
-use bincode::{Decode, Encode};
 use serde::{Deserializer, Serialize, Serializer};
 use serde::de::Error;
 use blf_lib::io::packed_decoding::PackedDecoder;
@@ -8,7 +7,7 @@ use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::Packing;
 use crate::io::packed_encoding::PackedEncoder;
 
-#[derive(PartialEq, Debug, Clone, Encode, Decode, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub struct ByteLimitedUTF8String<const N: usize> {
     buf: [u8; N],
 }

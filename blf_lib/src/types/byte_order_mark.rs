@@ -1,8 +1,7 @@
-use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use blf_lib_derive::PackedSerialize;
 
-#[derive(Clone, Copy, Encode, Decode, Debug, PartialEq, PackedSerialize, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, PackedSerialize, Serialize, Deserialize)]
 pub struct byte_order_mark {
     pub value: u16,
 }

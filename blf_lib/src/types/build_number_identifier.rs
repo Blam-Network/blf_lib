@@ -1,8 +1,7 @@
 use std::fmt::{Display, Formatter, Result};
-use bincode::{Decode, Encode};
 use blf_lib_derive::PackedSerialize;
 
-#[derive(Clone, Copy, Encode, Decode, Debug, PartialEq, Default, PackedSerialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Default, PackedSerialize)]
 pub struct build_number_identifier {
     pub build_number_version: u32,
     pub build_number: u32,

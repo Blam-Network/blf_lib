@@ -1,13 +1,12 @@
 use std::io::Cursor;
 use std::ops::Index;
-use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib::io::packed_encoding::PackedEncoder;
 use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::Packing;
 
-#[derive(PartialEq, Debug, Encode, Decode, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct Array<E: 'static, const N: usize> {
     _data: Vec<E> // 1984
 }

@@ -145,6 +145,7 @@ pub fn dot_product3d(a1: &vector3d, a2: &vector3d) -> f32 {
 
 pub const k_test_real_epsilon: f32 = 0.001;
 pub const k_real_epsilon: f32 = 0.0001;
+pub const k_pi: f32 = 3.1415927;
 
 pub const global_up3d: vector3d = vector3d {
     i: 0f32,
