@@ -164,14 +164,12 @@ pub const global_left3d: vector3d = vector3d {
     k: 0f32,
 };
 
-// Not sure exactly on this function name
-pub fn quantize_unit_vector3d(vector: &vector3d) -> i32 {
+pub fn quantize_normalized_vector3d(vector: &vector3d) -> i32 {
     assert!(assert_valid_real_normal3d(vector));
 
-    let mut largest_axis = 0;
-    let mut axis_code: u8 = 3;
-    let mut u = 0.0;
-    let mut v = 0.0;
+    let mut axis_code: u8;
+    let u: f32;
+    let v: f32;
     let negative: bool;
     let positive_code: u8;
 
@@ -182,25 +180,13 @@ pub fn quantize_unit_vector3d(vector: &vector3d) -> i32 {
     let j = vector.j;
     let k = vector.k;
 
-    if ( i_abs <= j_abs )
-    {
-        if ( j_abs > k_abs )
-        {
-            axis_code = 4;
-            negative = j <= 0.0;
-            positive_code = 1;
-            u = i / j_abs;
-            v = k / j_abs;
-        } else {
-            negative = k <= 0.0;
-            positive_code = 2;
-            axis_code = 5;
-            v = j / k_abs;
-            u = i / k_abs;
-        }
-    }
-    else if ( i_abs > k_abs )
-    {
+    if i_abs <= j_abs && j_abs > k_abs {
+        axis_code = 4;
+        negative = j <= 0.0;
+        positive_code = 1;
+        u = i / j_abs;
+        v = k / j_abs;
+    } else if i_abs > j_abs && i_abs > k_abs {
         positive_code = 0;
         axis_code = 3;
         negative = i <= 0.0;
@@ -214,7 +200,7 @@ pub fn quantize_unit_vector3d(vector: &vector3d) -> i32 {
         u = i / k_abs;
     }
 
-    if (!negative) {
+    if !negative {
         axis_code = positive_code;
     }
 

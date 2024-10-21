@@ -1,5 +1,4 @@
 use blf_lib::blam::common::memory::bitstream::e_bitstream_byte_order;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_map_variant;
 use crate::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
 use blf_lib::blf_chunk;
 use blf_lib_derivable::blf::chunks::SerializableBlfChunk;

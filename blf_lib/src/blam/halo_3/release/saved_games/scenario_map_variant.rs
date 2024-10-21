@@ -1,4 +1,3 @@
-use bincode::config::BigEndian;
 use serde::{Deserialize, Serialize};
 use blf_lib::blam::common::memory::bitstream::c_bitstream;
 use blf_lib::TEST_BIT;
@@ -47,7 +46,7 @@ impl c_map_variant {
         bitstream.write_integer(self.m_number_of_variant_objects as u32, 10);
         bitstream.write_integer(self.m_number_of_placeable_object_quotas as u32, 9);
         bitstream.write_integer(self.m_map_id, 32);
-        bitstream.write_integer(if self.m_built_in { 1 } else { 0 }, 1);
+        bitstream.write_bool(self.m_built_in);
         bitstream.write_raw_data(self.m_world_bounds.encode_packed(Endianness::Big, PACK1).as_slice(), 0xC0);
         bitstream.write_integer(self.m_game_engine_subtype, 4);
         bitstream.write_float(self.m_maximum_budget, 32);
@@ -58,33 +57,32 @@ impl c_map_variant {
 
             if variant_object.flags & 0x3FF == 0 // 0x3FF is 10 bits, there's 10 flags. If none are set...
             {
-                bitstream.write_integer(0, 1); // variant_object_exists
+                bitstream.write_bool(false); // variant_object_exists
             }
             else
             {
-                bitstream.write_integer(1, 1); // variant_object_exists
+                bitstream.write_bool(true); // variant_object_exists
                 bitstream.write_integer(variant_object.flags as u32, 16);
                 bitstream.write_integer(variant_object.variant_quota_index as u32, 32);
 
                 if TEST_BIT!(variant_object.flags, 8) // spawns relative
                 {
-                    bitstream.write_integer(1, 1); // parent-object-exists
+                    bitstream.write_bool(true); // parent-object-exists
                     bitstream.write_raw_data(variant_object.parent_object_identifier.encode_packed(Endianness::Big, PACK1).as_slice(), 64);
                 }
                 else
                 {
-                    bitstream.write_integer(0, 1); // parent-object-exists
+                    bitstream.write_bool(false); // parent-object-exists
                 }
 
                 if !TEST_BIT!(variant_object.flags, 1) && i < self.m_number_of_scenario_objects as usize  //edited
                 {
-                    bitstream.write_integer(0, 1);
+                    bitstream.write_bool(false);
                 }
                 else
                 {
-                    bitstream.write_integer(1, 1);
+                    bitstream.write_bool(true);
                     simulation_write_quantized_position(bitstream, &variant_object.position, 16, false, &self.m_world_bounds);
-                    bitstream.write_axes(&variant_object.up, &variant_object.forward);
                     bitstream.write_axes(&variant_object.forward, &variant_object.up);
                     bitstream.write_integer(variant_object.multiplayer_game_object_properties.object_type as u32, 8);
                     bitstream.write_integer(variant_object.multiplayer_game_object_properties.symmetry_placement_flags as u32, 8);

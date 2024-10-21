@@ -12,9 +12,8 @@ use std::mem;
 use libc::wchar_t;
 use widestring::U16CString;
 use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, quantize_unit_vector3d, valid_real_vector3d_axes3, arctangent};
-use blf_lib::io::packed_encoding::PackedEncoder;
 use crate::blam::common::math::integer_math::int32_point3d;
-use crate::blam::common::math::real_math::{k_test_real_epsilon, quantize_real, vector3d};
+use crate::blam::common::math::real_math::{quantize_real, vector3d};
 use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
 
 #[derive(Default, PartialEq, Eq, Debug)]
@@ -641,24 +640,21 @@ impl<'a> c_bitstream<'a> {
         let j_abs = (up.j - global_up3d.j).abs();
         let k_abs = (up.k - global_up3d.k).abs();
 
-        // Compare the a4 vector with global_up3d
         if i_abs > k_real_epsilon
             || j_abs > k_real_epsilon
             || k_abs > k_real_epsilon
         {
             let quantized_up = quantize_unit_vector3d(up);
             self.write_bool(false); // up-is-global-up3d
-            self.write_integer(quantized_up as u32, 19); // correct, as is quantized_up
+            self.write_integer(quantized_up as u32, 19);
             dequantize_unit_vector3d(quantized_up, &mut dequantized_up);
         } else {
             self.write_bool(true); // up-is-global-up3d
             dequantized_up = global_up3d.clone();
         }
 
-        // angle may be bad
-        let angle = c_bitstream::axes_to_angle_internal(forward, &dequantized_up);
-        // this is fine
-        self.write_quantized_real(angle, -3.1415927, 3.1415927, 8, true, false);
+        let forward_angle = c_bitstream::axes_to_angle_internal(forward, &dequantized_up);
+        self.write_quantized_real(forward_angle, -3.1415927, 3.1415927, 8, true, false);
     }
 
     // not from blam
