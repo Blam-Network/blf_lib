@@ -135,8 +135,7 @@ pub fn assert_valid_real_normal3d(vector: &vector3d) -> bool {
 }
 
 pub fn arctangent(a1: f32, a2: f32) -> f32 {
-    let result = a1.atan2(a2);
-    result
+    a1.atan2(a2)
 }
 
 pub fn dot_product3d(a1: &vector3d, a2: &vector3d) -> f32 {
@@ -210,36 +209,36 @@ pub fn square_root(value: f32) -> f32 {
 }
 
 pub fn magnitude_squared3d(a1: &vector3d) -> f32 {
-    a1.i * a1.i + a1.j * a1.j + a1.k * a1.k
+    (a1.i * a1.i) + (a1.j * a1.j) + (a1.k * a1.k)
 }
 
 fn magnitude3d(vector: &vector3d) -> f32 {
     square_root(magnitude_squared3d(vector))
 }
 
-fn scale_vector3d(a1: &mut vector3d, scale: f32) {
-    a1.i *= scale;
-    a1.j *= scale;
-    a1.k *= scale;
+fn scale_vector3d(vector: &mut vector3d, scale: f32) {
+    vector.i *= scale;
+    vector.j *= scale;
+    vector.k *= scale;
 }
 
-pub fn normalize3d(a1: &mut vector3d) -> f32 {
-    let mut magnitude = magnitude3d(a1);
+pub fn normalize3d(vector: &mut vector3d) -> f32 {
+    let mut result = magnitude3d(vector);
 
-    if (magnitude - 0.0).abs() < k_real_epsilon {
-        magnitude = 0.0;
+    if result.abs() >= k_real_epsilon {
+        let scale = 1.0 / result;
+        scale_vector3d(vector, scale);
     } else {
-        let scale = 1.0 / magnitude;
-        scale_vector3d(a1, scale);
+        result = 0.0;
     }
 
-    magnitude
+    result
 }
 
 pub fn dequantize_unit_vector3d(value: i32, vector: &mut vector3d) {
     let face = value & 7;
-    let x = dequantize_real(value >> 3, -1.0, 1.0, 8, true, false);
-    let y = dequantize_real(value >> 11, -1.0, 1.0, 8, true, false);
+    let x = dequantize_real((value >> 3) as u8 as i32, -1.0, 1.0, 8, true, false);
+    let y = dequantize_real((value >> 11) as u8 as i32, -1.0, 1.0, 8, true, false);
 
     match face {
         0 => {
@@ -273,9 +272,7 @@ pub fn dequantize_unit_vector3d(value: i32, vector: &mut vector3d) {
             vector.k = -1.0;
         }
         _ => {
-            vector.i = global_up3d.i;
-            vector.i = global_up3d.j;
-            vector.k = global_up3d.k;
+            panic!("dequantize_unit_vector3d: bad face value {face} when reading unit vector");
         }
     }
 

@@ -14,7 +14,7 @@ use widestring::U16CString;
 use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, quantize_unit_vector3d, valid_real_vector3d_axes3, arctangent};
 use blf_lib::io::packed_encoding::PackedEncoder;
 use crate::blam::common::math::integer_math::int32_point3d;
-use crate::blam::common::math::real_math::{quantize_real, vector3d};
+use crate::blam::common::math::real_math::{k_test_real_epsilon, quantize_real, vector3d};
 use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
 
 #[derive(Default, PartialEq, Eq, Debug)]
@@ -416,7 +416,7 @@ impl<'a> c_bitstream<'a> {
 
     pub fn write_quantized_real(&mut self, value: f32, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool, exact_endpoints: bool) {
         assert!(self.writing());
-        self.write_integer(quantize_real(value, min_value, max_value, size_in_bits, exact_midpoint, exact_endpoints) as u32, size_in_bits);
+        self.write_signed_integer(quantize_real(value, min_value, max_value, size_in_bits, exact_midpoint, exact_endpoints), size_in_bits);
     }
 
     pub fn write_secure_address(address: &s_transport_secure_address) {
@@ -600,21 +600,23 @@ impl<'a> c_bitstream<'a> {
     ) {
         assert!(assert_valid_real_normal3d(up));
 
-        let v10 = dot_product3d(up, &global_forward3d);
-        let v9 = dot_product3d(up, &global_left3d);
-        let v5 = v10.abs();
+        let v10 = dot_product3d(up, &global_forward3d).abs();
+        let v9 = dot_product3d(up, &global_left3d).abs();
 
-        if v5 >= v9.abs() {
+        if v10 >= v9 {
             cross_product3d(&global_left3d, up, forward_reference);
         } else {
-            cross_product3d(up, &global_up3d, forward_reference);
+            cross_product3d(up, &global_forward3d, forward_reference);
         }
 
-        assert!(normalize3d(forward_reference) > k_real_epsilon, "forward_magnitude>k_real_epsilon");
+        let forward_magnitude = normalize3d(forward_reference);
+        assert!(forward_magnitude > k_real_epsilon, "forward_magnitude>k_real_epsilon");
 
         cross_product3d(up, forward_reference, left_reference);
 
-        assert!(normalize3d(left_reference) > k_real_epsilon, "left_magnitude>k_real_epsilon");
+        let left_magnitude = normalize3d(left_reference);
+        assert!(left_magnitude > k_real_epsilon, "left_magnitude>k_real_epsilon");
+
         assert!(valid_real_vector3d_axes3(forward_reference, left_reference, up)); // Failing
     }
 
@@ -622,7 +624,7 @@ impl<'a> c_bitstream<'a> {
         let mut forward: vector3d = vector3d::default();
         let mut left: vector3d = vector3d::default();
         c_bitstream::axes_compute_reference_internal(up, &mut forward, &mut left);
-        arctangent(dot_product3d(&forward, &a1), dot_product3d(&left, &a1))
+        arctangent(dot_product3d(&left, &a1), dot_product3d(&forward, &a1))
     }
 
     pub fn write_axes(
@@ -646,15 +648,18 @@ impl<'a> c_bitstream<'a> {
         {
             let quantized_up = quantize_unit_vector3d(up);
             self.write_bool(false); // up-is-global-up3d
-            self.write_integer(quantized_up as u32, 19);
+            self.write_integer(quantized_up as u32, 19); // correct, as is quantized_up
+            // dequantized_up may be bad
             dequantize_unit_vector3d(quantized_up, &mut dequantized_up);
         } else {
             self.write_bool(true); // up-is-global-up3d
             dequantized_up = global_up3d.clone();
         }
 
+        // angle may be bad
         let angle = c_bitstream::axes_to_angle_internal(forward, &dequantized_up);
-        self.write_quantized_real(angle, -std::f32::consts::PI, std::f32::consts::PI, 8, false, false);
+        // this is fine
+        self.write_quantized_real(angle, -std::f32::consts::PI, std::f32::consts::PI, 8, true, false);
     }
 
     // not from blam
