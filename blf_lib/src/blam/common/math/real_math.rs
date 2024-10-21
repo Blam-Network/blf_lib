@@ -169,29 +169,53 @@ pub fn quantize_unit_vector3d(vector: &vector3d) -> i32 {
     assert!(assert_valid_real_normal3d(vector));
 
     let mut largest_axis = 0;
-    let mut axis_code: i32 = 3;
+    let mut axis_code: u8 = 3;
     let mut u = 0.0;
     let mut v = 0.0;
+    let negative: bool;
+    let positive_code: u8;
 
-    let abs_x = vector.i.abs();
-    let abs_y = vector.j.abs();
-    let abs_z = vector.k.abs();
+    let i_abs = vector.i.abs();
+    let j_abs = vector.j.abs();
+    let k_abs = vector.k.abs();
+    let i = vector.i;
+    let j = vector.j;
+    let k = vector.k;
 
-    if abs_x > abs_y && abs_x > abs_z {
-        largest_axis = 0;
-        axis_code = if vector.i > 0.0 { 3 } else { 0 };
-        u = vector.j / abs_x;
-        v = vector.k / abs_x;
-    } else if abs_y > abs_z {
-        largest_axis = 1;
-        axis_code = if vector.j > 0.0 { 4 } else { 1 };
-        u = vector.i / abs_y;
-        v = vector.k / abs_y;
+    if ( i_abs <= j_abs )
+    {
+        if ( j_abs > k_abs )
+        {
+            axis_code = 4;
+            negative = j <= 0.0;
+            positive_code = 1;
+            u = i / j_abs;
+            v = k / j_abs;
+        } else {
+            negative = k <= 0.0;
+            positive_code = 2;
+            axis_code = 5;
+            v = j / k_abs;
+            u = i / k_abs;
+        }
+    }
+    else if ( i_abs > k_abs )
+    {
+        positive_code = 0;
+        axis_code = 3;
+        negative = i <= 0.0;
+        u = j / i_abs;
+        v = k / i_abs;
     } else {
-        largest_axis = 2;
-        axis_code = if vector.k > 0.0 { 5 } else { 2 };
-        u = vector.i / abs_z;
-        v = vector.j / abs_z;
+        negative = k <= 0.0;
+        positive_code = 2;
+        axis_code = 5;
+        v = j / k_abs;
+        u = i / k_abs;
+    }
+
+    if (!negative) {
+        axis_code = positive_code;
     }
 
     assert!(u >= -1.0 && u <= 1.0);
@@ -200,7 +224,7 @@ pub fn quantize_unit_vector3d(vector: &vector3d) -> i32 {
     let quantized_u = quantize_real(u, -1.0, 1.0, 8, true, false);
     let quantized_v = quantize_real(v, -1.0, 1.0, 8, true, false);
 
-    let result = axis_code | (quantized_u << 3) | (quantized_v << 11);
+    let result = axis_code as i32 | (quantized_u << 3) | (quantized_v << 11);
 
     result
 }
