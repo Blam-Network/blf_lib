@@ -620,11 +620,11 @@ impl<'a> c_bitstream<'a> {
         assert!(valid_real_vector3d_axes3(forward_reference, left_reference, up)); // Failing
     }
 
-    fn axes_to_angle_internal(a1: &vector3d, up: &vector3d) -> f32 {
-        let mut forward: vector3d = vector3d::default();
-        let mut left: vector3d = vector3d::default();
-        c_bitstream::axes_compute_reference_internal(up, &mut forward, &mut left);
-        arctangent(dot_product3d(&left, &a1), dot_product3d(&forward, &a1))
+    fn axes_to_angle_internal(forward: &vector3d, up: &vector3d) -> f32 {
+        let mut forward_reference: vector3d = vector3d::default();
+        let mut left_reference: vector3d = vector3d::default();
+        c_bitstream::axes_compute_reference_internal(up, &mut forward_reference, &mut left_reference);
+        arctangent(dot_product3d(&left_reference, &forward), dot_product3d(&forward_reference, &forward))
     }
 
     pub fn write_axes(
@@ -649,7 +649,6 @@ impl<'a> c_bitstream<'a> {
             let quantized_up = quantize_unit_vector3d(up);
             self.write_bool(false); // up-is-global-up3d
             self.write_integer(quantized_up as u32, 19); // correct, as is quantized_up
-            // dequantized_up may be bad
             dequantize_unit_vector3d(quantized_up, &mut dequantized_up);
         } else {
             self.write_bool(true); // up-is-global-up3d
@@ -659,7 +658,7 @@ impl<'a> c_bitstream<'a> {
         // angle may be bad
         let angle = c_bitstream::axes_to_angle_internal(forward, &dequantized_up);
         // this is fine
-        self.write_quantized_real(angle, -std::f32::consts::PI, std::f32::consts::PI, 8, true, false);
+        self.write_quantized_real(angle, -3.1415927, 3.1415927, 8, true, false);
     }
 
     // not from blam

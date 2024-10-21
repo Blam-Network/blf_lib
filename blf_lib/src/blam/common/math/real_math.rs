@@ -91,7 +91,7 @@ pub fn quantize_real(value: f32, min_value: f32, max_value: f32, size_in_bits: u
     quantized_value
 }
 
-pub fn dequantize_real(value: i32, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool, a6: bool) -> f32 {
+pub fn dequantize_real(quantized: i32, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool) -> f32 {
     assert!(size_in_bits > 0, "size_in_bits>0");
     assert!(max_value > min_value, "max_value>min_value");
     assert!(!exact_midpoint || size_in_bits > 1, "!exact_midpoint || size_in_bits>1");
@@ -102,23 +102,24 @@ pub fn dequantize_real(value: i32, min_value: f32, max_value: f32, size_in_bits:
     }
     assert!(step_count > 0, "step_count>0");
 
-    let value_f32 = if value != 0 {
-        if value < step_count {
-            (((step_count - value) as f32 * min_value)
-                + (value as f32 * max_value))
-                / step_count as f32
-        } else {
-            max_value
+    let dequantized: f32;
+
+    if quantized != 0 {
+        if quantized < step_count {
+            dequantized = (((step_count - quantized) as f32 * min_value) + (quantized as f32 * max_value)) / step_count as f32;
+        }
+        else {
+            dequantized = max_value;
         }
     } else {
-        min_value
-    };
-
-    if exact_midpoint && 2 * value == step_count {
-        assert!(value_f32 == (min_value + max_value) / 2.0, "value==(max_value+min_value)/2");
+        dequantized = min_value;
     }
 
-    value_f32
+    if exact_midpoint && 2 * quantized == step_count {
+        assert!(dequantized == (min_value + max_value) / 2.0, "value==(max_value+min_value)/2");
+    }
+
+    dequantized
 }
 
 pub fn assert_valid_real_normal3d(vector: &vector3d) -> bool {
@@ -237,8 +238,8 @@ pub fn normalize3d(vector: &mut vector3d) -> f32 {
 
 pub fn dequantize_unit_vector3d(value: i32, vector: &mut vector3d) {
     let face = value & 7;
-    let x = dequantize_real((value >> 3) as u8 as i32, -1.0, 1.0, 8, true, false);
-    let y = dequantize_real((value >> 11) as u8 as i32, -1.0, 1.0, 8, true, false);
+    let x = dequantize_real((value >> 3) as u8 as i32, -1.0, 1.0, 8, true);
+    let y = dequantize_real((value >> 11) as u8 as i32, -1.0, 1.0, 8, true);
 
     match face {
         0 => {
