@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use blf_lib::blam::common::memory::bitstream::c_bitstream;
+use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib_derive::PackedSerialize;
 use crate::types::byte_limited_utf8_string::ByteLimitedUTF8String;
 use crate::types::byte_limited_wchar_string::ByteLimitedWcharString;
@@ -38,12 +38,12 @@ pub struct s_content_item_metadata {
     map_id: u32,
     game_engine_type: u32,
     campaign_difficulty: i32,
-    hopper_id: i8,
+    hopper_id: i16,
     game_id: u64,
 }
 
 impl s_content_item_metadata {
-    pub fn encode(&self, bitstream: &mut c_bitstream) {
+    pub fn encode(&self, bitstream: &mut c_bitstream_writer) {
         bitstream.write_qword(self.unique_id, 64);
         bitstream.write_string_wchar(&self.name.get_string(), 32);
         bitstream.write_string_utf8(&self.description.get_string(), 128);
@@ -60,5 +60,24 @@ impl s_content_item_metadata {
         bitstream.write_signed_integer(self.campaign_difficulty + 1, 3);
         bitstream.write_integer(self.hopper_id as u32, 16);
         bitstream.write_qword(self.game_id, 64);
+    }
+
+    pub fn decode(&mut self, bitstream: &mut c_bitstream_reader) {
+        self.unique_id = bitstream.read_qword(64);
+        self.name.set_string(&bitstream.read_string_whar(32)).unwrap();
+        self.description.set_string(&bitstream.read_string_utf8(128)).unwrap();
+        self.author.set_string(&bitstream.read_string_utf8(16)).unwrap();
+        self.file_type = bitstream.read_integer(5) - 1;
+        self.author_is_xuid_online = bitstream.read_bool();
+        self.author_id = bitstream.read_qword(64);
+        self.size_in_bytes = bitstream.read_qword(64);
+        self.date = bitstream.read_qword(64);
+        self.length_seconds = bitstream.read_integer(32);
+        self.campaign_id = bitstream.read_signed_integer(32);
+        self.map_id = bitstream.read_integer(32);
+        self.game_engine_type = bitstream.read_integer(4);
+        self.campaign_difficulty = bitstream.read_signed_integer(3) - 1;
+        self.hopper_id = bitstream.read_signed_integer(16) as i16;
+        self.game_id = bitstream.read_qword(64);
     }
 }

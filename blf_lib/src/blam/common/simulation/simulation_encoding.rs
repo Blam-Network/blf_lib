@@ -1,10 +1,10 @@
 use blf_lib::blam::common::math::integer_math::int32_point3d;
 use blf_lib::blam::common::math::real_math::{real_point3d, real_rectangle3d};
-use blf_lib::blam::common::memory::bitstream::c_bitstream;
+use crate::io::bitstream::c_bitstream_writer;
 use crate::blam::common::math::real_math::quantize_real_point3d;
 
 pub fn simulation_write_quantized_position(
-    bitstream: &mut c_bitstream,
+    bitstream: &mut c_bitstream_writer,
     position: &real_point3d,
     bits: usize,
     a4: bool,

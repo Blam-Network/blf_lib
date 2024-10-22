@@ -1,11 +1,3 @@
-// This module is based on ManagedDonkey's bitstream module.
-// It has been significantly altered in moving from C++ to Rust,
-// though most of it's interface is in-tact.
-// https://github.com/twist84/ManagedDonkey/blob/main/game/source/memory/bitstream.cpp
-
-// Changes:
-// - We don't use pointer arithmetic internally, as such m_data_max is removed.
-// - The empty constructor is removed, function overloads are unsupported in Rust.
 
 use std::cmp::min;
 use std::mem;
@@ -15,43 +7,11 @@ use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_p
 use crate::blam::common::math::integer_math::int32_point3d;
 use crate::blam::common::math::real_math::{quantize_real, vector3d};
 use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
+use crate::io::bitstream::{e_bitstream_byte_order, e_bitstream_state, k_bitstream_maximum_position_stack_size, s_bitstream_data};
 
-#[derive(Default, PartialEq, Eq, Debug)]
-pub enum e_bitstream_byte_order
+pub struct c_bitstream_reader<'a>
 {
-    #[default]
-    _bitstream_byte_order_little_endian,
-    _bitstream_byte_order_big_endian
-}
-
-#[derive(Default, PartialEq, Eq, Debug)]
-enum e_bitstream_state
-{
-    #[default]
-    _bitstream_state_initial = 0,
-    _bitstream_state_writing,
-    _bitstream_state_write_finished,
-    _bitstream_state_reading,
-    _bitstream_state_read_only_for_consistency,
-    _bitstream_state_read_finished,
-
-    k_bitstream_state_count
-}
-
-const k_bitstream_maximum_position_stack_size: usize = 4;
-
-#[derive(Default)]
-struct s_bitstream_data {
-    current_memory_bit_position: usize,
-    current_stream_bit_position: usize,
-    window: u64,
-    window_bits_used: usize,
-    current_stream_byte_position: usize, // aka current_memory_byte_position
-}
-
-pub struct c_bitstream<'a>
-{
-    m_data: &'a mut [u8],
+    m_data: &'a [u8],
     // m_data_max: u32, REMOVED
     m_data_size_bytes: usize,
     m_data_size_alignment: u32, // not sure if this is used
@@ -68,13 +28,13 @@ pub struct c_bitstream<'a>
 
 }
 
-impl<'a> c_bitstream<'a> {
+impl<'a> c_bitstream_reader<'a> {
 
     // pub fn new() {}
 
-    pub fn new(data: &mut [u8], byte_order: e_bitstream_byte_order) -> c_bitstream {
+    pub fn new(data: &[u8], byte_order: e_bitstream_byte_order) -> c_bitstream_reader {
         let length = data.len();
-        c_bitstream {
+        c_bitstream_reader {
             m_data: data,
             m_data_size_bytes: length,
             m_data_size_alignment: 1,
@@ -96,16 +56,8 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    pub fn read_signed_integer(size_in_bits: u8) -> u32 {
-        unimplemented!()
-    }
-
-    pub fn read_qword(size_in_bits: u8) -> u64 {
-        unimplemented!()
-    }
-
-    pub fn read_bool() -> bool {
-        unimplemented!()
+    pub fn read_bool(&mut self) -> bool {
+        self.read_integer(1) == 1
     }
 
     pub fn read_bits_internal(&mut self, output: &mut [u8], size_in_bits: usize) {
@@ -225,13 +177,37 @@ impl<'a> c_bitstream<'a> {
 
     pub fn read_integer(&mut self, size_in_bits: usize) -> u32 {
         assert!(size_in_bits > 0);
-        assert!(size_in_bits <= mem::size_of::<u32>() * 8);
+        assert!(size_in_bits <= 32);
         let mut bytes = [0u8; 4];
         self.read_bits_internal(&mut bytes, size_in_bits);
 
         match self.m_byte_order {
             e_bitstream_byte_order::_bitstream_byte_order_little_endian => { u32::from_le_bytes(bytes) }
             e_bitstream_byte_order::_bitstream_byte_order_big_endian => { u32::from_be_bytes(bytes) }
+        }
+    }
+
+    pub fn read_signed_integer(&mut self, size_in_bits: usize) -> i32 {
+        assert!(size_in_bits > 0);
+        assert!(size_in_bits <= 32);
+        let mut bytes = [0u8; 4];
+        self.read_bits_internal(&mut bytes, size_in_bits);
+
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => { i32::from_le_bytes(bytes) }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => { i32::from_be_bytes(bytes) }
+        }
+    }
+
+    pub fn read_qword(&mut self, size_in_bits: usize) -> u64 {
+        assert!(size_in_bits > 0);
+        assert!(size_in_bits <= 64);
+        let mut bytes = [0u8; 8];
+        self.read_bits_internal(&mut bytes, size_in_bits);
+
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => { u64::from_le_bytes(bytes) }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => { u64::from_be_bytes(bytes) }
         }
     }
 
@@ -259,12 +235,43 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    pub fn read_string_utf8(_string: &mut String, max_string_size: u8) {
-        unimplemented!()
+    // differs from blam API
+    pub fn read_string_utf8(&mut self, max_string_size: usize) -> String {
+        assert!(self.reading());
+        assert!(max_string_size > 0);
+
+
+        let mut bytes = vec![0u8; max_string_size];
+
+        for i in 0..max_string_size {
+            let byte = self.read_integer(8) as u8;
+            bytes[i] = byte;
+
+            if byte == 0 {
+                return String::from_utf8(bytes).unwrap()
+            }
+        }
+
+        panic!("Exceeded max string size reading utf8 string.");
     }
 
-    pub fn read_string_whar(&mut self, write_string: &mut [wchar_t], max_string_size: u8) {
-        unimplemented!()
+    // differs from blam API
+    pub fn read_string_whar(&mut self, max_string_size: usize) -> String {
+        assert!(self.reading());
+        assert!(max_string_size > 0);
+
+        let mut characters = vec![0 as wchar_t; max_string_size];
+
+        for i in 0..max_string_size {
+            let character: wchar_t = self.read_integer(16) as u16;
+            characters[i] = character;
+
+            if character == 0 {
+                return U16CString::from_vec(characters).unwrap().to_string().unwrap();
+            }
+        }
+
+        panic!("Exceeded max string size reading wchar string.");
     }
 
     pub fn read_unit_vector(unit_vector: &mut vector3d, size_in_bits: u8) {
@@ -275,202 +282,9 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    // WRITES
-
-    pub fn write_integer(&mut self, value: u32, size_in_bits: usize) {
-        match self.m_byte_order {
-            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
-                self.write_bits_internal(&value.to_le_bytes(), size_in_bits);
-            }
-            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
-                self.write_bits_internal(&value.to_be_bytes(), size_in_bits);
-            }
-        }
-    }
-
-    pub fn write_signed_integer(&mut self, value: i32, size_in_bits: usize) {
-        match self.m_byte_order {
-            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
-                self.write_bits_internal(&value.to_le_bytes(), size_in_bits);
-            }
-            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
-                self.write_bits_internal(&value.to_be_bytes(), size_in_bits);
-            }
-        }
-    }
-
-    pub fn write_bool(&mut self, value: bool) {
-        self.write_integer(if value { 1 } else { 0 }, 1);
-    }
-
-    // Be careful using this.
-    pub fn write_float(&mut self, value: f32, size_in_bits: usize) {
-        match self.m_byte_order {
-            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
-                self.write_bits_internal(&value.to_le_bytes(), size_in_bits);
-            }
-            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
-                self.write_bits_internal(&value.to_be_bytes(), size_in_bits);
-            }
-        }
-    }
-
-    pub fn write_raw_data(&mut self, value: &[u8], size_in_bits: usize) {
-        assert!(value.len() >= size_in_bits / 8);
-        self.write_bits_internal(value, size_in_bits);
-    }
-
-    pub fn write_qword(&mut self, value: u64, size_in_bits: usize) {
-        match self.m_byte_order {
-            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
-                self.write_bits_internal(&value.to_le_bytes(), size_in_bits);
-            }
-            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
-                self.write_bits_internal(&value.to_be_bytes(), size_in_bits);
-            }
-        }
-    }
-
-    fn write_value_internal(&mut self, data: &[u8], size_in_bits: usize) {
-        self.write_bits_internal(data, size_in_bits);
-    }
-
-    fn write_bits_internal(&mut self, data: &[u8], size_in_bits: usize) {
-        if data.len() < (size_in_bits as f32 / 8f32).ceil() as usize {
-            panic!("Tried to write {size_in_bits} bits but only {} were provided!", (data.len() * 8))
-        }
-
-        let bits_available
-            = ((self.m_data.len() - self.m_bitstream_data.current_stream_byte_position) * 8)
-            - self.m_bitstream_data.current_stream_bit_position;
-
-        // Make a mutable clone of the data to work with.
-        let mut data = Vec::from(data);
-
-        // If we were given surplus bits, shift them off.
-        let surplus_bits = (data.len() * 8) - size_in_bits;
-        left_shift_array(&mut data, surplus_bits);
-
-        let mut remaining_bits_to_write = size_in_bits;
-
-        // 1. Write remaining bits at the current byte.
-        let remaining_bits_at_output_position =
-            8 - self.m_bitstream_data.current_stream_bit_position;
-
-        if remaining_bits_at_output_position < 8 {
-            // of the remaining bits at this byte, how many are we writing?
-            let bits_to_write_at_position = min(remaining_bits_to_write, remaining_bits_at_output_position);
-            let writing_byte = data[0];
-            // TODO: Check this part.
-            self.m_data[self.m_bitstream_data.current_stream_byte_position]
-                |= writing_byte >> 8 - remaining_bits_at_output_position;
-
-            remaining_bits_to_write -= min(remaining_bits_at_output_position, remaining_bits_to_write);
-            // after writing, how many bits are now left at this byte?
-            let remaining_bits_at_output_position = remaining_bits_at_output_position - bits_to_write_at_position;
-            let more_space_at_current_byte = remaining_bits_at_output_position > 0;
-
-            if !more_space_at_current_byte {
-                self.m_bitstream_data.current_stream_bit_position = 0;
-                self.m_bitstream_data.current_stream_byte_position += 1;
-            } else {
-                self.m_bitstream_data.current_stream_bit_position = 8 - remaining_bits_at_output_position;
-            }
-
-            left_shift_array(&mut data, bits_to_write_at_position);
-        }
-
-        // 2. Write full bytes.
-        let bytes_remaining = remaining_bits_to_write / 8;
-        for i in 0..bytes_remaining {
-            self.m_data[self.m_bitstream_data.current_stream_byte_position] = data[i];
-
-            self.m_bitstream_data.current_stream_byte_position += 1;
-            remaining_bits_to_write -= 8;
-        }
-
-        // 3. Write remaining bits.
-        if remaining_bits_to_write > 0 {
-            self.m_data[self.m_bitstream_data.current_stream_byte_position] = data[bytes_remaining];
-            self.m_bitstream_data.current_stream_bit_position
-                += remaining_bits_to_write;
-        }
-    }
-
-    pub fn write_identifier(identifier: String) {
-        unimplemented!()
-    }
-
-    pub fn write_point3d(&mut self, point: &int32_point3d, axis_encoding_size_in_bits: usize) {
-        assert!(axis_encoding_size_in_bits > 0 && axis_encoding_size_in_bits <= 32);
-
-        assert!(point.x < 1 << axis_encoding_size_in_bits);
-        assert!(point.y < 1 << axis_encoding_size_in_bits);
-        assert!(point.z < 1 << axis_encoding_size_in_bits);
-
-        self.write_signed_integer(point.x, axis_encoding_size_in_bits);
-        self.write_signed_integer(point.y, axis_encoding_size_in_bits);
-        self.write_signed_integer(point.z, axis_encoding_size_in_bits);
-    }
-
-    pub fn write_quantized_real(&mut self, value: f32, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool, exact_endpoints: bool) {
-        assert!(self.writing());
-        self.write_signed_integer(quantize_real(value, min_value, max_value, size_in_bits, exact_midpoint, exact_endpoints), size_in_bits);
-    }
-
-    pub fn write_secure_address(address: &s_transport_secure_address) {
-        unimplemented!()
-    }
-
-    pub fn write_string(_string: &String, max_string_size: u32) {
-        unimplemented!()
-    }
-
-    pub fn write_string_utf8(&mut self, char_string: &String, max_string_size: u32) {
-        assert!(self.writing());
-        assert!(max_string_size > 0);
-        assert!(char_string.len() <= max_string_size as usize);
-
-        for byte in char_string.as_bytes() {
-            self.write_value_internal(&[*byte], 8);
-        }
-
-        // null terminate
-        self.write_value_internal(&0u8.to_ne_bytes(), 8);
-    }
-
-    pub fn write_string_wchar(&mut self, value: &String, max_string_size: usize) {
-        assert!(self.writing());
-        assert!(value.len() <= max_string_size);
-        assert!(max_string_size > 0);
-
-        let wchar_string = U16CString::from_str(value).unwrap();
-        let characters = wchar_string.as_slice();
-
-        for char in characters {
-            match self.m_byte_order {
-                e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
-                    self.write_value_internal(&char.to_le_bytes(), 16);
-                }
-                e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
-                    self.write_value_internal(&char.to_be_bytes(), 16);
-                }
-            }
-        }
-
-        // null terminate
-        self.write_value_internal(&0u16.to_ne_bytes(), 16);
-    }
-
-    pub fn write_unit_vector(unit_vector: &vector3d, size_in_bits: u8) {
-        unimplemented!()
-    }
-
-    pub fn write_vector(vector: &vector3d, min_value: f32, max_value: f32, step_count_size_in_bits: u32, size_in_bits: u8) {}
-
     // GUTS
 
-    pub fn append(stream: &c_bitstream) {
+    pub fn append(stream: &c_bitstream_reader) {
         unimplemented!()
     }
 
@@ -478,8 +292,8 @@ impl<'a> c_bitstream<'a> {
         unimplemented!()
     }
 
-    pub fn begin_reading() {
-        unimplemented!()
+    pub fn begin_reading(&mut self) {
+        self.reset(e_bitstream_state::_bitstream_state_reading);
     }
 
     pub fn begin_writing(&mut self, data_size_alignment: u32) {
@@ -525,9 +339,7 @@ impl<'a> c_bitstream<'a> {
     }
 
     pub fn finish_writing(&mut self, out_bits_remaining: &mut usize) {
-        self.m_state = e_bitstream_state::_bitstream_state_write_finished;
-        self.m_data_size_bytes = (((self.m_bitstream_data.current_stream_byte_position * 8) + self.m_bitstream_data.current_stream_bit_position) as f32 / 8f32).ceil() as usize;
-        *out_bits_remaining = (8 * self.m_data.len()) - self.m_data_size_bytes;
+        unreachable!()
     }
 
     pub fn get_current_stream_bit_position() -> u32 {
@@ -573,7 +385,7 @@ impl<'a> c_bitstream<'a> {
         }
     }
 
-    fn set_data(&mut self, data: &'a mut [u8]) {
+    fn set_data(&mut self, data: &'a [u8]) {
         let length = data.len();
         self.m_data = data;
         self.m_data_size_bytes = length;
@@ -622,39 +434,8 @@ impl<'a> c_bitstream<'a> {
     fn axes_to_angle_internal(forward: &vector3d, up: &vector3d) -> f32 {
         let mut forward_reference: vector3d = vector3d::default();
         let mut left_reference: vector3d = vector3d::default();
-        c_bitstream::axes_compute_reference_internal(up, &mut forward_reference, &mut left_reference);
+        c_bitstream_reader::axes_compute_reference_internal(up, &mut forward_reference, &mut left_reference);
         arctangent(dot_product3d(&left_reference, &forward), dot_product3d(&forward_reference, &forward))
-    }
-
-    pub fn write_axes(
-        &mut self,
-        forward: &vector3d,
-        up: &vector3d,
-    ) {
-        assert!(assert_valid_real_normal3d(up));
-        assert!(assert_valid_real_normal3d(forward));
-
-        let mut dequantized_up: vector3d = vector3d::default();
-
-        let i_abs = (up.i - global_up3d.i).abs();
-        let j_abs = (up.j - global_up3d.j).abs();
-        let k_abs = (up.k - global_up3d.k).abs();
-
-        if i_abs > k_real_epsilon
-            || j_abs > k_real_epsilon
-            || k_abs > k_real_epsilon
-        {
-            let quantized_up = quantize_normalized_vector3d(up);
-            self.write_bool(false); // up-is-global-up3d
-            self.write_integer(quantized_up as u32, 19);
-            dequantize_unit_vector3d(quantized_up, &mut dequantized_up);
-        } else {
-            self.write_bool(true); // up-is-global-up3d
-            dequantized_up = global_up3d.clone();
-        }
-
-        let forward_angle = c_bitstream::axes_to_angle_internal(forward, &dequantized_up);
-        self.write_quantized_real(forward_angle, -k_pi, k_pi, 8, true, false);
     }
 
     // not from blam
@@ -673,7 +454,7 @@ mod tests {
         let data: &mut [u8] = &mut [
             0b10101010, 0b11001100, 0b11110000
         ];
-        let mut bitstream = c_bitstream::new(data, e_bitstream_byte_order::_bitstream_byte_order_little_endian);
+        let mut bitstream = c_bitstream_reader::new(data, e_bitstream_byte_order::_bitstream_byte_order_little_endian);
 
         let mut output = [0u8; 2]; // Output buffer for storing results
 
@@ -694,45 +475,11 @@ mod tests {
             0x03, 0x29, 0x48, 0xFF, 0xAB, 0x30, 0x92, 0x49, 0xFF
         ];
 
-        let mut bitstream = c_bitstream::new(data, e_bitstream_byte_order::_bitstream_byte_order_little_endian);
+        let mut bitstream = c_bitstream_reader::new(data, e_bitstream_byte_order::_bitstream_byte_order_little_endian);
 
         assert_eq!(bitstream.read_integer(10), 12);
         assert_eq!(bitstream.read_integer(3), 5);
         assert_eq!(bitstream.read_integer(24), 2695157);
         assert_eq!(bitstream.read_integer(32), 1712474431)
-    }
-}
-
-// Not from blam
-fn left_shift_array(data: &mut Vec<u8>, shift: usize) {
-    if shift == 0 || data.is_empty() {
-        return;
-    }
-
-    let len = data.len();
-    let byte_shift = shift / 8;
-    let bit_shift = shift % 8;
-
-    // Shift bytes
-    if byte_shift != 0 {
-        for i in 0..len {
-            if i + byte_shift < len {
-                data[i] = data[i + byte_shift]
-            } else {
-                data[i] = 0;
-            }
-        }
-    }
-
-    // Shift bits
-    data[0] = data[0] << bit_shift;
-    for i in 1..(len - byte_shift) {
-        // use a short for shifting
-        let current_byte = data[i];
-        let shift_window = current_byte as u16;
-        let shift_window = shift_window << bit_shift;
-        let [carry_bits, shifted_byte] = shift_window.to_be_bytes();
-        data[i - 1] |= carry_bits;
-        data[i] = shifted_byte;
     }
 }

@@ -1,8 +1,8 @@
-use blf_lib::blam::common::memory::bitstream::e_bitstream_byte_order;
+use crate::io::bitstream::e_bitstream_byte_order;
 use crate::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
 use blf_lib::blf_chunk;
+use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
-use crate::blam::common::memory::bitstream::c_bitstream;
 
 blf_chunk!(
     #[Signature("mvar")]
@@ -31,7 +31,7 @@ impl s_blf_chunk_packed_map_variant {
 impl SerializableBlfChunk for s_blf_chunk_packed_map_variant {
     fn encode_body(&mut self, previously_written: &Vec<u8>) -> Vec<u8> {
         let mut data = [0u8; 0xE0A0];
-        let mut bitstream = c_bitstream::new(&mut data, e_bitstream_byte_order::_bitstream_byte_order_big_endian);
+        let mut bitstream = c_bitstream_writer::new(&mut data, e_bitstream_byte_order::_bitstream_byte_order_big_endian);
         bitstream.begin_writing(1);
         self.map_variant.encode(&mut bitstream);
         let mut bits_remaining: usize = 0;
@@ -42,6 +42,8 @@ impl SerializableBlfChunk for s_blf_chunk_packed_map_variant {
     }
 
     fn decode_body(&mut self, buffer: &[u8]) {
-        todo!()
+        let mut bitstream = c_bitstream_reader::new(buffer, e_bitstream_byte_order::_bitstream_byte_order_big_endian);
+        bitstream.begin_reading();
+        self.map_variant.decode(&mut bitstream);
     }
 }

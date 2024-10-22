@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use blf_lib::blam::common::memory::bitstream::c_bitstream;
+use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib::TEST_BIT;
 use crate::blam::common::math::real_math::{real_point3d, real_rectangle3d};
 use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
@@ -38,7 +38,7 @@ pub struct c_map_variant {
 }
 
 impl c_map_variant {
-    pub fn encode(&self, bitstream: &mut c_bitstream) {
+    pub fn encode(&self, bitstream: &mut c_bitstream_writer) {
         self.m_metadata.encode(bitstream);
         bitstream.write_integer(self.m_map_variant_version as u32, 8);
         bitstream.write_integer(self.m_map_variant_checksum, 32);
@@ -128,6 +128,10 @@ impl c_map_variant {
             bitstream.write_float(object_quota.price_per_item, 32);
         }
 
+    }
+
+    pub fn decode(&mut self, bitstream: &mut c_bitstream_reader) {
+        self.m_metadata.decode(bitstream);
     }
 }
 
