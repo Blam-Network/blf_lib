@@ -1,5 +1,6 @@
 
 use std::cmp::min;
+use std::io::Cursor;
 use std::mem;
 use libc::wchar_t;
 use widestring::U16CString;
@@ -52,8 +53,10 @@ impl<'a> c_bitstream_reader<'a> {
 
     // READS
 
-    pub fn read_raw_data(value: &mut [u8], size_in_bits: u8) {
-        unimplemented!()
+    pub fn read_raw_data(&mut self, size_in_bits: usize) -> Vec<u8> {
+        let mut buffer = vec![0u8; (size_in_bits as f32 / 8f32).ceil() as usize];
+        self.read_bits_internal(buffer.as_mut_slice(), size_in_bits);
+        buffer
     }
 
     pub fn read_bool(&mut self) -> bool {
@@ -172,6 +175,10 @@ impl<'a> c_bitstream_reader<'a> {
         }
 
         self.m_bitstream_data.current_memory_bit_position = 0;
+
+        // This is a bit hacky but it works for now.
+        // TODO: Figure out why output is being built in the wrong order.
+        output.reverse();
     }
 
 
@@ -184,6 +191,42 @@ impl<'a> c_bitstream_reader<'a> {
         match self.m_byte_order {
             e_bitstream_byte_order::_bitstream_byte_order_little_endian => { u32::from_le_bytes(bytes) }
             e_bitstream_byte_order::_bitstream_byte_order_big_endian => { u32::from_be_bytes(bytes) }
+        }
+    }
+
+    pub fn read_float(&mut self, size_in_bits: usize) -> f32 {
+        assert!(size_in_bits > 0);
+        assert!(size_in_bits <= 32);
+        let mut bytes = [0u8; 4];
+        self.read_bits_internal(&mut bytes, size_in_bits);
+
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => { f32::from_le_bytes(bytes) }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => { f32::from_be_bytes(bytes) }
+        }
+    }
+
+    pub fn read_u16(&mut self, size_in_bits: usize) -> u16 {
+        assert!(size_in_bits > 0);
+        assert!(size_in_bits <= 16);
+        let mut bytes = [0u8; 2];
+        self.read_bits_internal(&mut bytes, size_in_bits);
+
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => { u16::from_le_bytes(bytes) }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => { u16::from_be_bytes(bytes) }
+        }
+    }
+
+    pub fn read_u8(&mut self, size_in_bits: usize) -> u8 {
+        assert!(size_in_bits > 0);
+        assert!(size_in_bits <= 8);
+        let mut bytes = [0u8; 1];
+        self.read_bits_internal(&mut bytes, size_in_bits);
+
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => { u8::from_le_bytes(bytes) }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => { u8::from_be_bytes(bytes) }
         }
     }
 
@@ -244,7 +287,7 @@ impl<'a> c_bitstream_reader<'a> {
         let mut bytes = vec![0u8; max_string_size];
 
         for i in 0..max_string_size {
-            let byte = self.read_integer(8) as u8;
+            let byte = self.read_u8(8);
             bytes[i] = byte;
 
             if byte == 0 {
@@ -260,14 +303,21 @@ impl<'a> c_bitstream_reader<'a> {
         assert!(self.reading());
         assert!(max_string_size > 0);
 
-        let mut characters = vec![0 as wchar_t; max_string_size];
+        let mut characters = vec![0u16; max_string_size];
 
         for i in 0..max_string_size {
-            let character: wchar_t = self.read_integer(16) as u16;
-            characters[i] = character;
+            println!("Reading character at offset {}:{}", self.m_bitstream_data.current_stream_byte_position, self.m_bitstream_data.current_stream_bit_position);
+            println!("Data at offset {} {}", self.m_data[self.m_bitstream_data.current_stream_byte_position + (i * 2)], self.m_data[self.m_bitstream_data.current_stream_byte_position + (i * 2)+1]);
+
+            let character = self.read_u16(16);
+            println!("Read: {} (casted as {})", character, character);
+
+
 
             if character == 0 {
-                return U16CString::from_vec(characters).unwrap().to_string().unwrap();
+                return U16CString::from_vec(&mut characters[0..i]).unwrap().to_string().unwrap();
+            } else {
+                characters[i] = character as u16;
             }
         }
 

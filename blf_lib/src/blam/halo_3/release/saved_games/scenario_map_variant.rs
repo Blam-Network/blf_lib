@@ -1,5 +1,7 @@
+use std::io::Cursor;
 use serde::{Deserialize, Serialize};
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
+use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib::TEST_BIT;
 use crate::blam::common::math::real_math::{real_point3d, real_rectangle3d};
 use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
@@ -132,6 +134,79 @@ impl c_map_variant {
 
     pub fn decode(&mut self, bitstream: &mut c_bitstream_reader) {
         self.m_metadata.decode(bitstream);
+        self.m_map_variant_version = bitstream.read_u8(8) as u16;
+        self.m_map_variant_checksum = bitstream.read_integer(32);
+        self.m_number_of_scenario_objects = bitstream.read_u16(10);
+        self.m_number_of_variant_objects = bitstream.read_u16(10);
+        self.m_number_of_placeable_object_quotas = bitstream.read_u16(9);
+        self.m_map_id = bitstream.read_integer(32);
+        self.m_built_in = bitstream.read_bool();
+        self.m_world_bounds = real_rectangle3d::decode_packed(&mut Cursor::new(&bitstream.read_raw_data(0xC0)), Endianness::Big, PACK1).unwrap();
+        self.m_game_engine_subtype = bitstream.read_u8(4) as u32;
+        self.m_maximum_budget = bitstream.read_float(32);
+        self.m_spent_budget = bitstream.read_float(32);
+
+        for i in 0..self.m_number_of_variant_objects as usize {
+            let variant_object = &mut self.m_variant_objects.get_mut()[i];
+
+            let variant_object_exists = bitstream.read_bool();
+            if variant_object_exists {
+                variant_object.flags = bitstream.read_u16(16);
+                variant_object.variant_quota_index = bitstream.read_signed_integer(32);
+            }
+
+            let parent_object_exists = bitstream.read_bool();
+            if parent_object_exists {
+                variant_object.parent_object_identifier = c_object_identifier::decode_packed(&mut Cursor::new(&bitstream.read_raw_data(64)), Endianness::Big, PACK1).unwrap();
+            }
+
+            let position_exists = bitstream.read_bool();
+            if position_exists {
+                bitstream.read_qword(48); // TODO: Actually read the positiion
+                bitstream.read_integer(28); // TODO: Actually read the rotation
+                variant_object.multiplayer_game_object_properties.object_type = bitstream.read_u8(8) as i8;
+                variant_object.multiplayer_game_object_properties.symmetry_placement_flags = bitstream.read_u8(8);
+                variant_object.multiplayer_game_object_properties.game_engine_flags = bitstream.read_u16(16);
+                variant_object.multiplayer_game_object_properties.shared_storage = bitstream.read_u8(8);
+                variant_object.multiplayer_game_object_properties.spawn_time = bitstream.read_u8(8);
+                variant_object.multiplayer_game_object_properties.owner_team = bitstream.read_u8(8) as i8;
+                variant_object.multiplayer_game_object_properties.boundary_shape = bitstream.read_u8(8);
+
+                match variant_object.multiplayer_game_object_properties.boundary_shape {
+                    1 => { // sphere
+                        variant_object.multiplayer_game_object_properties.boundary_size = bitstream.read_u16(16) as f32;
+                        variant_object.multiplayer_game_object_properties.boundary_negative_height = bitstream.read_u16(16) as f32;
+                    }
+                    2 => { // cylinder
+                        variant_object.multiplayer_game_object_properties.boundary_size = bitstream.read_u16(16) as f32;
+                        variant_object.multiplayer_game_object_properties.boundary_box_length = bitstream.read_u16(16) as f32;
+                        variant_object.multiplayer_game_object_properties.boundary_positive_height = bitstream.read_u16(16) as f32;
+                    }
+                    3 => { // box
+                        variant_object.multiplayer_game_object_properties.boundary_size = bitstream.read_u16(16) as f32;
+                        variant_object.multiplayer_game_object_properties.boundary_box_length = bitstream.read_u16(16) as f32;
+                        variant_object.multiplayer_game_object_properties.boundary_positive_height = bitstream.read_u16(16) as f32;
+                        variant_object.multiplayer_game_object_properties.boundary_negative_height = bitstream.read_u16(16) as f32;
+                    }
+                    _ => { }
+                }
+
+            }
+        }
+
+        for i in 0..k_object_type_count {
+            self.m_object_type_start_index.get_mut()[i] = bitstream.read_u16(9) as i16;
+        }
+
+        for i in 0..self.m_number_of_placeable_object_quotas as usize {
+            let object_quota = &mut self.m_quotas.get_mut()[i];
+            object_quota.object_definition_index = bitstream.read_signed_integer(32);
+            object_quota.minimum_count = bitstream.read_u8(8);
+            object_quota.maximum_count = bitstream.read_u8(8);
+            object_quota.placed_on_map = bitstream.read_u8(8);
+            object_quota.maximum_allowed = bitstream.read_u8(8) as i8;
+            object_quota.price_per_item = bitstream.read_float(32);
+        }
     }
 }
 
