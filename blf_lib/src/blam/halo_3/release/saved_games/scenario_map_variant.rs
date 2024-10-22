@@ -150,10 +150,13 @@ impl c_map_variant {
             let variant_object = &mut self.m_variant_objects.get_mut()[i];
 
             let variant_object_exists = bitstream.read_bool();
-            if variant_object_exists {
-                variant_object.flags = bitstream.read_u16(16);
-                variant_object.variant_quota_index = bitstream.read_signed_integer(32);
+
+            if !variant_object_exists {
+                continue;
             }
+
+            variant_object.flags = bitstream.read_u16(16);
+            variant_object.variant_quota_index = bitstream.read_signed_integer(32);
 
             let parent_object_exists = bitstream.read_bool();
             if parent_object_exists {
@@ -195,7 +198,7 @@ impl c_map_variant {
         }
 
         for i in 0..k_object_type_count {
-            self.m_object_type_start_index.get_mut()[i] = bitstream.read_u16(9) as i16;
+            self.m_object_type_start_index.get_mut()[i] = bitstream.read_u16(9) as i16 - 1;
         }
 
         for i in 0..self.m_number_of_placeable_object_quotas as usize {
