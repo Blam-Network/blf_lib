@@ -40,6 +40,18 @@ pub struct real_point3d {
     pub z: f32,
 }
 
+pub fn dequantize_real_point3d(
+    point: &int32_point3d,
+    bounds: &real_rectangle3d,
+    axis_encoding_bit_count: usize,
+    dequantized_point: &mut real_point3d
+) {
+    // I think there's a missing assert here.
+    dequantized_point.x = dequantize_real(point.x, bounds.x.lower, bounds.x.upper, axis_encoding_bit_count, false);
+    dequantized_point.y = dequantize_real(point.y, bounds.y.lower, bounds.y.upper, axis_encoding_bit_count, false);
+    dequantized_point.z = dequantize_real(point.z, bounds.z.lower, bounds.z.upper, axis_encoding_bit_count, false);
+}
+
 pub fn quantize_real_point3d(
     point: &real_point3d,
     bounds: &real_rectangle3d,

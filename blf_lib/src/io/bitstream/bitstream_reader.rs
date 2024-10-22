@@ -4,7 +4,7 @@ use std::io::Cursor;
 use std::mem;
 use libc::wchar_t;
 use widestring::U16CString;
-use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, valid_real_vector3d_axes3, arctangent, quantize_normalized_vector3d, k_pi};
+use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, valid_real_vector3d_axes3, arctangent, quantize_normalized_vector3d, k_pi, dequantize_real};
 use crate::blam::common::math::integer_math::int32_point3d;
 use crate::blam::common::math::real_math::{quantize_real, vector3d};
 use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
@@ -258,12 +258,17 @@ impl<'a> c_bitstream_reader<'a> {
         unimplemented!()
     }
 
-    pub fn read_point3d(point: &mut int32_point3d, axis_encoding_size_in_bits: u8) {
-        unimplemented!()
+    pub fn read_point3d(&mut self, point: &mut int32_point3d, axis_encoding_size_in_bits: usize) {
+        assert!(0 < axis_encoding_size_in_bits && axis_encoding_size_in_bits <= 32);
+
+        point.x = self.read_signed_integer(axis_encoding_size_in_bits);
+        point.y = self.read_signed_integer(axis_encoding_size_in_bits);
+        point.z = self.read_signed_integer(axis_encoding_size_in_bits);
     }
 
-    pub fn read_quantized_real(min_value: f32, max_value: f32, size_in_bits: u8, exact_midpoint: bool, exact_endpoints: bool) -> f32 {
-        unimplemented!()
+    pub fn read_quantized_real(&mut self, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool, exact_endpoints: bool) -> f32 {
+        assert!(self.reading());
+        dequantize_real(self.read_signed_integer(size_in_bits), min_value, max_value, size_in_bits, exact_midpoint)
     }
 
     pub fn read_qword_internal(size_in_bits: u8) -> u64 {
@@ -272,6 +277,24 @@ impl<'a> c_bitstream_reader<'a> {
 
     pub fn read_secure_address(address: &mut s_transport_secure_address) {
         unimplemented!()
+    }
+
+    pub fn read_axis(&mut self, forward: &mut vector3d, up: &mut vector3d) {
+        let up_is_global_up = self.read_bool();
+
+        if up_is_global_up {
+            up.i = global_up3d.i;
+            up.j = global_up3d.j;
+            up.k = global_up3d.k;
+        }
+        else {
+            let quantized = self.read_signed_integer(19);
+            dequantize_unit_vector3d(quantized, up);
+        }
+
+        let forward_angle = self.read_quantized_real(-k_pi, k_pi, 8, false, false);
+        // TODO: update forward vector.
+        // angle_to_axes_internal(v5, a4a, a3);
     }
 
     pub fn read_string(_string: &mut String, max_string_size: u8) {

@@ -10,7 +10,7 @@ use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::PACK1;
 use blf_lib_derive::PackedSerialize;
 use crate::blam::common::math::real_math::vector3d;
-use crate::blam::common::simulation::simulation_encoding::simulation_write_quantized_position;
+use crate::blam::common::simulation::simulation_encoding::{simulation_read_quantized_position, simulation_write_quantized_position};
 use crate::io::packed_encoding::PackedEncoder;
 
 const k_object_type_count: usize = 14;
@@ -165,8 +165,8 @@ impl c_map_variant {
 
             let position_exists = bitstream.read_bool();
             if position_exists {
-                bitstream.read_qword(48); // TODO: Actually read the positiion
-                bitstream.read_integer(28); // TODO: Actually read the rotation
+                simulation_read_quantized_position(bitstream, &mut variant_object.position, 16, &self.m_world_bounds);
+                bitstream.read_axis(&mut variant_object.forward, &mut variant_object.up);
                 variant_object.multiplayer_game_object_properties.object_type = bitstream.read_u8(8) as i8;
                 variant_object.multiplayer_game_object_properties.symmetry_placement_flags = bitstream.read_u8(8);
                 variant_object.multiplayer_game_object_properties.game_engine_flags = bitstream.read_u16(16);
