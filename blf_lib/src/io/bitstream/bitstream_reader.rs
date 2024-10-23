@@ -160,8 +160,8 @@ impl<'a> c_bitstream_reader<'a> {
             let window_bytes_used = self.m_bitstream_data.window_bits_used.div_ceil(8);
             let next_memory_position = current_memory_position + window_bytes_used;
             let window_value = self.m_bitstream_data.window >> 64 - self.m_bitstream_data.window_bits_used;
-            let window_bytes = window_value.to_le_bytes();
-            output[current_memory_position..next_memory_position].copy_from_slice(&window_bytes[0..window_bytes_used]);
+            let window_bytes = window_value.to_be_bytes();
+            output[current_memory_position..next_memory_position].copy_from_slice(&window_bytes[8-window_bytes_used..8]);
             self.m_bitstream_data.current_memory_bit_position += self.m_bitstream_data.window_bits_used;
 
             windows_to_read -= 1;
@@ -175,10 +175,6 @@ impl<'a> c_bitstream_reader<'a> {
         }
 
         self.m_bitstream_data.current_memory_bit_position = 0;
-
-        // This is a bit hacky but it works for now.
-        // TODO: Figure out why output is being built in the wrong order.
-        output.reverse();
     }
 
 
@@ -396,7 +392,7 @@ impl<'a> c_bitstream_reader<'a> {
 
     pub fn reading(&self) -> bool {
         self.m_state == e_bitstream_state::_bitstream_state_reading ||
-            self.m_state == e_bitstream_state::_bitstream_state_read_only_for_consistency
+        self.m_state == e_bitstream_state::_bitstream_state_read_only_for_consistency
     }
 
     pub fn writing(&self) -> bool {
