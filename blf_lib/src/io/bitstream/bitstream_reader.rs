@@ -1,10 +1,7 @@
 
 use std::cmp::min;
-use std::io::Cursor;
-use std::mem;
-use libc::wchar_t;
 use widestring::U16CString;
-use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, valid_real_vector3d_axes3, arctangent, quantize_normalized_vector3d, k_pi, dequantize_real};
+use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, valid_real_vector3d_axes3, arctangent, quantize_normalized_vector3d, k_pi, dequantize_real, rotate_vector_about_axis, valid_real_vector3d_axes2};
 use crate::blam::common::math::integer_math::int32_point3d;
 use crate::blam::common::math::real_math::{quantize_real, vector3d};
 use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
@@ -60,7 +57,7 @@ impl<'a> c_bitstream_reader<'a> {
     }
 
     pub fn read_bool(&mut self) -> bool {
-        self.read_integer(1) == 1
+        self.read_u8(1) == 1
     }
 
     pub fn read_bits_internal(&mut self, output: &mut [u8], size_in_bits: usize) {
@@ -181,12 +178,22 @@ impl<'a> c_bitstream_reader<'a> {
     pub fn read_integer(&mut self, size_in_bits: usize) -> u32 {
         assert!(size_in_bits > 0);
         assert!(size_in_bits <= 32);
-        let mut bytes = [0u8; 4];
-        self.read_bits_internal(&mut bytes, size_in_bits);
+        let size_in_bytes = (size_in_bits as f32 / 8f32 ).ceil() as usize;
+        let mut bytes_vec = vec![0u8; size_in_bytes];
+        self.read_bits_internal(&mut bytes_vec, size_in_bits);
+        let bytes_slice = bytes_vec.as_slice();
+
+        let mut byte_array = [0u8; 4];
 
         match self.m_byte_order {
-            e_bitstream_byte_order::_bitstream_byte_order_little_endian => { u32::from_le_bytes(bytes) }
-            e_bitstream_byte_order::_bitstream_byte_order_big_endian => { u32::from_be_bytes(bytes) }
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
+                byte_array[0..bytes_slice.len()].copy_from_slice(bytes_slice);
+                u32::from_le_bytes(byte_array)
+            }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
+                byte_array[4 - bytes_slice.len()..4].copy_from_slice(bytes_slice);
+                u32::from_be_bytes(byte_array)
+            }
         }
     }
 
@@ -199,6 +206,18 @@ impl<'a> c_bitstream_reader<'a> {
         match self.m_byte_order {
             e_bitstream_byte_order::_bitstream_byte_order_little_endian => { f32::from_le_bytes(bytes) }
             e_bitstream_byte_order::_bitstream_byte_order_big_endian => { f32::from_be_bytes(bytes) }
+        }
+    }
+
+    pub fn read_i16(&mut self, size_in_bits: usize) -> i16 {
+        assert!(size_in_bits > 0);
+        assert!(size_in_bits <= 16);
+        let mut bytes = [0u8; 2];
+        self.read_bits_internal(&mut bytes, size_in_bits);
+
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => { i16::from_le_bytes(bytes) }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => { i16::from_be_bytes(bytes) }
         }
     }
 
@@ -229,12 +248,22 @@ impl<'a> c_bitstream_reader<'a> {
     pub fn read_signed_integer(&mut self, size_in_bits: usize) -> i32 {
         assert!(size_in_bits > 0);
         assert!(size_in_bits <= 32);
-        let mut bytes = [0u8; 4];
-        self.read_bits_internal(&mut bytes, size_in_bits);
+        let size_in_bytes = (size_in_bits as f32 / 8f32 ).ceil() as usize;
+        let mut bytes_vec = vec![0u8; size_in_bytes];
+        self.read_bits_internal(&mut bytes_vec, size_in_bits);
+        let bytes_slice = bytes_vec.as_slice();
+
+        let mut byte_array = [0u8; 4];
 
         match self.m_byte_order {
-            e_bitstream_byte_order::_bitstream_byte_order_little_endian => { i32::from_le_bytes(bytes) }
-            e_bitstream_byte_order::_bitstream_byte_order_big_endian => { i32::from_be_bytes(bytes) }
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
+                byte_array[0..bytes_slice.len()].copy_from_slice(bytes_slice);
+                i32::from_le_bytes(byte_array)
+            }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
+                byte_array[4 - bytes_slice.len()..4].copy_from_slice(bytes_slice);
+                i32::from_be_bytes(byte_array)
+            }
         }
     }
 
@@ -264,7 +293,8 @@ impl<'a> c_bitstream_reader<'a> {
 
     pub fn read_quantized_real(&mut self, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool, exact_endpoints: bool) -> f32 {
         assert!(self.reading());
-        dequantize_real(self.read_signed_integer(size_in_bits), min_value, max_value, size_in_bits, exact_midpoint)
+        let value = self.read_signed_integer(size_in_bits);
+        dequantize_real(value, min_value, max_value, size_in_bits, exact_midpoint)
     }
 
     pub fn read_qword_internal(size_in_bits: u8) -> u64 {
@@ -288,9 +318,36 @@ impl<'a> c_bitstream_reader<'a> {
             dequantize_unit_vector3d(quantized, up);
         }
 
-        let forward_angle = self.read_quantized_real(-k_pi, k_pi, 8, false, false);
-        // TODO: update forward vector.
-        // angle_to_axes_internal(v5, a4a, a3);
+        let forward_angle = self.read_quantized_real(-k_pi, k_pi, 8, true, false);
+        c_bitstream_reader::angle_to_axes_internal(up, forward_angle, forward);
+    }
+
+    pub fn angle_to_axes_internal(up: &vector3d, angle: f32, forward: &mut vector3d) {
+        let mut forward_reference = vector3d::default();
+        let mut left_reference = vector3d::default();
+
+        c_bitstream_reader::axes_compute_reference_internal(up, &mut forward_reference, &mut left_reference);
+
+        forward.i = forward_reference.i;
+        forward.j = forward_reference.j;
+        forward.k = forward_reference.k;
+
+        let u: f32;
+        let v: f32;
+
+        if angle == k_pi || angle == -k_pi {
+            u = 0.0;
+            v = -1.0;
+        }
+        else {
+            u = angle.sin();
+            v = angle.cos();
+        }
+
+        rotate_vector_about_axis(forward, up, u, v);
+        normalize3d(forward);
+
+        assert!(valid_real_vector3d_axes2(forward, up));
     }
 
     pub fn read_string(_string: &mut String, max_string_size: u8) {
@@ -325,13 +382,7 @@ impl<'a> c_bitstream_reader<'a> {
         let mut characters = vec![0u16; max_string_size];
 
         for i in 0..max_string_size {
-            println!("Reading character at offset {}:{}", self.m_bitstream_data.current_stream_byte_position, self.m_bitstream_data.current_stream_bit_position);
-            println!("Data at offset {} {}", self.m_data[self.m_bitstream_data.current_stream_byte_position + (i * 2)], self.m_data[self.m_bitstream_data.current_stream_byte_position + (i * 2)+1]);
-
             let character = self.read_u16(16);
-            println!("Read: {} (casted as {})", character, character);
-
-
 
             if character == 0 {
                 return U16CString::from_vec(&mut characters[0..i]).unwrap().to_string().unwrap();

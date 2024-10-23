@@ -54,11 +54,11 @@ impl s_content_item_metadata {
         bitstream.write_qword(self.size_in_bytes, 64);
         bitstream.write_qword(self.date, 64);
         bitstream.write_integer(self.length_seconds, 32);
-        bitstream.write_integer(self.campaign_id as u32, 32);
+        bitstream.write_signed_integer(self.campaign_id, 32);
         bitstream.write_integer(self.map_id, 32);
         bitstream.write_integer(self.game_engine_type, 4);
         bitstream.write_signed_integer(self.campaign_difficulty + 1, 3);
-        bitstream.write_integer(self.hopper_id as u32, 16);
+        bitstream.write_signed_integer(self.hopper_id as i32, 16);
         bitstream.write_qword(self.game_id, 64);
     }
 
@@ -77,7 +77,7 @@ impl s_content_item_metadata {
         self.map_id = bitstream.read_integer(32);
         self.game_engine_type = bitstream.read_integer(4);
         self.campaign_difficulty = bitstream.read_signed_integer(3) - 1;
-        self.hopper_id = bitstream.read_signed_integer(16) as i16;
+        self.hopper_id = bitstream.read_i16(16);
         self.game_id = bitstream.read_qword(64);
     }
 }

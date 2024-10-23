@@ -12,6 +12,7 @@ use blf_lib_derive::PackedSerialize;
 use crate::blam::common::math::real_math::vector3d;
 use crate::blam::common::simulation::simulation_encoding::{simulation_read_quantized_position, simulation_write_quantized_position};
 use crate::io::packed_encoding::PackedEncoder;
+use serde_hex::{SerHex,StrictCap};
 
 const k_object_type_count: usize = 14;
 const k_number_of_map_variant_simulation_entities: usize = 80;
@@ -31,7 +32,9 @@ pub struct c_map_variant {
     m_spent_budget: f32,
     m_helpers_enabled: bool,
     m_built_in: bool,
+    #[serde(skip_serializing,skip_deserializing)]
     __pad12A: [u8; 2],
+    #[serde(with = "SerHex::<StrictCap>")]
     m_map_variant_checksum: u32,
     m_variant_objects: Array<s_variant_object_datum, 640>,
     m_object_type_start_index: Array<i16, k_object_type_count>,
@@ -122,7 +125,7 @@ impl c_map_variant {
 
         for i in 0..self.m_number_of_placeable_object_quotas as usize {
             let object_quota = self.m_quotas[i];
-            bitstream.write_integer(object_quota.object_definition_index as u32, 32);
+            bitstream.write_integer(object_quota.object_definition_index, 32);
             bitstream.write_integer(object_quota.minimum_count as u32, 8);
             bitstream.write_integer(object_quota.maximum_count as u32, 8);
             bitstream.write_integer(object_quota.placed_on_map as u32, 8);
@@ -134,7 +137,7 @@ impl c_map_variant {
 
     pub fn decode(&mut self, bitstream: &mut c_bitstream_reader) {
         self.m_metadata.decode(bitstream);
-        self.m_map_variant_version = bitstream.read_u8(8) as u16;
+        self.m_map_variant_version = bitstream.read_integer(8) as u16;
         self.m_map_variant_checksum = bitstream.read_integer(32);
         self.m_number_of_scenario_objects = bitstream.read_u16(10);
         self.m_number_of_variant_objects = bitstream.read_u16(10);
@@ -142,7 +145,7 @@ impl c_map_variant {
         self.m_map_id = bitstream.read_integer(32);
         self.m_built_in = bitstream.read_bool();
         self.m_world_bounds = real_rectangle3d::decode_packed(&mut Cursor::new(&bitstream.read_raw_data(0xC0)), Endianness::Big, PACK1).unwrap();
-        self.m_game_engine_subtype = bitstream.read_u8(4) as u32;
+        self.m_game_engine_subtype = bitstream.read_integer(4);
         self.m_maximum_budget = bitstream.read_float(32);
         self.m_spent_budget = bitstream.read_float(32);
 
@@ -164,50 +167,52 @@ impl c_map_variant {
             }
 
             let position_exists = bitstream.read_bool();
-            if position_exists {
-                simulation_read_quantized_position(bitstream, &mut variant_object.position, 16, &self.m_world_bounds);
-                bitstream.read_axis(&mut variant_object.forward, &mut variant_object.up);
-                variant_object.multiplayer_game_object_properties.object_type = bitstream.read_u8(8) as i8;
-                variant_object.multiplayer_game_object_properties.symmetry_placement_flags = bitstream.read_u8(8);
-                variant_object.multiplayer_game_object_properties.game_engine_flags = bitstream.read_u16(16);
-                variant_object.multiplayer_game_object_properties.shared_storage = bitstream.read_u8(8);
-                variant_object.multiplayer_game_object_properties.spawn_time = bitstream.read_u8(8);
-                variant_object.multiplayer_game_object_properties.owner_team = bitstream.read_u8(8) as i8;
-                variant_object.multiplayer_game_object_properties.boundary_shape = bitstream.read_u8(8);
 
-                match variant_object.multiplayer_game_object_properties.boundary_shape {
-                    1 => { // sphere
-                        variant_object.multiplayer_game_object_properties.boundary_size = bitstream.read_u16(16) as f32;
-                        variant_object.multiplayer_game_object_properties.boundary_negative_height = bitstream.read_u16(16) as f32;
-                    }
-                    2 => { // cylinder
-                        variant_object.multiplayer_game_object_properties.boundary_size = bitstream.read_u16(16) as f32;
-                        variant_object.multiplayer_game_object_properties.boundary_box_length = bitstream.read_u16(16) as f32;
-                        variant_object.multiplayer_game_object_properties.boundary_positive_height = bitstream.read_u16(16) as f32;
-                    }
-                    3 => { // box
-                        variant_object.multiplayer_game_object_properties.boundary_size = bitstream.read_u16(16) as f32;
-                        variant_object.multiplayer_game_object_properties.boundary_box_length = bitstream.read_u16(16) as f32;
-                        variant_object.multiplayer_game_object_properties.boundary_positive_height = bitstream.read_u16(16) as f32;
-                        variant_object.multiplayer_game_object_properties.boundary_negative_height = bitstream.read_u16(16) as f32;
-                    }
-                    _ => { }
+            if !position_exists {
+                continue;
+            }
+
+            simulation_read_quantized_position(bitstream, &mut variant_object.position, 16, &self.m_world_bounds);
+            bitstream.read_axis(&mut variant_object.forward, &mut variant_object.up);
+            variant_object.multiplayer_game_object_properties.object_type = bitstream.read_signed_integer(8) as i8;
+            variant_object.multiplayer_game_object_properties.symmetry_placement_flags = bitstream.read_u8(8);
+            variant_object.multiplayer_game_object_properties.game_engine_flags = bitstream.read_u16(16);
+            variant_object.multiplayer_game_object_properties.shared_storage = bitstream.read_u8(8);
+            variant_object.multiplayer_game_object_properties.spawn_time = bitstream.read_u8(8);
+            variant_object.multiplayer_game_object_properties.owner_team = bitstream.read_signed_integer(8) as i8;
+            variant_object.multiplayer_game_object_properties.boundary_shape = bitstream.read_u8(8);
+
+            match variant_object.multiplayer_game_object_properties.boundary_shape {
+                1 => { // sphere
+                    variant_object.multiplayer_game_object_properties.boundary_size = bitstream.read_signed_integer(16) as f32;
+                    variant_object.multiplayer_game_object_properties.boundary_negative_height = bitstream.read_signed_integer(16) as f32;
                 }
-
+                2 => { // cylinder
+                    variant_object.multiplayer_game_object_properties.boundary_size = bitstream.read_signed_integer(16) as f32;
+                    variant_object.multiplayer_game_object_properties.boundary_box_length = bitstream.read_signed_integer(16) as f32;
+                    variant_object.multiplayer_game_object_properties.boundary_positive_height = bitstream.read_signed_integer(16) as f32;
+                }
+                3 => { // box
+                    variant_object.multiplayer_game_object_properties.boundary_size = bitstream.read_signed_integer(16) as f32;
+                    variant_object.multiplayer_game_object_properties.boundary_box_length = bitstream.read_signed_integer(16) as f32;
+                    variant_object.multiplayer_game_object_properties.boundary_positive_height = bitstream.read_signed_integer(16) as f32;
+                    variant_object.multiplayer_game_object_properties.boundary_negative_height = bitstream.read_signed_integer(16) as f32;
+                }
+                _ => { }
             }
         }
 
         for i in 0..k_object_type_count {
-            self.m_object_type_start_index.get_mut()[i] = bitstream.read_u16(9) as i16 - 1;
+            self.m_object_type_start_index.get_mut()[i] = bitstream.read_integer(9) as i16 - 1;
         }
 
         for i in 0..self.m_number_of_placeable_object_quotas as usize {
             let object_quota = &mut self.m_quotas.get_mut()[i];
-            object_quota.object_definition_index = bitstream.read_signed_integer(32);
-            object_quota.minimum_count = bitstream.read_u8(8);
-            object_quota.maximum_count = bitstream.read_u8(8);
-            object_quota.placed_on_map = bitstream.read_u8(8);
-            object_quota.maximum_allowed = bitstream.read_u8(8) as i8;
+            object_quota.object_definition_index = bitstream.read_integer(32);
+            object_quota.minimum_count = bitstream.read_integer(8) as u8;
+            object_quota.maximum_count = bitstream.read_integer(8) as u8;
+            object_quota.placed_on_map = bitstream.read_integer(8) as u8;
+            object_quota.maximum_allowed = bitstream.read_integer(8) as i8;
             object_quota.price_per_item = bitstream.read_float(32);
         }
     }
@@ -216,7 +221,8 @@ impl c_map_variant {
 #[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
 #[PackedSerialize(1, BigEndian)]
 pub struct s_variant_quota {
-    pub object_definition_index: i32,
+    #[serde(with = "SerHex::<StrictCap>")]
+    pub object_definition_index: u32,
     pub minimum_count: u8,
     pub maximum_count: u8,
     pub placed_on_map: u8,

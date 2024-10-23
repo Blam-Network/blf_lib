@@ -52,6 +52,20 @@ pub fn dequantize_real_point3d(
     dequantized_point.z = dequantize_real(point.z, bounds.z.lower, bounds.z.upper, axis_encoding_bit_count, false);
 }
 
+pub fn rotate_vector_about_axis(
+    forward: &mut vector3d,
+    up: &vector3d,
+    u: f32,
+    v: f32
+) {
+    let v1 = (1.0 - v) * (((forward.i * up.i) + (forward.j * up.j)) + (forward.k * up.k));
+    let v2 = (forward.k * up.i) - (forward.i * up.k);
+    let v3 = (forward.i * up.j) - (forward.j * up.i);
+    forward.i = ((v * forward.i) + (v1 * up.i)) - (u * ((forward.j * up.k) - (forward.k * up.j)));
+    forward.j = ((v * forward.j) + (v1 * up.j)) - (u * v2);
+    forward.k = ((v * forward.k) + (v1 * up.k)) - (u * v3);
+}
+
 pub fn quantize_real_point3d(
     point: &real_point3d,
     bounds: &real_rectangle3d,
@@ -105,6 +119,8 @@ pub fn quantize_real(value: f32, min_value: f32, max_value: f32, size_in_bits: u
 }
 
 pub fn dequantize_real(quantized: i32, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool) -> f32 {
+    println!("dequantize_real({quantized}, {min_value}, {max_value}, {size_in_bits}, {exact_midpoint})");
+
     assert!(size_in_bits > 0, "size_in_bits>0");
     assert!(max_value > min_value, "max_value>min_value");
     assert!(!exact_midpoint || size_in_bits > 1, "!exact_midpoint || size_in_bits>1");
@@ -316,6 +332,12 @@ pub fn valid_real(value: f32) -> bool {
 
 pub fn valid_realcmp(a1: f32, a2: f32) -> bool {
     valid_real(a1 - a2) && (a1 - a2).abs() < k_test_real_epsilon
+}
+
+pub fn valid_real_vector3d_axes2(a: &vector3d, b: &vector3d) -> bool {
+    assert_valid_real_normal3d(a)
+        && assert_valid_real_normal3d(b)
+        && valid_realcmp(dot_product3d(a, b), 0.0)
 }
 
 pub fn valid_real_vector3d_axes3(forward: &vector3d, left: &vector3d, up: &vector3d) -> bool {

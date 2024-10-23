@@ -1,12 +1,14 @@
 use std::io::Cursor;
 use std::ops::Index;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::ser::SerializeSeq;
 use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib::io::packed_encoding::PackedEncoder;
+use blf_lib::types::byte_limited_wchar_string::ByteLimitedWcharString;
 use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::Packing;
 
-#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Array<E: 'static, const N: usize> {
     _data: Vec<E> // 1984
 }
@@ -73,5 +75,22 @@ impl<E, const N: usize> Index<usize> for Array<E, N> {
 
     fn index(&self, index: usize) -> &Self::Output {
         &self._data[index]
+    }
+}
+
+impl<E: Serialize, const N: usize> Serialize for Array<E, N> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        self._data.serialize(serializer)
+    }
+}
+
+impl<'de, E: Deserialize<'de>, const N: usize> serde::Deserialize<'de> for Array<E, N> {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        Ok(Self {
+            _data: Vec::<E>::deserialize(d)?
+        })
     }
 }
