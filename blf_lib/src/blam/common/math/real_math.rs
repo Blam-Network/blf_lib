@@ -119,8 +119,6 @@ pub fn quantize_real(value: f32, min_value: f32, max_value: f32, size_in_bits: u
 }
 
 pub fn dequantize_real(quantized: i32, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool) -> f32 {
-    println!("dequantize_real({quantized}, {min_value}, {max_value}, {size_in_bits}, {exact_midpoint})");
-
     assert!(size_in_bits > 0, "size_in_bits>0");
     assert!(max_value > min_value, "max_value>min_value");
     assert!(!exact_midpoint || size_in_bits > 1, "!exact_midpoint || size_in_bits>1");
