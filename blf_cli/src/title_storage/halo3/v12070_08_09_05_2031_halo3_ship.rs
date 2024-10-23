@@ -1,19 +1,21 @@
-use std::fs::{create_dir_all, File};
+use std::fs::{create_dir_all, exists, File};
 use std::io::{Read, Write};
 use crate::io::{build_path, get_directories_in_folder, get_files_in_folder, FILE_SEPARATOR};
 use crate::title_converter;
 use crate::title_storage::{check_file_exists, TitleConverter};
 use inline_colorization::*;
+use lazy_static::lazy_static;
 use blf_lib::blam::common::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::BlfFile;
 use blf_lib::blf::chunks::find_chunk_in_file;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_packed_map_variant};
 use crate::console::console_task;
 use crate::title_storage::halo3::release::blf_files::{motd, rsa_manifest};
 use crate::title_storage::halo3::release::config_files::motd_popup::motd_popup as motd_popup_config;
 use crate::title_storage::halo3::release::blf_files::motd_popup::motd_popup as motd_popup_blf;
 use crate::title_storage::halo3::release::blf_files::matchmaking_banhammer_messages::{matchmaking_banhammer_messages as matchmaking_banhammer_messages_blf};
 use crate::title_storage::halo3::release::blf_files::matchmaking_tips::matchmaking_tips as matchmaking_tips_blf;
+use regex::Regex;
 
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
@@ -73,6 +75,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             Self::build_config_motds(blfs_path, &hopper_directory, config_path, true);
             Self::build_config_motd_popups(blfs_path, &hopper_directory, config_path, false);
             Self::build_config_motd_popups(blfs_path, &hopper_directory, config_path, true);
+            Self::build_config_map_variants(blfs_path, &hopper_directory, config_path);
         }
     }
 }
@@ -91,6 +94,10 @@ pub const k_language_suffixes: [&str; 10] = [
     k_language_suffix_portuguese,
     // k_language_suffix_polish,
 ];
+
+lazy_static! {
+    static ref hopper_folder_regex: Regex = Regex::new(r"[0-9]{5}").unwrap();
+}
 
 impl v12070_08_09_05_2031_halo3_ship {
     fn build_config_banhammer_messages(blfs_path: &String, hopper_directory: &String, config_path: &String) {
@@ -338,6 +345,82 @@ impl v12070_08_09_05_2031_halo3_ship {
 
             std::fs::copy(file_path, output_path).unwrap();
         }
+
+        task.complete();
+    }
+
+    fn build_config_map_variants(blfs_path: &String, hopper_directory: &String, config_path: &String) {
+        let mut task = console_task::start(String::from("Converting Map Variants"));
+
+        let map_variants_folder = build_path(vec![
+            config_path,
+            hopper_directory,
+            &String::from("map_variants"),
+        ]);
+
+        create_dir_all(&map_variants_folder).unwrap();
+
+        let current_hoppers_blf_folder = build_path(vec![
+            blfs_path,
+            hopper_directory,
+        ]);
+
+        // Iterate through hopper folders. eg default_hoppers/00101
+        let hopper_directory_subfolders = get_directories_in_folder(&current_hoppers_blf_folder).unwrap_or_else(|err|{
+            println!("{}", err);
+            panic!();
+        });
+
+        let mut maps_count = 0;
+
+        for subfolder in hopper_directory_subfolders {
+            if !hopper_folder_regex.is_match(&subfolder) {
+                continue;
+            }
+
+            let map_variant_blfs_folder = build_path(vec![
+                &current_hoppers_blf_folder,
+                &subfolder,
+                &String::from("map_variants"),
+            ]);
+
+            if !exists(&map_variant_blfs_folder).unwrap() {
+                continue;
+            }
+
+            let map_variant_files = get_files_in_folder(&map_variant_blfs_folder).unwrap_or_else(|err|{
+                println!("{}", err);
+                panic!();
+            });
+
+            for map_variant_file_name in map_variant_files {
+                if !map_variant_file_name.ends_with("_012.bin") {
+                    continue;
+                }
+
+                let map_variant_blf_file_path = build_path(vec![
+                    &map_variant_blfs_folder,
+                    &map_variant_file_name,
+                ]);
+
+                let map_variant_json_file_path = build_path(vec![
+                    &map_variants_folder,
+                    &map_variant_file_name.replace("_012.bin", ".json"),
+                ]);
+
+                if exists(&map_variant_json_file_path).unwrap() {
+                    continue;
+                }
+
+                let packed_map_variant = find_chunk_in_file::<s_blf_chunk_packed_map_variant>(&map_variant_blf_file_path).unwrap();
+                let map_variant_json = serde_json::to_string_pretty(&packed_map_variant.map_variant).unwrap();
+                let mut map_variant_json_file = File::create_new(map_variant_json_file_path).unwrap();
+                map_variant_json_file.write_all(map_variant_json.as_bytes()).unwrap();
+                maps_count += 1;
+            }
+        }
+
+        task.add_message(format!("Converted {maps_count} map variants."));
 
         task.complete();
     }
