@@ -1,0 +1,18 @@
+pub const HASHES_PER_BLOCK: usize = 0xAA;
+#[rustfmt::skip]
+pub const DATA_BLOCKS_PER_HASH_TREE_LEVEL: [usize; 3] =
+	[HASHES_PER_BLOCK,
+	HASHES_PER_BLOCK * HASHES_PER_BLOCK,
+	HASHES_PER_BLOCK * HASHES_PER_BLOCK * HASHES_PER_BLOCK];
+
+#[rustfmt::skip]
+pub const DATA_BLOCKS_PER_HASH_TREE_LEVEL_TEMP: [usize; 3] =
+	[1,
+	HASHES_PER_BLOCK,
+	HASHES_PER_BLOCK * HASHES_PER_BLOCK];
+
+pub const BLOCK_SIZE: usize = 0x1000;
+
+pub const END_OF_BLOCK_CHAIN: u32 = 0x00FFFFFF;
+
+pub const HASH_ENTRY_LEN: usize = 0x18;

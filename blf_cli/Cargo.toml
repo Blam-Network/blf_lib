@@ -5,9 +5,12 @@ edition = "2021"
 
 [dependencies]
 blf_lib = { path = "../blf_lib" }
+stfs = { path = "../third-party/stfs" }
+xcontent = { path = "../third-party/xcontent" }
 clap = { version = "4.5.20", features = ["cargo", "derive"] }
 inline_colorization = "0.1.6"
 serde_json = "1.0.128"
 serde = { version = "1.0.210", features = ["derive"] }
 regex = "1.11.0"
 lazy_static = "1.5.0"
+memmap2 = "0.9.5"

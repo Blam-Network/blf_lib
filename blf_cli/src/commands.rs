@@ -1,4 +1,5 @@
 pub mod import_rsa_signature;
+pub mod import_map_variant;
 
 use clap::Subcommand;
 
@@ -25,4 +26,11 @@ pub enum Commands {
         title: String,
         version: String,
     },
+    #[command(arg_required_else_help = true)]
+    ImportMapVariant {
+        config_path: String,
+        map_variant_file_path: String,
+        title: String,
+        version: String,
+    }
 }

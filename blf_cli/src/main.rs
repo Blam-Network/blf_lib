@@ -8,6 +8,7 @@
 use std::fs::{remove_file, File};
 use std::io::{Read, Write};
 use clap::{command, Parser};
+use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
 use blf_lib::io::bitstream::{c_bitstream_writer, e_bitstream_byte_order};
 use blf_lib::blf::chunks::find_chunk_in_file;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_map_variant, s_blf_chunk_packed_map_variant};
@@ -15,6 +16,7 @@ use crate::commands::Commands;
 use crate::commands::import_rsa_signature::import_rsa_signature;
 use crate::title_storage::halo3::release::blf_files::map_variant::map_variant;
 use blf_lib::blf::BlfFile;
+use crate::commands::import_map_variant::import_map_variant;
 
 mod title_storage;
 mod io;
@@ -55,6 +57,9 @@ fn main() {
         },
         Commands::ImportRsaSignature { config_path, map_file_path, title, version } => {
             import_rsa_signature(config_path, map_file_path, title, version);
+        }
+        Commands::ImportMapVariant { config_path, map_variant_file_path, title, version} => {
+            import_map_variant(config_path, map_variant_file_path, title, version);
         }
     }
 }

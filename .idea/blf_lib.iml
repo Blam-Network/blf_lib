@@ -7,11 +7,19 @@
       <sourceFolder url="file://$MODULE_DIR$/blf_lib-derive/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/blf_lib/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/stfs/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third-party/stfs/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third-party/xcontent/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third-party/xecrypt/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/blf_cli/target" />
       <excludeFolder url="file://$MODULE_DIR$/blf_lib-derivable/target" />
       <excludeFolder url="file://$MODULE_DIR$/blf_lib-derive/target" />
       <excludeFolder url="file://$MODULE_DIR$/blf_lib/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
+      <excludeFolder url="file://$MODULE_DIR$/stfs/target" />
+      <excludeFolder url="file://$MODULE_DIR$/third-party/stfs/target" />
+      <excludeFolder url="file://$MODULE_DIR$/third-party/xcontent/target" />
+      <excludeFolder url="file://$MODULE_DIR$/third-party/xecrypt/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -6,7 +6,7 @@ use blf_lib::blf::s_blf_header;
 pub use blf_lib_derivable::blf::chunks::*;
 
 
-pub fn find_chunk<'a, T: BlfChunk + SerializableBlfChunk + ReadableBlfChunk>(buffer: Vec<u8>) -> Result<T, &'a str> {
+pub fn find_chunk<'a, T: BlfChunk + SerializableBlfChunk + ReadableBlfChunk>(buffer: &Vec<u8>) -> Result<T, &'a str> {
     let mut offset: usize = 0;
     while offset < buffer.len() {
         let header = s_blf_header::decode(&buffer[offset..offset + (s_blf_header::size())]);
