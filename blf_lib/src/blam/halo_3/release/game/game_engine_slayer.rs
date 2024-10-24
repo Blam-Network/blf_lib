@@ -3,12 +3,16 @@ use blf_lib::blam::halo_3::release::game::game_engine_default::{c_game_engine_ma
 use blf_lib::blam::halo_3::release::game::game_engine_traits::{c_game_engine_miscellaneous_options, c_game_engine_respawn_options};
 use blf_lib::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
 use blf_lib::types::byte_limited_utf8_string::ByteLimitedUTF8String;
+use blf_lib::types::byte_limited_wchar_string::ByteLimitedWcharString;
 use blf_lib_derive::PackedSerialize;
+use crate::types::array::Array;
+use serde_hex::{SerHex,StrictCap};
 
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
 pub struct c_game_engine_slayer_variant {
+    #[serde(with = "SerHex::<StrictCap>")]
     m_checksum: u32,
-    m_name: ByteLimitedUTF8String<32>,
+    pad: Array<u32, 1>,
     m_metadata: s_content_item_metadata,
     m_miscellaneous_options: c_game_engine_miscellaneous_options,
     m_respawn_options: c_game_engine_respawn_options,
