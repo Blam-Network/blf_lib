@@ -15,8 +15,8 @@ pub struct c_game_engine_social_options {
 pub struct c_game_engine_map_override_options {
     m_flags: u32,
     m_base_player_traits: c_player_traits,
-    m_weapon_set_absolute_index: u16,
-    m_vehicle_set_absolute_index: u16,
+    m_weapon_set_absolute_index: i16,
+    m_vehicle_set_absolute_index: i16,
     m_red_powerup_traits: c_player_traits,
     m_blue_powerup_traits: c_player_traits,
     m_yellow_powerup_traits: c_player_traits,

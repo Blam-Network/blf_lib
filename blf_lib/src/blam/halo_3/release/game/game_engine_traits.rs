@@ -18,9 +18,8 @@ pub struct c_game_engine_respawn_options {
     m_respawn_time_seconds: u8,
     m_suicide_penalty_seconds: u8,
     m_betrayal_penalty_seconds: u8,
-    m_unknown_penalty_seconds: u8,
+    // m_unknown_penalty_seconds: u8,
     m_respawn_growth_seconds: u8,
     m_respawn_player_traits_duration_seconds: u8,
-    pad: [u8; 3],
     m_respawn_player_traits: c_player_traits,
 }

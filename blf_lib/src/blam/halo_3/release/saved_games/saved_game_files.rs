@@ -35,7 +35,7 @@ pub struct s_content_item_metadata {
     date: u64, // time_t probs
     length_seconds: u32,
     campaign_id: i32,
-    map_id: u32,
+    map_id: i32,
     game_engine_type: u32,
     campaign_difficulty: i32,
     hopper_id: i16,
@@ -55,7 +55,7 @@ impl s_content_item_metadata {
         bitstream.write_qword(self.date, 64);
         bitstream.write_integer(self.length_seconds, 32);
         bitstream.write_signed_integer(self.campaign_id, 32);
-        bitstream.write_integer(self.map_id, 32);
+        bitstream.write_signed_integer(self.map_id, 32);
         bitstream.write_integer(self.game_engine_type, 4);
         bitstream.write_signed_integer(self.campaign_difficulty + 1, 3);
         bitstream.write_signed_integer(self.hopper_id as i32, 16);
@@ -74,7 +74,7 @@ impl s_content_item_metadata {
         self.date = bitstream.read_qword(64);
         self.length_seconds = bitstream.read_integer(32);
         self.campaign_id = bitstream.read_signed_integer(32);
-        self.map_id = bitstream.read_integer(32);
+        self.map_id = bitstream.read_signed_integer(32);
         self.game_engine_type = bitstream.read_integer(4);
         self.campaign_difficulty = bitstream.read_signed_integer(3) - 1;
         self.hopper_id = bitstream.read_i16(16);

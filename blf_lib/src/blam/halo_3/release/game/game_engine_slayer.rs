@@ -18,6 +18,9 @@ pub struct c_game_engine_slayer_variant {
     m_respawn_options: c_game_engine_respawn_options,
     m_social_options: c_game_engine_social_options,
     m_map_override_options: c_game_engine_map_override_options,
+
+    pad2: u32,
+
     m_flags: u16,
     m_team_scoring_method: u16,
 

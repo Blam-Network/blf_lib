@@ -4,8 +4,8 @@ use blf_lib_derive::PackedSerialize;
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
 pub struct c_player_trait_weapons {
     m_initial_grenade_count_setting: u16,
-    m_initial_primary_weapon_absolute_index: u8,
-    m_initial_secondary_weapon_absolute_index: u8,
+    m_initial_primary_weapon_absolute_index: i8,
+    m_initial_secondary_weapon_absolute_index: i8,
     m_damage_modifier_percentage_setting: u8,
     m_recharging_grenades_setting: u8,
     m_infinite_ammo_setting: u8,
