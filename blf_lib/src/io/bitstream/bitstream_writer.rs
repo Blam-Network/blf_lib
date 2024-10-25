@@ -1,7 +1,5 @@
 
 use std::cmp::min;
-use std::mem;
-use libc::wchar_t;
 use widestring::U16CString;
 use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, valid_real_vector3d_axes3, arctangent, quantize_normalized_vector3d, k_pi};
 use crate::blam::common::math::integer_math::int32_point3d;

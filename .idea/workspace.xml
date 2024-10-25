@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="CargoProjects">
+    <cargoProject FILE="$PROJECT_DIR$/blf_lib/Cargo.toml" />
+    <cargoProject FILE="$PROJECT_DIR$/blf_lib-derive/Cargo.toml" />
+    <cargoProject FILE="$PROJECT_DIR$/blf_lib-derivable/Cargo.toml" />
+    <cargoProject FILE="$PROJECT_DIR$/blf_cli/Cargo.toml" />
+    <cargoProject FILE="$PROJECT_DIR$/third-party/stfs/Cargo.toml" />
+    <cargoProject FILE="$PROJECT_DIR$/third-party/xcontent/Cargo.toml" />
+    <cargoProject FILE="$PROJECT_DIR$/third-party/xecrypt/Cargo.toml" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="17d787f6-783d-49cd-b523-654102f75680" name="Changes" comment="Corrected bitstream reader swapping issue">
+      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_assault.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_ctf.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_infection.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_juggernaut.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_king.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_oddball.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_sandbox.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_territories.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_vip.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/blf_lib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/blf_lib.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_cli/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_cli/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/common/math/real_math.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/common/math/real_math.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_default.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_default.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_player_traits.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_player_traits.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_slayer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_slayer.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_variant.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_variant.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/blf/chunks/halo3/v12070_08_09_05_2031_halo3_ship/s_blf_chunk_game_variant.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blf/chunks/halo3/v12070_08_09_05_2031_halo3_ship/s_blf_chunk_game_variant.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/io/bitstream/bitstream_reader.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/io/bitstream/bitstream_reader.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/io/bitstream/bitstream_writer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/io/bitstream/bitstream_writer.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/types/array.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/types/array.rs" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Rust File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;craftycodie&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Blam-Network/blf_lib.git&quot;,
+    &quot;accountId&quot;: &quot;57051006-1794-4b74-9760-ac82fb3225fd&quot;
+  }
+}</component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="tmc5tc7y" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="2n1ekbe1fNsF8NVRZeJLBXpOsWQ" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Cargo.All Tests.executor": "Run",
+    "Cargo.Build `Run blf_cli`.executor": "Run",
+    "Cargo.Build `Run blf_lib`.executor": "Run",
+    "Cargo.Build `Test bitstream::tests`.executor": "Run",
+    "Cargo.Build `Test blam::memory::bitstream::tests::test_read_bits_internal`.executor": "Run",
+    "Cargo.Build `Test blam::memory::bitstream::tests::test_reset_reading_state`.executor": "Run",
+    "Cargo.Build `Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_author::tests::check_alignment`.executor": "Run",
+    "Cargo.Build `Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_author::tests::encode_and_decode_test_struct`.executor": "Run",
+    "Cargo.Build `Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_author::tests::encode_with_bincode`.executor": "Run",
+    "Cargo.Build `Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_author::tests::foo_size`.executor": "Run",
+    "Cargo.Build `Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_start_of_file::tests::decode_start_of_file`.executor": "Run",
+    "Cargo.Build `Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_start_of_file::tests::encode_with_bincode`.executor": "Run",
+    "Cargo.Build `Test blf::chunks::s_blf_chunk_start_of_file::tests::decode_start_of_file`.executor": "Run",
+    "Cargo.Build `Test blf::chunks::s_blf_chunk_start_of_file::tests::s_blf_chunk_start_of_file_signature`.executor": "Run",
+    "Cargo.Build `Test blf::s_blf_header::tests::sizeof_s_blf_header`.executor": "Run",
+    "Cargo.Build `Test s_blf_chunk_author::tests`.executor": "Run",
+    "Cargo.Build blf_lib.executor": "Run",
+    "Cargo.Expand blf_cli::title_storage [blf_cli].executor": "Run",
+    "Cargo.Expand blf_lib::blam::cseries::cseries.executor": "Run",
+    "Cargo.Import Map Variant.executor": "Debug",
+    "Cargo.Install cargo-expand.executor": "Run",
+    "Cargo.Run blf_cli.executor": "Run",
+    "Cargo.Run blf_lib.executor": "Debug",
+    "Cargo.Test bitstream::tests.executor": "Run",
+    "Cargo.Test blam::common::memory::bitstream::tests::test_read_bits_internal.executor": "Run",
+    "Cargo.Test blam::common::memory::bitstream::tests::test_read_integers.executor": "Run",
+    "Cargo.Test blam::memory::bitstream::tests::test_read_bits_internal.executor": "Debug",
+    "Cargo.Test blam::memory::bitstream::tests::test_read_bits_internal_multiple_reads.executor": "Debug",
+    "Cargo.Test blam::memory::bitstream::tests::test_read_int32.executor": "Run",
+    "Cargo.Test blam::memory::bitstream::tests::test_read_integers.executor": "Debug",
+    "Cargo.Test blam::memory::bitstream::tests::test_reset_reading_state.executor": "Debug",
+    "Cargo.Test blam::networking::transport::transport_security::tests::sizeof_s_transport_secure_address.executor": "Run",
+    "Cargo.Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_author::tests::check_alignment.executor": "Run",
+    "Cargo.Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_author::tests::encode_and_decode.executor": "Run",
+    "Cargo.Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_author::tests::encode_and_decode_test_struct.executor": "Run",
+    "Cargo.Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_author::tests::encode_with_bincode.executor": "Run",
+    "Cargo.Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_author::tests::foo_size.executor": "Run",
+    "Cargo.Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_start_of_file::tests::check_alignment.executor": "Run",
+    "Cargo.Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_start_of_file::tests::decode_start_of_file.executor": "Run",
+    "Cargo.Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_start_of_file::tests::encode_with_bincode.executor": "Run",
+    "Cargo.Test blf::chunks::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_start_of_file::tests::s_blf_chunk_start_of_file_signature.executor": "Run",
+    "Cargo.Test blf::chunks::s_blf_chunk_author::tests::s_blf_chunk_start_of_file_signature.executor": "Run",
+    "Cargo.Test blf::chunks::s_blf_chunk_author::tests::s_blf_chunk_start_of_file_version.executor": "Run",
+    "Cargo.Test blf::chunks::s_blf_chunk_author::tests::sizeof_s_blf_chunk_author.executor": "Run",
+    "Cargo.Test blf::chunks::s_blf_chunk_start_of_file::tests::decode_start_of_file.executor": "Run",
+    "Cargo.Test blf::chunks::s_blf_chunk_start_of_file::tests::s_blf_chunk_start_of_file_signature.executor": "Debug",
+    "Cargo.Test blf::chunks::s_blf_chunk_start_of_file::tests::s_blf_chunk_start_of_file_version.executor": "Run",
+    "Cargo.Test blf::chunks::s_blf_chunk_start_of_file::tests::sizeof_s_blf_chunk_start_of_file.executor": "Run",
+    "Cargo.Test blf::s_blf_header::tests::sizeof_s_blf_header.executor": "Run",
+    "Cargo.Test blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::tests::test_the_factory.executor": "Run",
+    "Cargo.Test s_blf_chunk_author::tests.executor": "Run",
+    "Cargo.Test s_blf_chunk_start_of_file::tests.executor": "Run",
+    "Cargo.build title storage config.executor": "Run",
+    "Cargo.build title storage.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/stell/Desktop/blf_lib/blf_lib/src/blam/halo_3/release/game",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "org.rust.first.attach.projects": "true",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\stell\Desktop\blf_lib\blf_lib\src\blam\halo_3\release\game" />
+      <recent name="C:\Users\stell\Desktop\blf_lib\blf_lib\src\blf\chunks\halo3\v12070_08_09_05_2031_halo3_ship" />
+      <recent name="C:\Users\stell\Desktop\blf_lib\blf_cli\src\commands" />
+      <recent name="C:\Users\stell\Desktop\blf_lib\blf_cli\src\title_storage\halo3\v12070_08_09_05_2031_halo3_ship" />
+      <recent name="C:\Users\stell\Desktop\blf_lib\blf_lib\src\io" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\stell\Desktop\blf_lib\blf_lib\src\io" />
+      <recent name="C:\Users\stell\Desktop\blf_lib\blf_lib\src\blf" />
+      <recent name="C:\Users\stell\Desktop\blf_lib\blf_lib-derivable\src" />
+      <recent name="C:\Users\stell\Desktop\blf_lib\blf_lib-derivable" />
+      <recent name="C:\Users\stell\Desktop\blf_lib\blf_lib\src" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Cargo.build title storage config">
+    <configuration name="Expand blf_cli::title_storage [blf_cli]" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="expand --bin blf_cli --color=always --theme=Dracula --tests title_storage" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$/blf_cli" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Import Map Variant" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="buildProfileId" value="dev" />
+      <option name="command" value="run --package blf_cli --bin blf_cli -- import-map-variant  &quot;C:\Users\stell\Desktop\Blam-Title-Storage\Halo 3\Release\default_hoppers&quot; &quot;C:\Users\stell\Downloads\usermap00000000618163EE17&quot; &quot;Halo 3&quot; 12070.08.09.05.2031.halo3_ship" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$/blf_cli" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Run blf_cli" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="buildProfileId" value="dev" />
+      <option name="command" value="run --package blf_cli --bin blf_cli" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$/blf_cli" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test bitstream::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package blf_lib --lib blam::common::memory::bitstream::tests" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$/blf_lib" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test blam::common::memory::bitstream::tests::test_read_bits_internal" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="buildProfileId" value="test" />
+      <option name="command" value="test --package blf_lib --lib blam::common::memory::bitstream::tests::test_read_bits_internal -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$/blf_lib" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test blam::common::memory::bitstream::tests::test_read_integers" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package blf_lib --lib blam::common::memory::bitstream::tests::test_read_integers -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$/blf_lib" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="build title storage config" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="buildProfileId" value="dev" />
+      <option name="command" value="run --package blf_cli --bin blf_cli -- build-title-storage-config &quot;C:\Users\stell\Downloads\RawGames-Halo\RawGames-Halo\Halo 3\11855.07.08.20.2317.halo3_ship\title storage\title2&quot; &quot;C:\Users\stell\Desktop\Blam-Title-Storage\Halo 3\Release&quot; &quot;Halo 3&quot; 12070.08.09.05.2031.halo3_ship" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$/blf_cli" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="build title storage" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="buildProfileId" value="dev" />
+      <option name="command" value="run --package blf_cli --bin blf_cli -- build-title-storage &quot;C:\Users\stell\Desktop\Blam-Title-Storage\Halo 3\Release&quot; &quot;C:\Users\stell\Desktop\blf_out\title&quot; &quot;Halo 3&quot; 12070.08.09.05.2031.halo3_ship" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$/blf_cli" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Cargo.build title storage" />
+      <item itemvalue="Cargo.Import Map Variant" />
+      <item itemvalue="Cargo.build title storage config" />
+      <item itemvalue="Cargo.Test bitstream::tests" />
+      <item itemvalue="Cargo.Test blam::common::memory::bitstream::tests::test_read_bits_internal" />
+      <item itemvalue="Cargo.Test blam::common::memory::bitstream::tests::test_read_integers" />
+      <item itemvalue="Cargo.Expand blf_cli::title_storage [blf_cli]" />
+      <item itemvalue="Cargo.Run blf_cli" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Cargo.Test blam::common::memory::bitstream::tests::test_read_integers" />
+        <item itemvalue="Cargo.Test blam::common::memory::bitstream::tests::test_read_bits_internal" />
+        <item itemvalue="Cargo.Test bitstream::tests" />
+        <item itemvalue="Cargo.Run blf_cli" />
+        <item itemvalue="Cargo.Expand blf_cli::title_storage [blf_cli]" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="RustProjectSettings">
+    <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="17d787f6-783d-49cd-b523-654102f75680" name="Changes" comment="" />
+      <created>1728145154215</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1728145154215</updated>
+      <workItem from="1728145154994" duration="145000" />
+      <workItem from="1728145310936" duration="3106000" />
+      <workItem from="1728148509227" duration="69806000" />
+      <workItem from="1728326317418" duration="34331000" />
+      <workItem from="1728436954106" duration="3235000" />
+      <workItem from="1728489429424" duration="31420000" />
+      <workItem from="1728594973353" duration="57917000" />
+      <workItem from="1729185401971" duration="144348000" />
+    </task>
+    <task id="LOCAL-00001" summary="Day 1 of blf_lib">
+      <option name="closed" value="true" />
+      <created>1728169358760</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1728169358760</updated>
+    </task>
+    <task id="LOCAL-00002" summary="read_bits_internal rewrite (WIP)">
+      <option name="closed" value="true" />
+      <created>1728172817394</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1728172817394</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Corrected bitstream reader swapping issue">
+      <option name="closed" value="true" />
+      <created>1729702535257</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1729702535257</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Day 1 of blf_lib" />
+    <MESSAGE value="read_bits_internal rewrite (WIP)" />
+    <MESSAGE value="Corrected bitstream reader swapping issue" />
+    <option name="LAST_COMMIT_MESSAGE" value="Corrected bitstream reader swapping issue" />
+  </component>
+  <component name="XDebuggerManager">
+    <watches-manager>
+      <configuration name="CargoCommandRunConfiguration">
+        <watch expression="stfs.files.data.raw" />
+      </configuration>
+    </watches-manager>
+  </component>
+</project>

@@ -1,9 +1,9 @@
 
 use std::cmp::min;
 use widestring::U16CString;
-use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, valid_real_vector3d_axes3, arctangent, quantize_normalized_vector3d, k_pi, dequantize_real, rotate_vector_about_axis, valid_real_vector3d_axes2};
+use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, valid_real_vector3d_axes3, arctangent, k_pi, dequantize_real, rotate_vector_about_axis, valid_real_vector3d_axes2};
 use crate::blam::common::math::integer_math::int32_point3d;
-use crate::blam::common::math::real_math::{quantize_real, vector3d};
+use crate::blam::common::math::real_math::vector3d;
 use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
 use crate::io::bitstream::{e_bitstream_byte_order, e_bitstream_state, k_bitstream_maximum_position_stack_size, s_bitstream_data};
 

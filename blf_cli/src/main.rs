@@ -5,16 +5,9 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use std::fs::{remove_file, File};
-use std::io::{Read, Write};
 use clap::{command, Parser};
-use blf_lib::io::bitstream::{c_bitstream_writer, e_bitstream_byte_order};
-use blf_lib::blf::chunks::find_chunk_in_file;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_map_variant, s_blf_chunk_packed_map_variant};
 use crate::commands::Commands;
 use crate::commands::import_rsa_signature::import_rsa_signature;
-use crate::title_storage::halo3::release::blf_files::map_variant::map_variant;
-use blf_lib::blf::BlfFile;
 
 mod title_storage;
 mod io;

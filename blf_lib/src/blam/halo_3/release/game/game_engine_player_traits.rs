@@ -19,6 +19,7 @@ pub struct c_player_trait_shield_vitality {
     m_vampirism_percentage_setting: u8,
     m_headshot_immunity_setting: u8,
     m_shield_multiplier_setting: u8,
+    #[serde(skip_serializing,skip_deserializing)]
     pad: [u8;3], // pelican
 }
 
@@ -27,6 +28,7 @@ pub struct c_player_trait_movement {
     m_speed_setting: u8,
     m_gravity_setting: u8,
     m_vehicle_usage_setting: u8,
+    #[serde(skip_serializing,skip_deserializing)]
     pad: u8, // hornet
 }
 

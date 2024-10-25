@@ -12,6 +12,9 @@
       <excludeFolder url="file://$MODULE_DIR$/blf_lib-derive/target" />
       <excludeFolder url="file://$MODULE_DIR$/blf_lib/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
+      <excludeFolder url="file://$MODULE_DIR$/third-party/stfs/target" />
+      <excludeFolder url="file://$MODULE_DIR$/third-party/xcontent/target" />
+      <excludeFolder url="file://$MODULE_DIR$/third-party/xecrypt/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
