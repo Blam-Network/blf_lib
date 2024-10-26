@@ -1,29 +1,11 @@
-use std::io::Cursor;
 use serde::{Deserialize, Serialize};
 use blf_lib::blam::halo_3::release::game::game_engine_player_traits::c_player_traits;
 use blf_lib::blam::halo_3::release::game::game_engine_traits::{c_game_engine_miscellaneous_options, c_game_engine_respawn_options};
 use blf_lib::types::array::Array;
 use blf_lib_derive::PackedSerialize;
 use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
-use serde_hex::{SerHex,StrictCap};
-use blf_lib::blam::common::math::real_math::real_rectangle3d;
-use blf_lib::blam::common::simulation::simulation_encoding::{simulation_read_quantized_position, simulation_write_quantized_position};
-use blf_lib::blam::halo_3::release::game::game_engine_assault::c_game_engine_assault_variant;
-use blf_lib::blam::halo_3::release::game::game_engine_ctf::c_game_engine_ctf_variant;
-use blf_lib::blam::halo_3::release::game::game_engine_infection::c_game_engine_infection_variant;
-use blf_lib::blam::halo_3::release::game::game_engine_juggernaut::c_game_engine_juggernaut_variant;
-use blf_lib::blam::halo_3::release::game::game_engine_king::c_game_engine_king_variant;
-use blf_lib::blam::halo_3::release::game::game_engine_oddball::c_game_engine_oddball_variant;
-use blf_lib::blam::halo_3::release::game::game_engine_sandbox::c_game_engine_sandbox_variant;
-use blf_lib::blam::halo_3::release::game::game_engine_slayer::c_game_engine_slayer_variant;
-use blf_lib::blam::halo_3::release::game::game_engine_territories::c_game_engine_territories_variant;
-use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
-use blf_lib::blam::halo_3::release::game::game_engine_vip::c_game_engine_vip_variant;
-use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::{c_map_variant, c_object_identifier};
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib::{SET_BIT, TEST_BIT};
-use blf_lib_derivable::io::endian::Endianness;
-use blf_lib_derivable::io::packing::PACK1;
 
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
 pub struct c_game_engine_social_options {
@@ -101,8 +83,9 @@ impl c_game_engine_map_override_options {
 
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
 pub struct c_game_engine_base_variant {
-    #[serde(with = "SerHex::<StrictCap>")]
+    #[serde(skip_serializing,skip_deserializing)]
     m_checksum: u32,
+    #[serde(skip_serializing,skip_deserializing)]
     pad: Array<u32, 1>,
     m_metadata: s_content_item_metadata,
     m_miscellaneous_options: c_game_engine_miscellaneous_options,

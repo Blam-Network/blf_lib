@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
-use blf_lib::blam::halo_3::release::game::game_engine_default::c_game_engine_social_options;
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
-use blf_lib::{SET_BIT, TEST_BIT};
 use blf_lib_derive::PackedSerialize;
 
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]

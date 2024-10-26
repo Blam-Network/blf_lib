@@ -1,13 +1,11 @@
 use std::fmt::{Debug};
 use std::io::Cursor;
 use serde::{Deserialize, Serialize};
-use blf_lib::blam::common::math::real_math::real_rectangle3d;
-use blf_lib::blam::common::simulation::simulation_encoding::{simulation_read_quantized_position, simulation_write_quantized_position};
-use blf_lib::blam::halo_3::release::game::game_engine_default::{c_game_engine_base_variant, c_game_engine_social_options};
+use blf_lib::blam::halo_3::release::game::game_engine_default::c_game_engine_base_variant;
 use blf_lib::blam::halo_3::release::game::game_engine_slayer::c_game_engine_slayer_variant;
 use blf_lib::io::packed_encoding::PackedEncoder;
 use blf_lib_derivable::io::endian::Endianness;
-use blf_lib_derivable::io::packing::{Packing, PACK1};
+use blf_lib_derivable::io::packing::Packing;
 use blf_lib::blam::halo_3::release::game::game_engine_assault::c_game_engine_assault_variant;
 use blf_lib::blam::halo_3::release::game::game_engine_ctf::c_game_engine_ctf_variant;
 use blf_lib::blam::halo_3::release::game::game_engine_infection::c_game_engine_infection_variant;
@@ -17,9 +15,7 @@ use blf_lib::blam::halo_3::release::game::game_engine_oddball::c_game_engine_odd
 use blf_lib::blam::halo_3::release::game::game_engine_sandbox::c_game_engine_sandbox_variant;
 use blf_lib::blam::halo_3::release::game::game_engine_territories::c_game_engine_territories_variant;
 use blf_lib::blam::halo_3::release::game::game_engine_vip::c_game_engine_vip_variant;
-use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::c_object_identifier;
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
-use blf_lib::TEST_BIT;
 use crate::io::packed_decoding::PackedDecoder;
 
 #[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -179,43 +175,43 @@ impl c_game_variant {
             0 => { }
             1 => {
                 self.m_ctf_variant = Some(c_game_engine_ctf_variant::default());
-                self.m_ctf_variant.as_ref().unwrap().decode(bitstream);
+                self.m_ctf_variant.as_mut().unwrap().decode(bitstream);
             }
             2 => {
                 self.m_slayer_variant = Some(c_game_engine_slayer_variant::default());
-                self.m_slayer_variant.as_ref().unwrap().decode(bitstream);
+                self.m_slayer_variant.as_mut().unwrap().decode(bitstream);
             }
             3 => {
                 self.m_oddball_variant = Some(c_game_engine_oddball_variant::default());
-                self.m_oddball_variant.as_ref().unwrap().decode(bitstream);
+                self.m_oddball_variant.as_mut().unwrap().decode(bitstream);
             }
             4 => {
                 self.m_king_variant = Some(c_game_engine_king_variant::default());
-                self.m_king_variant.as_ref().unwrap().decode(bitstream);
+                self.m_king_variant.as_mut().unwrap().decode(bitstream);
             }
             5 => {
                 self.m_sandbox_variant = Some(c_game_engine_sandbox_variant::default());
-                self.m_sandbox_variant.as_ref().unwrap().decode(bitstream);
+                self.m_sandbox_variant.as_mut().unwrap().decode(bitstream);
             }
             6 => {
                 self.m_vip_variant = Some(c_game_engine_vip_variant::default());
-                self.m_vip_variant.as_ref().unwrap().decode(bitstream);
+                self.m_vip_variant.as_mut().unwrap().decode(bitstream);
             }
             7 => {
                 self.m_juggernaut_variant = Some(c_game_engine_juggernaut_variant::default());
-                self.m_juggernaut_variant.as_ref().unwrap().decode(bitstream);
+                self.m_juggernaut_variant.as_mut().unwrap().decode(bitstream);
             }
             8 => {
                 self.m_territories_variant = Some(c_game_engine_territories_variant::default());
-                self.m_territories_variant.as_ref().unwrap().decode(bitstream);
+                self.m_territories_variant.as_mut().unwrap().decode(bitstream);
             }
             9 => {
                 self.m_assault_variant = Some(c_game_engine_assault_variant::default());
-                self.m_assault_variant.as_ref().unwrap().decode(bitstream);
+                self.m_assault_variant.as_mut().unwrap().decode(bitstream);
             }
             10 => {
                 self.m_infection_variant = Some(c_game_engine_infection_variant::default());
-                self.m_infection_variant.as_ref().unwrap().decode(bitstream);
+                self.m_infection_variant.as_mut().unwrap().decode(bitstream);
             }
             _ => {
                 panic!("Tried to decode an unsupported game engine! ({})", self.m_game_engine_index);

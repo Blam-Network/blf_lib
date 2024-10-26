@@ -1,4 +1,4 @@
-use std::fs::{create_dir_all, exists, File};
+use std::fs::{create_dir_all, exists, remove_file, File};
 use std::io::{Read, Write};
 use crate::io::{build_path, get_directories_in_folder, get_files_in_folder, FILE_SEPARATOR};
 use crate::title_converter;
@@ -8,7 +8,7 @@ use lazy_static::lazy_static;
 use blf_lib::blam::common::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::BlfFile;
 use blf_lib::blf::chunks::find_chunk_in_file;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_packed_map_variant};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
 use crate::console::console_task;
 use crate::title_storage::halo3::release::blf_files::{motd, rsa_manifest};
 use crate::title_storage::halo3::release::config_files::motd_popup::motd_popup as motd_popup_config;
@@ -76,6 +76,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             Self::build_config_motd_popups(blfs_path, &hopper_directory, config_path, false);
             Self::build_config_motd_popups(blfs_path, &hopper_directory, config_path, true);
             Self::build_config_map_variants(blfs_path, &hopper_directory, config_path);
+            Self::build_config_game_variants(blfs_path, &hopper_directory, config_path);
         }
     }
 }
@@ -97,6 +98,8 @@ pub const k_language_suffixes: [&str; 10] = [
 
 lazy_static! {
     static ref hopper_folder_regex: Regex = Regex::new(r"[0-9]{5}").unwrap();
+    static ref map_variant_regex: Regex = Regex::new(r"_012.bin$").unwrap();
+    static ref game_variant_regex: Regex = Regex::new(r"_010.bin$").unwrap();
 }
 
 impl v12070_08_09_05_2031_halo3_ship {
@@ -394,7 +397,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             });
 
             for map_variant_file_name in map_variant_files {
-                if !map_variant_file_name.ends_with("_012.bin") {
+                if !map_variant_regex.is_match(&map_variant_file_name) {
                     continue;
                 }
 
@@ -409,7 +412,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 ]);
 
                 if exists(&map_variant_json_file_path).unwrap() {
-                    continue;
+                    remove_file(&map_variant_json_file_path).unwrap()
                 }
 
                 let packed_map_variant = find_chunk_in_file::<s_blf_chunk_packed_map_variant>(&map_variant_blf_file_path).unwrap();
@@ -421,6 +424,81 @@ impl v12070_08_09_05_2031_halo3_ship {
         }
 
         task.add_message(format!("Converted {maps_count} map variants."));
+
+        task.complete();
+    }
+
+    fn build_config_game_variants(blfs_path: &String, hopper_directory: &String, config_path: &String) {
+        let mut task = console_task::start(String::from("Converting Game Variants"));
+
+        let game_variants_folder = build_path(vec![
+            config_path,
+            hopper_directory,
+            &String::from("game_variants"),
+        ]);
+
+        create_dir_all(&game_variants_folder).unwrap();
+
+        let current_hoppers_blf_folder = build_path(vec![
+            blfs_path,
+            hopper_directory,
+        ]);
+
+        // Iterate through hopper folders. eg default_hoppers/00101
+        let hopper_directory_subfolders = get_directories_in_folder(&current_hoppers_blf_folder).unwrap_or_else(|err|{
+            println!("{}", err);
+            panic!();
+        });
+
+        let mut games_count = 0;
+
+        for subfolder in hopper_directory_subfolders {
+            if !hopper_folder_regex.is_match(&subfolder) {
+                continue;
+            }
+
+            let game_variant_blfs_folder = build_path(vec![
+                &current_hoppers_blf_folder,
+                &subfolder,
+            ]);
+
+            if !exists(&game_variant_blfs_folder).unwrap() {
+                continue;
+            }
+
+            let game_variant_files = get_files_in_folder(&game_variant_blfs_folder).unwrap_or_else(|err|{
+                println!("{}", err);
+                panic!();
+            });
+
+            for game_variant_file_name in game_variant_files {
+                if !game_variant_regex.is_match(&game_variant_file_name) {
+                    continue;
+                }
+
+                let game_variant_blf_file_path = build_path(vec![
+                    &game_variant_blfs_folder,
+                    &game_variant_file_name,
+                ]);
+
+                let game_variant_json_file_path = build_path(vec![
+                    &game_variants_folder,
+                    &game_variant_file_name.replace("_010.bin", ".json"),
+                ]);
+
+                if exists(&game_variant_json_file_path).unwrap() {
+                    remove_file(&game_variant_json_file_path).unwrap()
+                }
+
+                let packed_game_variant = find_chunk_in_file::<s_blf_chunk_packed_game_variant>(&game_variant_blf_file_path).unwrap();
+                let game_variant_json = serde_json::to_string_pretty(&packed_game_variant.game_variant).unwrap();
+                let mut game_variant_json_file = File::create_new(game_variant_json_file_path).unwrap();
+                game_variant_json_file.write_all(game_variant_json.as_bytes()).unwrap();
+                games_count += 1;
+            }
+        }
+
+        task.add_message(format!("Converted {games_count} game variants."));
 
         task.complete();
     }
