@@ -1,3 +1,4 @@
+use std::io::Cursor;
 use serde::{Deserialize, Serialize};
 use blf_lib::blam::halo_3::release::game::game_engine_player_traits::c_player_traits;
 use blf_lib::blam::halo_3::release::game::game_engine_traits::{c_game_engine_miscellaneous_options, c_game_engine_respawn_options};
@@ -5,11 +6,51 @@ use blf_lib::types::array::Array;
 use blf_lib_derive::PackedSerialize;
 use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
 use serde_hex::{SerHex,StrictCap};
+use blf_lib::blam::common::math::real_math::real_rectangle3d;
+use blf_lib::blam::common::simulation::simulation_encoding::{simulation_read_quantized_position, simulation_write_quantized_position};
+use blf_lib::blam::halo_3::release::game::game_engine_assault::c_game_engine_assault_variant;
+use blf_lib::blam::halo_3::release::game::game_engine_ctf::c_game_engine_ctf_variant;
+use blf_lib::blam::halo_3::release::game::game_engine_infection::c_game_engine_infection_variant;
+use blf_lib::blam::halo_3::release::game::game_engine_juggernaut::c_game_engine_juggernaut_variant;
+use blf_lib::blam::halo_3::release::game::game_engine_king::c_game_engine_king_variant;
+use blf_lib::blam::halo_3::release::game::game_engine_oddball::c_game_engine_oddball_variant;
+use blf_lib::blam::halo_3::release::game::game_engine_sandbox::c_game_engine_sandbox_variant;
+use blf_lib::blam::halo_3::release::game::game_engine_slayer::c_game_engine_slayer_variant;
+use blf_lib::blam::halo_3::release::game::game_engine_territories::c_game_engine_territories_variant;
+use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
+use blf_lib::blam::halo_3::release::game::game_engine_vip::c_game_engine_vip_variant;
+use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::{c_map_variant, c_object_identifier};
+use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
+use blf_lib::{SET_BIT, TEST_BIT};
+use blf_lib_derivable::io::endian::Endianness;
+use blf_lib_derivable::io::packing::PACK1;
 
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
 pub struct c_game_engine_social_options {
     m_flags: u16,
     m_team_changing: u16,
+}
+
+impl c_game_engine_social_options {
+    pub fn encode(&self, bitstream: &mut c_bitstream_writer) {
+        bitstream.write_bool(false); // "guess i'll go fuck myself" - observers
+        bitstream.write_integer(self.m_team_changing as u32, 2);
+        bitstream.write_bool(TEST_BIT!(self.m_flags, 0));
+        bitstream.write_bool(TEST_BIT!(self.m_flags, 1));
+        bitstream.write_bool(TEST_BIT!(self.m_flags, 2));
+        bitstream.write_bool(TEST_BIT!(self.m_flags, 3));
+        bitstream.write_bool(TEST_BIT!(self.m_flags, 4));
+    }
+
+    pub fn decode(&mut self, bitstream: &mut c_bitstream_reader) {
+        bitstream.read_bool();
+        self.m_team_changing = bitstream.read_integer(2) as u16;
+        SET_BIT!(self.m_flags, 0, bitstream.read_bool());
+        SET_BIT!(self.m_flags, 1, bitstream.read_bool());
+        SET_BIT!(self.m_flags, 2, bitstream.read_bool());
+        SET_BIT!(self.m_flags, 3, bitstream.read_bool());
+        SET_BIT!(self.m_flags, 4, bitstream.read_bool());
+    }
 }
 
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
@@ -28,6 +69,36 @@ pub struct c_game_engine_map_override_options {
     pad: u8, // john hold on
 }
 
+impl c_game_engine_map_override_options {
+    pub fn encode(&self, bitstream: &mut c_bitstream_writer) {
+        bitstream.write_bool(TEST_BIT!(self.m_flags, 0));
+        bitstream.write_bool(TEST_BIT!(self.m_flags, 1));
+        self.m_base_player_traits.encode(bitstream);
+        bitstream.write_integer(self.m_weapon_set_absolute_index as u32, 8);
+        bitstream.write_integer(self.m_vehicle_set_absolute_index as u32, 8);
+        self.m_red_powerup_traits.encode(bitstream);
+        self.m_blue_powerup_traits.encode(bitstream);
+        self.m_yellow_powerup_traits.encode(bitstream);
+        bitstream.write_integer(self.m_red_powerup_duration_seconds as u32, 7);
+        bitstream.write_integer(self.m_blue_powerup_duration_seconds as u32, 7);
+        bitstream.write_integer(self.m_yellow_powerup_duration_seconds as u32, 7);
+    }
+
+    pub fn decode(&mut self, bitstream: &mut c_bitstream_reader) {
+        SET_BIT!(self.m_flags, 0, bitstream.read_bool());
+        SET_BIT!(self.m_flags, 1, bitstream.read_bool());
+        self.m_base_player_traits.decode(bitstream);
+        self.m_weapon_set_absolute_index = bitstream.read_integer(8) as i16;
+        self.m_weapon_set_absolute_index = bitstream.read_integer(8) as i16;
+        self.m_red_powerup_traits.decode(bitstream);
+        self.m_blue_powerup_traits.decode(bitstream);
+        self.m_yellow_powerup_traits.decode(bitstream);
+        self.m_red_powerup_duration_seconds = bitstream.read_integer(7) as u8;
+        self.m_blue_powerup_duration_seconds = bitstream.read_integer(7) as u8;
+        self.m_yellow_powerup_duration_seconds = bitstream.read_integer(7) as u8;
+    }
+}
+
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
 pub struct c_game_engine_base_variant {
     #[serde(with = "SerHex::<StrictCap>")]
@@ -41,4 +112,26 @@ pub struct c_game_engine_base_variant {
     pad2: u32,
     m_flags: u16,
     m_team_scoring_method: u16,
+}
+
+impl c_game_engine_base_variant {
+    pub fn encode(&self, bitstream: &mut c_bitstream_writer) {
+        self.m_metadata.encode(bitstream);
+        bitstream.write_integer(self.m_flags as u32, 1);
+        self.m_miscellaneous_options.encode(bitstream);
+        self.m_respawn_options.encode(bitstream);
+        self.m_social_options.encode(bitstream);
+        self.m_map_override_options.encode(bitstream);
+        bitstream.write_integer(self.m_team_scoring_method as u32, 3);
+    }
+
+    pub fn decode(&mut self, bitstream: &mut c_bitstream_reader) {
+        self.m_metadata.decode(bitstream);
+        self.m_flags = bitstream.read_u16(1);
+        self.m_miscellaneous_options.decode(bitstream);
+        self.m_respawn_options.decode(bitstream);
+        self.m_social_options.decode(bitstream);
+        self.m_map_override_options.decode(bitstream);
+        self.m_team_scoring_method = bitstream.read_u16(3);
+    }
 }

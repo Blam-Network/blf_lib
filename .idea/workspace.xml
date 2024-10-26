@@ -14,27 +14,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="17d787f6-783d-49cd-b523-654102f75680" name="Changes" comment="Corrected bitstream reader swapping issue">
-      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_assault.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_ctf.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_infection.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_juggernaut.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_king.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_oddball.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_sandbox.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_territories.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_vip.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/blf_lib.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/blf_lib.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/blf_lib/src/blf/chunks/halo3/v12070_08_09_05_2031_halo3_ship/s_blf_chunk_packed_game_variant.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/blf_cli/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_cli/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/common/math/real_math.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/common/math/real_math.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/common/cseries.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/common/cseries.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_default.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_default.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_player_traits.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_player_traits.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_slayer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_slayer.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_traits.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_traits.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_variant.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blam/halo_3/release/game/game_engine_variant.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/blf_lib/src/blf/chunks/halo3/v12070_08_09_05_2031_halo3_ship/s_blf_chunk_game_variant.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blf/chunks/halo3/v12070_08_09_05_2031_halo3_ship/s_blf_chunk_game_variant.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/blf_lib/src/io/bitstream/bitstream_reader.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/io/bitstream/bitstream_reader.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/blf_lib/src/io/bitstream/bitstream_writer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/io/bitstream/bitstream_writer.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/blf_lib/src/types/array.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/types/array.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/blf/chunks/halo3/v12070_08_09_05_2031_halo3_ship.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blf/chunks/halo3/v12070_08_09_05_2031_halo3_ship.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/blf/versions/halo3/v12070_08_09_05_2031_halo3_ship.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/blf/versions/halo3/v12070_08_09_05_2031_halo3_ship.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blf_lib/src/types/byte_limited_wchar_string.rs" beforeDir="false" afterPath="$PROJECT_DIR$/blf_lib/src/types/byte_limited_wchar_string.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -134,7 +124,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/Users/stell/Desktop/blf_lib/blf_lib/src/blam/halo_3/release/game",
+    "last_opened_file_path": "C:/Users/stell/Desktop/blf_lib/blf_lib/src/blf/chunks/halo3/v12070_08_09_05_2031_halo3_ship",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -148,8 +138,8 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\stell\Desktop\blf_lib\blf_lib\src\blam\halo_3\release\game" />
       <recent name="C:\Users\stell\Desktop\blf_lib\blf_lib\src\blf\chunks\halo3\v12070_08_09_05_2031_halo3_ship" />
+      <recent name="C:\Users\stell\Desktop\blf_lib\blf_lib\src\blam\halo_3\release\game" />
       <recent name="C:\Users\stell\Desktop\blf_lib\blf_cli\src\commands" />
       <recent name="C:\Users\stell\Desktop\blf_lib\blf_cli\src\title_storage\halo3\v12070_08_09_05_2031_halo3_ship" />
       <recent name="C:\Users\stell\Desktop\blf_lib\blf_lib\src\io" />
@@ -342,7 +332,7 @@
       <workItem from="1728436954106" duration="3235000" />
       <workItem from="1728489429424" duration="31420000" />
       <workItem from="1728594973353" duration="57917000" />
-      <workItem from="1729185401971" duration="144348000" />
+      <workItem from="1729185401971" duration="154601000" />
     </task>
     <task id="LOCAL-00001" summary="Day 1 of blf_lib">
       <option name="closed" value="true" />

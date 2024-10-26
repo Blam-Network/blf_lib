@@ -48,7 +48,7 @@ impl<const N: usize> ByteLimitedWcharString<N> {
 impl<const N: usize> PackedEncoder for ByteLimitedWcharString<N> {
     fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
         let mut out = Vec::<u8>::with_capacity(N);
-        self.buf.get().iter().for_each(|&wchar| {out.append(&mut (wchar).encode_packed(endian, packing));});
+        self.buf.get().iter().for_each(|&wchar| {out.append(&mut (wchar).encode_packed(endian, PACK1));});
         out
     }
 }
