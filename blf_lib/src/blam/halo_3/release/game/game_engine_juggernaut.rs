@@ -15,12 +15,12 @@ pub struct c_game_engine_juggernaut_variant {
     m_variant_flags: u8,
     m_zone_movement: u8,
     m_zone_order: u8,
-    m_kill_points: u8,
-    m_juggernaut_kill_points: u8,
-    m_kill_as_juggernaut_points: u8,
-    m_destination_arrival_points: u8,
-    m_suicide_points: u8,
-    m_betrayal_points: u8,
+    m_kill_points: i8,
+    m_juggernaut_kill_points: i8,
+    m_kill_as_juggernaut_points: i8,
+    m_destination_arrival_points: i8,
+    m_suicide_points: i8,
+    m_betrayal_points: i8,
     m_juggernaut_delay: u8,
     m_juggernaut_traits: c_player_traits,
     #[serde(skip_serializing,skip_deserializing)]
@@ -37,12 +37,12 @@ impl c_game_engine_juggernaut_variant {
         bitstream.write_integer(self.m_next_juggernaut as u32, 2);
         bitstream.write_integer(self.m_zone_movement as u32, 4);
         bitstream.write_integer(self.m_zone_order as u32, 1);
-        bitstream.write_integer(self.m_kill_points as u32, 5);
-        bitstream.write_integer(self.m_juggernaut_kill_points as u32, 5);
-        bitstream.write_integer(self.m_kill_as_juggernaut_points as u32, 5);
-        bitstream.write_integer(self.m_destination_arrival_points as u32, 5);
-        bitstream.write_integer(self.m_suicide_points as u32, 5);
-        bitstream.write_integer(self.m_betrayal_points as u32, 5);
+        bitstream.write_signed_integer(self.m_kill_points as i32, 5);
+        bitstream.write_signed_integer(self.m_juggernaut_kill_points as i32, 5);
+        bitstream.write_signed_integer(self.m_kill_as_juggernaut_points as i32, 5);
+        bitstream.write_signed_integer(self.m_destination_arrival_points as i32, 5);
+        bitstream.write_signed_integer(self.m_suicide_points as i32, 5);
+        bitstream.write_signed_integer(self.m_betrayal_points as i32, 5);
         bitstream.write_integer(self.m_juggernaut_delay as u32, 4);
         self.m_juggernaut_traits.encode(bitstream);
     }
@@ -56,12 +56,12 @@ impl c_game_engine_juggernaut_variant {
         self.m_next_juggernaut = bitstream.read_u8(2);
         self.m_zone_movement = bitstream.read_u8(4);
         self.m_zone_order = bitstream.read_u8(1);
-        self.m_kill_points = bitstream.read_u8(5);
-        self.m_juggernaut_kill_points = bitstream.read_u8(5);
-        self.m_kill_as_juggernaut_points = bitstream.read_u8(5);
-        self.m_destination_arrival_points = bitstream.read_u8(5);
-        self.m_suicide_points = bitstream.read_u8(5);
-        self.m_betrayal_points = bitstream.read_u8(5);
+        self.m_kill_points = bitstream.read_signed_integer(5) as i8;
+        self.m_juggernaut_kill_points = bitstream.read_signed_integer(5) as i8;
+        self.m_kill_as_juggernaut_points = bitstream.read_signed_integer(5) as i8;
+        self.m_destination_arrival_points = bitstream.read_signed_integer(5) as i8;
+        self.m_suicide_points = bitstream.read_signed_integer(5) as i8;
+        self.m_betrayal_points = bitstream.read_signed_integer(5) as i8;
         self.m_juggernaut_delay = bitstream.read_u8(4);
         self.m_juggernaut_traits.decode(bitstream);
     }

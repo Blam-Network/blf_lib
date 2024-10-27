@@ -11,10 +11,10 @@ pub struct c_game_engine_king_variant {
     m_score_to_win: u16,
     m_moving_hill: u8,
     m_moving_hill_order: u8,
-    m_uncontested_hill_bonus: u8,
-    m_kill_points: u8,
-    m_inside_hill_points: u8,
-    m_outside_hill_points: u8,
+    m_uncontested_hill_bonus: i8,
+    m_kill_points: i8,
+    m_inside_hill_points: i8,
+    m_outside_hill_points: i8,
     m_inside_hill_traits: c_player_traits,
     #[serde(skip_serializing,skip_deserializing)]
     m_pad1: Array<u8, 6>,
@@ -26,10 +26,10 @@ impl c_game_engine_king_variant {
         bitstream.write_integer(self.m_score_to_win as u32, 10);
         bitstream.write_integer(self.m_moving_hill as u32, 4);
         bitstream.write_integer(self.m_moving_hill_order as u32, 2);
-        bitstream.write_integer(self.m_inside_hill_points as u32, 5);
-        bitstream.write_integer(self.m_outside_hill_points as u32, 5);
-        bitstream.write_integer(self.m_uncontested_hill_bonus as u32, 5);
-        bitstream.write_integer(self.m_kill_points as u32, 5);
+        bitstream.write_signed_integer(self.m_inside_hill_points as i32, 5);
+        bitstream.write_signed_integer(self.m_outside_hill_points as i32, 5);
+        bitstream.write_signed_integer(self.m_uncontested_hill_bonus as i32, 5);
+        bitstream.write_signed_integer(self.m_kill_points as i32, 5);
         self.m_inside_hill_traits.encode(bitstream);
     }
 
@@ -38,10 +38,10 @@ impl c_game_engine_king_variant {
         self.m_score_to_win = bitstream.read_u16(10);
         self.m_moving_hill = bitstream.read_u8(4);
         self.m_moving_hill_order = bitstream.read_u8(2);
-        self.m_inside_hill_points = bitstream.read_u8(5);
-        self.m_outside_hill_points = bitstream.read_u8(5);
-        self.m_uncontested_hill_bonus = bitstream.read_u8(5);
-        self.m_kill_points = bitstream.read_u8(5);
+        self.m_inside_hill_points = bitstream.read_signed_integer(5) as i8;
+        self.m_outside_hill_points = bitstream.read_signed_integer(5) as i8;
+        self.m_uncontested_hill_bonus = bitstream.read_signed_integer(5) as i8;
+        self.m_kill_points = bitstream.read_signed_integer(5) as i8;
         self.m_inside_hill_traits.decode(bitstream);
     }
 }

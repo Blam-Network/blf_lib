@@ -56,8 +56,8 @@ impl c_game_engine_map_override_options {
         bitstream.write_bool(TEST_BIT!(self.m_flags, 0));
         bitstream.write_bool(TEST_BIT!(self.m_flags, 1));
         self.m_base_player_traits.encode(bitstream);
-        bitstream.write_integer(self.m_weapon_set_absolute_index as u32, 8);
-        bitstream.write_integer(self.m_vehicle_set_absolute_index as u32, 8);
+        bitstream.write_signed_integer(self.m_weapon_set_absolute_index as i32, 8);
+        bitstream.write_signed_integer(self.m_vehicle_set_absolute_index as i32, 8);
         self.m_red_powerup_traits.encode(bitstream);
         self.m_blue_powerup_traits.encode(bitstream);
         self.m_yellow_powerup_traits.encode(bitstream);
@@ -70,8 +70,8 @@ impl c_game_engine_map_override_options {
         SET_BIT!(self.m_flags, 0, bitstream.read_bool());
         SET_BIT!(self.m_flags, 1, bitstream.read_bool());
         self.m_base_player_traits.decode(bitstream);
-        self.m_weapon_set_absolute_index = bitstream.read_integer(8) as i16;
-        self.m_weapon_set_absolute_index = bitstream.read_integer(8) as i16;
+        self.m_weapon_set_absolute_index = bitstream.read_signed_integer(8) as i16;
+        self.m_vehicle_set_absolute_index = bitstream.read_signed_integer(8) as i16;
         self.m_red_powerup_traits.decode(bitstream);
         self.m_blue_powerup_traits.decode(bitstream);
         self.m_yellow_powerup_traits.decode(bitstream);

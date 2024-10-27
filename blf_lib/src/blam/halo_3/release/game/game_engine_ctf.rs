@@ -10,8 +10,8 @@ pub struct c_game_engine_ctf_variant {
     m_home_flag_waypoint: u8,
     m_game_type: u8,
     m_respawn: u8,
-    m_touch_return_timeout: u16,
-    m_sudden_death_time: u16,
+    m_touch_return_timeout: i16,
+    m_sudden_death_time: i16,
     m_score_to_win: u16,
     m_flag_reset_time: u16,
     m_carrier_traits: c_player_traits,
@@ -24,9 +24,9 @@ impl c_game_engine_ctf_variant {
         bitstream.write_integer(self.m_game_type as u32, 2);
         bitstream.write_integer(self.m_respawn as u32, 2);
         bitstream.write_integer(self.m_score_to_win as u32, 6);
-        bitstream.write_integer(self.m_sudden_death_time as u32, 9);
+        bitstream.write_signed_integer(self.m_sudden_death_time as i32, 9);
         bitstream.write_integer(self.m_flag_reset_time as u32, 9);
-        bitstream.write_integer(self.m_touch_return_timeout as u32, 9);
+        bitstream.write_signed_integer(self.m_touch_return_timeout as i32, 9);
         self.m_carrier_traits.encode(bitstream);
     }
 
@@ -36,9 +36,9 @@ impl c_game_engine_ctf_variant {
         self.m_game_type = bitstream.read_u8(2);
         self.m_respawn = bitstream.read_u8(2);
         self.m_score_to_win = bitstream.read_u16(6);
-        self.m_sudden_death_time = bitstream.read_u16(9);
+        self.m_sudden_death_time = bitstream.read_signed_integer(9) as i16;
         self.m_flag_reset_time = bitstream.read_u16(9);
-        self.m_touch_return_timeout = bitstream.read_u16(9);
+        self.m_touch_return_timeout = bitstream.read_signed_integer(9) as i16;
         self.m_carrier_traits.decode(bitstream);
     }
 }

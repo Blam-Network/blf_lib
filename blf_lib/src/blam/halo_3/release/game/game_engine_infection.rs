@@ -13,12 +13,12 @@ pub struct c_game_engine_infection_variant {
     m_next_zombie: u8,
     m_initial_zombie_count: u8,
     m_safe_haven_movement_time: u16,
-    m_zombie_kill_points: u8,
-    m_infection_points: u8,
-    m_safe_haven_arrival_points: u8,
-    m_suicide_points: u8,
-    m_betrayal_points: u8,
-    m_last_man_bonus_points: u8,
+    m_zombie_kill_points: i8,
+    m_infection_points: i8,
+    m_safe_haven_arrival_points: i8,
+    m_suicide_points: i8,
+    m_betrayal_points: i8,
+    m_last_man_bonus_points: i8,
     m_zombie_traits: c_player_traits,
     m_first_zombie_traits: c_player_traits,
     m_safe_haven_defender_traits: c_player_traits,
@@ -34,12 +34,12 @@ impl c_game_engine_infection_variant {
         bitstream.write_integer(self.m_next_zombie as u32, 2);
         bitstream.write_integer(self.m_initial_zombie_count as u32, 5);
         bitstream.write_integer(self.m_safe_haven_movement_time as u32, 7);
-        bitstream.write_integer(self.m_zombie_kill_points as u32, 5);
-        bitstream.write_integer(self.m_infection_points as u32, 5);
-        bitstream.write_integer(self.m_safe_haven_arrival_points as u32, 5);
-        bitstream.write_integer(self.m_suicide_points as u32, 5);
-        bitstream.write_integer(self.m_betrayal_points as u32, 5);
-        bitstream.write_integer(self.m_last_man_bonus_points as u32, 5);
+        bitstream.write_signed_integer(self.m_zombie_kill_points as i32, 5);
+        bitstream.write_signed_integer(self.m_infection_points as i32, 5);
+        bitstream.write_signed_integer(self.m_safe_haven_arrival_points as i32, 5);
+        bitstream.write_signed_integer(self.m_suicide_points as i32, 5);
+        bitstream.write_signed_integer(self.m_betrayal_points as i32, 5);
+        bitstream.write_signed_integer(self.m_last_man_bonus_points as i32, 5);
         self.m_zombie_traits.encode(bitstream);
         self.m_first_zombie_traits.encode(bitstream);
         self.m_last_human_traits.encode(bitstream);
@@ -52,12 +52,12 @@ impl c_game_engine_infection_variant {
         self.m_next_zombie = bitstream.read_u8(2);
         self.m_initial_zombie_count = bitstream.read_u8(5);
         self.m_safe_haven_movement_time = bitstream.read_u16(7);
-        self.m_zombie_kill_points = bitstream.read_u8(5);
-        self.m_infection_points = bitstream.read_u8(5);
-        self.m_safe_haven_arrival_points = bitstream.read_u8(5);
-        self.m_suicide_points = bitstream.read_u8(5);
-        self.m_betrayal_points = bitstream.read_u8(5);
-        self.m_last_man_bonus_points = bitstream.read_u8(5);
+        self.m_zombie_kill_points = bitstream.read_signed_integer(5) as i8;
+        self.m_infection_points = bitstream.read_signed_integer(5) as i8;
+        self.m_safe_haven_arrival_points = bitstream.read_signed_integer(5) as i8;
+        self.m_suicide_points = bitstream.read_signed_integer(5) as i8;
+        self.m_betrayal_points = bitstream.read_signed_integer(5) as i8;
+        self.m_last_man_bonus_points = bitstream.read_signed_integer(5) as i8;
         self.m_zombie_traits.decode(bitstream);
         self.m_first_zombie_traits.decode(bitstream);
         self.m_last_human_traits.decode(bitstream);

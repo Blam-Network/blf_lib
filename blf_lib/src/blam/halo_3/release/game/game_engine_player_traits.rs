@@ -64,8 +64,8 @@ impl c_player_traits {
         bitstream.write_integer(self.m_shield_vitality_traits.m_headshot_immunity_setting as u32, 2);
         bitstream.write_integer(self.m_shield_vitality_traits.m_shield_multiplier_setting as u32, 3);
         bitstream.write_integer(self.m_weapon_traits.m_damage_modifier_percentage_setting as u32, 4);
-        bitstream.write_integer(self.m_weapon_traits.m_initial_primary_weapon_absolute_index as u32, 8);
-        bitstream.write_integer(self.m_weapon_traits.m_initial_secondary_weapon_absolute_index as u32, 8);
+        bitstream.write_signed_integer(self.m_weapon_traits.m_initial_primary_weapon_absolute_index as i32, 8);
+        bitstream.write_signed_integer(self.m_weapon_traits.m_initial_secondary_weapon_absolute_index as i32, 8);
         bitstream.write_integer(self.m_weapon_traits.m_initial_grenade_count_setting as u32, 2);
         bitstream.write_integer(self.m_weapon_traits.m_infinite_ammo_setting as u32, 2);
         bitstream.write_integer(self.m_weapon_traits.m_recharging_grenades_setting as u32, 2);
@@ -88,8 +88,8 @@ impl c_player_traits {
         self.m_shield_vitality_traits.m_headshot_immunity_setting = bitstream.read_integer(2) as u8;
         self.m_shield_vitality_traits.m_shield_multiplier_setting = bitstream.read_integer(3) as u8;
         self.m_weapon_traits.m_damage_modifier_percentage_setting = bitstream.read_integer(4) as u8;
-        self.m_weapon_traits.m_initial_primary_weapon_absolute_index = bitstream.read_integer(8) as i8;
-        self.m_weapon_traits.m_initial_secondary_weapon_absolute_index = bitstream.read_integer(8) as i8;
+        self.m_weapon_traits.m_initial_primary_weapon_absolute_index = bitstream.read_signed_integer(8) as i8;
+        self.m_weapon_traits.m_initial_secondary_weapon_absolute_index = bitstream.read_signed_integer(8) as i8;
         self.m_weapon_traits.m_initial_grenade_count_setting = bitstream.read_integer(2) as u16;
         self.m_weapon_traits.m_infinite_ammo_setting = bitstream.read_integer(2) as u8;
         self.m_weapon_traits.m_recharging_grenades_setting = bitstream.read_integer(2) as u8;
