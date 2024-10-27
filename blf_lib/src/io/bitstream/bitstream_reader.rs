@@ -246,25 +246,13 @@ impl<'a> c_bitstream_reader<'a> {
     }
 
     pub fn read_signed_integer(&mut self, size_in_bits: usize) -> i32 {
-        assert!(size_in_bits > 0);
-        assert!(size_in_bits <= 32);
-        let size_in_bytes = (size_in_bits as f32 / 8f32 ).ceil() as usize;
-        let mut bytes_vec = vec![0u8; size_in_bytes];
-        self.read_bits_internal(&mut bytes_vec, size_in_bits);
-        let bytes_slice = bytes_vec.as_slice();
+        let mut result = self.read_integer(size_in_bits);
 
-        let mut byte_array = [0u8; 4];
-
-        match self.m_byte_order {
-            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
-                byte_array[0..bytes_slice.len()].copy_from_slice(bytes_slice);
-                i32::from_le_bytes(byte_array)
-            }
-            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
-                byte_array[4 - bytes_slice.len()..4].copy_from_slice(bytes_slice);
-                i32::from_be_bytes(byte_array)
-            }
+        if size_in_bits < 32 && (result & (1 << (size_in_bits - 1))) != 0 {
+            result |= !((1 << size_in_bits) - 1);
         }
+
+        result as i32
     }
 
     pub fn read_qword(&mut self, size_in_bits: usize) -> u64 {
@@ -286,15 +274,15 @@ impl<'a> c_bitstream_reader<'a> {
     pub fn read_point3d(&mut self, point: &mut int32_point3d, axis_encoding_size_in_bits: usize) {
         assert!(0 < axis_encoding_size_in_bits && axis_encoding_size_in_bits <= 32);
 
-        point.x = self.read_signed_integer(axis_encoding_size_in_bits);
-        point.y = self.read_signed_integer(axis_encoding_size_in_bits);
-        point.z = self.read_signed_integer(axis_encoding_size_in_bits);
+        point.x = self.read_integer(axis_encoding_size_in_bits) as i32;
+        point.y = self.read_integer(axis_encoding_size_in_bits) as i32;
+        point.z = self.read_integer(axis_encoding_size_in_bits) as i32;
     }
 
     pub fn read_quantized_real(&mut self, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool, exact_endpoints: bool) -> f32 {
         assert!(self.reading());
-        let value = self.read_signed_integer(size_in_bits);
-        dequantize_real(value, min_value, max_value, size_in_bits, exact_midpoint)
+        let value = self.read_integer(size_in_bits);
+        dequantize_real(value as i32, min_value, max_value, size_in_bits, exact_midpoint)
     }
 
     pub fn read_qword_internal(size_in_bits: u8) -> u64 {

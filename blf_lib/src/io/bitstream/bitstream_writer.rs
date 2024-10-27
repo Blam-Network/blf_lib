@@ -59,14 +59,13 @@ impl<'a> c_bitstream_writer<'a> {
     }
 
     pub fn write_signed_integer(&mut self, value: i32, size_in_bits: usize) {
-        match self.m_byte_order {
-            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
-                self.write_bits_internal(&value.to_le_bytes(), size_in_bits);
-            }
-            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
-                self.write_bits_internal(&value.to_be_bytes(), size_in_bits);
-            }
-        }
+        let max_value = ((1u32 << (size_in_bits - 1)) - 1) as i32; // Maximum positive value
+
+        assert!(self.writing(), "writing()");
+        assert!(size_in_bits <= 32, "size_in_bits>0 && size_in_bits<=LONG_BITS");
+        assert!(value > !max_value, "value>=minimum");
+        assert!(value < max_value, "value<=maximum");
+        self.write_integer(value as u32, size_in_bits);
     }
 
     pub fn write_bool(&mut self, value: bool) {
@@ -178,14 +177,14 @@ impl<'a> c_bitstream_writer<'a> {
         assert!(point.y < 1 << axis_encoding_size_in_bits);
         assert!(point.z < 1 << axis_encoding_size_in_bits);
 
-        self.write_signed_integer(point.x, axis_encoding_size_in_bits);
-        self.write_signed_integer(point.y, axis_encoding_size_in_bits);
-        self.write_signed_integer(point.z, axis_encoding_size_in_bits);
+        self.write_integer(point.x as u32, axis_encoding_size_in_bits);
+        self.write_integer(point.y as u32, axis_encoding_size_in_bits);
+        self.write_integer(point.z as u32, axis_encoding_size_in_bits);
     }
 
     pub fn write_quantized_real(&mut self, value: f32, min_value: f32, max_value: f32, size_in_bits: usize, exact_midpoint: bool, exact_endpoints: bool) {
         assert!(self.writing());
-        self.write_signed_integer(quantize_real(value, min_value, max_value, size_in_bits, exact_midpoint, exact_endpoints), size_in_bits);
+        self.write_integer(quantize_real(value, min_value, max_value, size_in_bits, exact_midpoint, exact_endpoints) as u32, size_in_bits);
     }
 
     pub fn write_secure_address(address: &s_transport_secure_address) {
