@@ -6,7 +6,7 @@ use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::PACK1;
 use blf_lib_derive::{PackedSerialize};
 use crate::io::packed_decoding::PackedDecoder;
-use crate::types::byte_limited_utf8_string::ByteLimitedUTF8String;
+use crate::types::byte_limited_utf8_string::FixedSizeUTF8String;
 use crate::types::c_string::to_string;
 
 #[derive(PackedSerialize, Debug)]
@@ -15,7 +15,7 @@ pub struct s_cache_file_header_v11 {
     pub version: u32, // 11
     pub size: u32,
     unknown1: Array<u8, 0x180>,
-    pub map_name: ByteLimitedUTF8String<0x20>,
+    pub map_name: FixedSizeUTF8String<0x20>,
     pub map_language: u32,
     unknown2: Array<u8, 0x1BC>,
     pub rsa_signature: Array<u8, 0x100>,

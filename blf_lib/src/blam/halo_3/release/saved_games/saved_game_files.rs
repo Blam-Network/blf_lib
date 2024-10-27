@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib_derive::PackedSerialize;
-use crate::types::byte_limited_utf8_string::ByteLimitedUTF8String;
+use crate::types::byte_limited_utf8_string::FixedSizeUTF8String;
 use crate::types::byte_limited_wchar_string::ByteLimitedWcharString;
 
 pub const e_saved_game_file_type_none: u32 = 0xFFFFFFFF;
@@ -26,8 +26,8 @@ pub const k_saved_game_file_type_count: u32 = 13;
 pub struct s_content_item_metadata {
     unique_id: u64,
     name: ByteLimitedWcharString<0x10>,
-    description: ByteLimitedUTF8String<128>,
-    author: ByteLimitedUTF8String<16>,
+    description: FixedSizeUTF8String<128>,
+    author: FixedSizeUTF8String<16>,
     file_type: u32,
     author_is_xuid_online: bool, // padded by 3 bytes, must be pack4
     author_id: u64,

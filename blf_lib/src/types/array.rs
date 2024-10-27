@@ -11,7 +11,7 @@ pub struct Array<E: 'static, const N: usize> {
     _data: Vec<E> // 1984
 }
 
-impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> Array<E, N> {
+impl<E: Default + Copy + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> Array<E, N> {
     pub fn get(&self) -> &Vec<E> {
          &self._data
     }
@@ -32,7 +32,7 @@ impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> 
     }
 }
 
-impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> Default for Array<E, N> {
+impl<E: Default + Clone, const N: usize> Default for Array<E, N> {
     fn default() -> Self {
         Self {
             _data: vec![E::default(); N]

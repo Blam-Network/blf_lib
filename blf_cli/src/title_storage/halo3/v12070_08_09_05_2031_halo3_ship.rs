@@ -1,5 +1,6 @@
 use std::fs::{create_dir_all, exists, remove_file, File};
 use std::io::{Read, Write};
+use std::path::Path;
 use crate::io::{build_path, get_directories_in_folder, get_files_in_folder, FILE_SEPARATOR};
 use crate::title_converter;
 use crate::title_storage::{check_file_exists, TitleConverter};
@@ -8,7 +9,7 @@ use lazy_static::lazy_static;
 use blf_lib::blam::common::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::BlfFile;
 use blf_lib::blf::chunks::find_chunk_in_file;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_game_set, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
 use crate::console::console_task;
 use crate::title_storage::halo3::release::blf_files::{motd, rsa_manifest};
 use crate::title_storage::halo3::release::config_files::motd_popup::motd_popup as motd_popup_config;
@@ -16,7 +17,6 @@ use crate::title_storage::halo3::release::blf_files::motd_popup::motd_popup as m
 use crate::title_storage::halo3::release::blf_files::matchmaking_banhammer_messages::{matchmaking_banhammer_messages as matchmaking_banhammer_messages_blf};
 use crate::title_storage::halo3::release::blf_files::matchmaking_tips::matchmaking_tips as matchmaking_tips_blf;
 use regex::Regex;
-
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
 
@@ -75,8 +75,9 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             Self::build_config_motds(blfs_path, &hopper_directory, config_path, true);
             Self::build_config_motd_popups(blfs_path, &hopper_directory, config_path, false);
             Self::build_config_motd_popups(blfs_path, &hopper_directory, config_path, true);
-            Self::build_config_map_variants(blfs_path, &hopper_directory, config_path);
+            //Self::build_config_map_variants(blfs_path, &hopper_directory, config_path);
             Self::build_config_game_variants(blfs_path, &hopper_directory, config_path);
+            Self::build_config_game_sets(blfs_path, &hopper_directory, config_path);
         }
     }
 }
@@ -499,6 +500,68 @@ impl v12070_08_09_05_2031_halo3_ship {
         }
 
         task.add_message(format!("Converted {games_count} game variants."));
+
+        task.complete();
+    }
+
+    fn build_config_game_sets(blfs_path: &String, hopper_directory: &String, config_path: &String) {
+        let mut task = console_task::start(String::from("Converting Game Sets"));
+
+        let hoppers_folder = build_path(vec![
+            config_path,
+            hopper_directory,
+        ]);
+
+        create_dir_all(&hoppers_folder).unwrap();
+
+        let current_hoppers_blf_folder = build_path(vec![
+            blfs_path,
+            hopper_directory,
+        ]);
+
+        // Iterate through hopper folders. eg default_hoppers/00101
+        let hopper_directory_subfolders = get_directories_in_folder(&current_hoppers_blf_folder).unwrap_or_else(|err|{
+            println!("{}", err);
+            panic!();
+        });
+
+        let mut game_sets_count = 0;
+
+        for subfolder in hopper_directory_subfolders {
+            if !hopper_folder_regex.is_match(&subfolder) {
+                continue;
+            }
+
+            let game_set_blf_path = build_path(vec![
+                &current_hoppers_blf_folder,
+                &subfolder,
+                &String::from("game_set_006.bin"),
+            ]);
+
+            if !exists(&game_set_blf_path).unwrap() {
+                task.add_warning(format!("No game set was found for hopper \"{subfolder}\""));
+                continue;
+            }
+
+            let game_set = find_chunk_in_file::<s_blf_chunk_game_set>(&game_set_blf_path).unwrap();
+
+            let output_path = build_path(vec![
+                &hoppers_folder,
+                &String::from("hoppers"),
+                &subfolder,
+                &String::from("game_set.json"),
+            ]);
+
+            // gross
+            create_dir_all(Path::new(&output_path).parent().unwrap().to_str().unwrap()).unwrap();
+
+            let mut output_file = File::create(&output_path).unwrap();
+            output_file.write_all(serde_json::to_string_pretty(&game_set).unwrap().as_bytes()).unwrap();
+
+            game_sets_count += 1;
+        }
+
+        task.add_message(format!("Converted {game_sets_count} game sets."));
 
         task.complete();
     }

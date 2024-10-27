@@ -7,9 +7,9 @@ use crate::blam::common::math::real_math::{quantize_real, vector3d};
 use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
 use crate::io::bitstream::{e_bitstream_byte_order, e_bitstream_state, k_bitstream_maximum_position_stack_size, s_bitstream_data};
 
-pub struct c_bitstream_writer<'a>
+pub struct c_bitstream_writer
 {
-    m_data: &'a mut [u8],
+    m_data: Vec<u8>,
     // m_data_max: u32, REMOVED
     m_data_size_bytes: usize,
     m_data_size_alignment: u32, // not sure if this is used
@@ -26,12 +26,11 @@ pub struct c_bitstream_writer<'a>
 
 }
 
-impl<'a> c_bitstream_writer<'a> {
-    pub fn new(data: &mut [u8], byte_order: e_bitstream_byte_order) -> c_bitstream_writer {
-        let length = data.len();
+impl c_bitstream_writer {
+    pub fn new(size: usize, byte_order: e_bitstream_byte_order) -> c_bitstream_writer {
         c_bitstream_writer {
-            m_data: data,
-            m_data_size_bytes: length,
+            m_data: vec![0u8; size],
+            m_data_size_bytes: size,
             m_data_size_alignment: 1,
             m_state: e_bitstream_state::_bitstream_state_initial,
             __unknown14: Default::default(),
@@ -311,7 +310,7 @@ impl<'a> c_bitstream_writer<'a> {
         assert!(!self.writing());
 
         *data_length = self.m_data_size_bytes;
-        self.m_data
+        self.m_data.as_slice()
     }
 
     pub fn push_position() {
@@ -342,12 +341,12 @@ impl<'a> c_bitstream_writer<'a> {
         }
     }
 
-    fn set_data(&mut self, data: &'a mut [u8]) {
-        let length = data.len();
-        self.m_data = data;
-        self.m_data_size_bytes = length;
-        self.reset(e_bitstream_state::_bitstream_state_initial);
-    }
+    // fn set_data(&mut self, data: &'a mut [u8]) {
+    //     let length = data.len();
+    //     self.m_data = data;
+    //     self.m_data_size_bytes = length;
+    //     self.reset(e_bitstream_state::_bitstream_state_initial);
+    // }
 
     fn skip(bits_to_skip: u32) {
         unimplemented!()
