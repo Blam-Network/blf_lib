@@ -41,15 +41,15 @@ impl c_game_engine_assault_variant {
 
     pub fn decode(&mut self, bitstream: &mut c_bitstream_reader) {
         SET_BIT!(self.m_variant_flags, 0, bitstream.read_bool());
-        self.m_game_type = bitstream.read_u16(2);
-        self.m_respawn = bitstream.read_u16(3);
-        self.m_enemy_bomb_waypoint = bitstream.read_u16(3);
-        self.m_score_to_win = bitstream.read_u16(6);
+        self.m_game_type = bitstream.read_integer(2) as u16;
+        self.m_respawn = bitstream.read_integer(3) as u16;
+        self.m_enemy_bomb_waypoint = bitstream.read_integer(3) as u16;
+        self.m_score_to_win = bitstream.read_integer(6) as u16;
         self.m_sudden_death_time = bitstream.read_signed_integer(9) as i16;
-        self.m_bomb_arming_time = bitstream.read_u16(5);
+        self.m_bomb_arming_time = bitstream.read_integer(5) as u16;
         self.m_bomb_disarming_time = bitstream.read_integer(5) as u16;
-        self.m_bomb_fuse_time = bitstream.read_u16(5);
-        self.m_bomb_reset_time = bitstream.read_u16(6);
+        self.m_bomb_fuse_time = bitstream.read_integer(5) as u16;
+        self.m_bomb_reset_time = bitstream.read_integer(6) as u16;
         self.m_carrier_traits.decode(bitstream);
         self.m_arming_traits.decode(bitstream);
     }

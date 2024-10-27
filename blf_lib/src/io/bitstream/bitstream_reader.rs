@@ -222,27 +222,12 @@ impl<'a> c_bitstream_reader<'a> {
     }
 
     pub fn read_u16(&mut self, size_in_bits: usize) -> u16 {
-        assert!(size_in_bits > 0);
-        assert!(size_in_bits <= 16);
-        let mut bytes = [0u8; 2];
-        self.read_bits_internal(&mut bytes, size_in_bits);
-
-        match self.m_byte_order {
-            e_bitstream_byte_order::_bitstream_byte_order_little_endian => { u16::from_le_bytes(bytes) }
-            e_bitstream_byte_order::_bitstream_byte_order_big_endian => { u16::from_be_bytes(bytes) }
-        }
+        self.read_integer(size_in_bits) as u16
     }
 
     pub fn read_u8(&mut self, size_in_bits: usize) -> u8 {
-        assert!(size_in_bits > 0);
-        assert!(size_in_bits <= 8);
-        let mut bytes = [0u8; 1];
-        self.read_bits_internal(&mut bytes, size_in_bits);
+        self.read_integer(size_in_bits) as u8
 
-        match self.m_byte_order {
-            e_bitstream_byte_order::_bitstream_byte_order_little_endian => { u8::from_le_bytes(bytes) }
-            e_bitstream_byte_order::_bitstream_byte_order_big_endian => { u8::from_be_bytes(bytes) }
-        }
     }
 
     pub fn read_signed_integer(&mut self, size_in_bits: usize) -> i32 {
