@@ -17,6 +17,7 @@ use crate::title_storage::halo3::release::blf_files::motd_popup::motd_popup as m
 use crate::title_storage::halo3::release::blf_files::matchmaking_banhammer_messages::{matchmaking_banhammer_messages as matchmaking_banhammer_messages_blf};
 use crate::title_storage::halo3::release::blf_files::matchmaking_tips::matchmaking_tips as matchmaking_tips_blf;
 use regex::Regex;
+use crate::title_storage::halo3::release::config_files::game_set::build_game_set_csv;
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
 
@@ -549,14 +550,14 @@ impl v12070_08_09_05_2031_halo3_ship {
                 &hoppers_folder,
                 &String::from("hoppers"),
                 &subfolder,
-                &String::from("game_set.json"),
+                &String::from("game_set.csv"),
             ]);
 
             // gross
             create_dir_all(Path::new(&output_path).parent().unwrap().to_str().unwrap()).unwrap();
 
             let mut output_file = File::create(&output_path).unwrap();
-            output_file.write_all(serde_json::to_string_pretty(&game_set).unwrap().as_bytes()).unwrap();
+            output_file.write_all(build_game_set_csv(&game_set).as_bytes()).unwrap();
 
             game_sets_count += 1;
         }

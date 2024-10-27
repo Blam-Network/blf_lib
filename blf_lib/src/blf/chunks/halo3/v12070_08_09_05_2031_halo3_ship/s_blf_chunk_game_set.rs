@@ -11,8 +11,8 @@ use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
 use crate::io::bitstream::close_bitstream_writer;
 
 #[derive(Clone, Default, PartialEq, Debug, Copy, Serialize, Deserialize)]
-struct s_blf_chunk_game_set_entry {
-    pub game_entry_weight: u32,
+pub struct s_blf_chunk_game_set_entry {
+    pub weight: u32,
     pub minimum_player_count: u8,
     pub skip_after_veto: bool,
     pub optional: bool,
@@ -43,7 +43,7 @@ impl SerializableBlfChunk for s_blf_chunk_game_set {
 
         for i in 0..self.game_entry_count {
             let game_entry = self.game_entries[i];
-            bitstream.write_integer(game_entry.game_entry_weight, 32);
+            bitstream.write_integer(game_entry.weight, 32);
             bitstream.write_integer(game_entry.minimum_player_count as u32, 4);
             bitstream.write_bool(game_entry.skip_after_veto);
             bitstream.write_bool(game_entry.optional);
@@ -65,7 +65,7 @@ impl SerializableBlfChunk for s_blf_chunk_game_set {
 
         for i in 0..self.game_entry_count {
             let game_entry = &mut self.game_entries.as_mut_slice()[i];
-            game_entry.game_entry_weight = bitstream.read_integer(32);
+            game_entry.weight = bitstream.read_integer(32);
             game_entry.minimum_player_count = bitstream.read_integer(4) as u8;
             game_entry.skip_after_veto = bitstream.read_bool();
             game_entry.optional = bitstream.read_bool();
