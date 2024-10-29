@@ -1,9 +1,11 @@
+use std::time::SystemTime;
 use inline_colorization::*;
 
 pub struct console_task {
     messages: Vec<String>,
     warnings: Vec<String>,
-    errors: Vec<String>
+    errors: Vec<String>,
+    start_time: SystemTime,
 }
 
 impl console_task {
@@ -12,7 +14,8 @@ impl console_task {
         console_task {
             messages: vec![],
             warnings: vec![],
-            errors: vec![]
+            errors: vec![],
+            start_time: SystemTime::now()
         }
     }
     pub fn fail(&self, error: String) {
@@ -33,6 +36,15 @@ impl console_task {
         }
         for error in &self.messages {
             Self::log_message(error);
+        }
+
+        self.log_duration();
+    }
+
+    fn log_duration(&self) {
+        let seconds = self.start_time.elapsed().unwrap().as_secs();
+        if seconds > 5 {
+            println!("  ⏱ Task completed in {seconds} seconds", );
         }
     }
 

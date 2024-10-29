@@ -2,6 +2,7 @@ pub(crate) mod halo3;
 
 use std::fs::File;
 use std::io::{Read, Seek};
+use serde::Deserialize;
 use blf_lib::blf::s_blf_header;
 pub use blf_lib_derivable::blf::chunks::*;
 
@@ -39,4 +40,13 @@ pub fn find_chunk_in_file<T: BlfChunk + SerializableBlfChunk + ReadableBlfChunk>
         file.seek_relative((header.chunk_size - s_blf_header::size() as u32) as i64).unwrap();
     }
     Err(format!("{} Chunk not found!", T::get_signature().to_string()))
+}
+
+pub fn read_chunk_json<T: BlfChunk + for<'d> Deserialize<'d>>(path: &str) -> Result<T, String> {
+    let mut file = File::open(path).unwrap();
+    let parsed = serde_json::from_reader(&mut file);
+    if parsed.is_err() {
+        return Err(parsed.err().unwrap().to_string());
+    }
+    Ok(parsed.unwrap())
 }

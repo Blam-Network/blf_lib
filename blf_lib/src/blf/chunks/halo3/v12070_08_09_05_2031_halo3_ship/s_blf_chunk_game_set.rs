@@ -1,11 +1,7 @@
 use serde::{Deserialize, Serialize};
 use blf_lib::blam::common::memory::secure_signature::s_network_http_request_hash;
-use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
-use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_packed_map_variant;
 use blf_lib::blf_chunk;
-use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer, create_bitstream_reader, create_bitstream_writer, e_bitstream_byte_order};
-use blf_lib::types::array::Array;
+use blf_lib::io::bitstream::{create_bitstream_reader, create_bitstream_writer, e_bitstream_byte_order};
 use blf_lib::types::byte_limited_utf8_string::FixedSizeUTF8String;
 use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
 use crate::io::bitstream::close_bitstream_writer;

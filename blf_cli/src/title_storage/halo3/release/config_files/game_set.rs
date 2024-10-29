@@ -1,4 +1,4 @@
-use csv::WriterBuilder;
+use csv::{ReaderBuilder, WriterBuilder};
 use serde::{Deserialize, Serialize};
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_game_set;
 
@@ -10,6 +10,27 @@ pub struct game_set_row {
     pub minimum_player_count: u8,
     pub skip_after_veto: bool,
     pub optional: bool,
+}
+
+pub struct game_set {
+    pub entries: Vec<game_set_row>,
+}
+
+impl game_set {
+    pub fn read(path: String) -> Result<game_set, String> {
+        let mut reader = ReaderBuilder::new().from_path(&path).unwrap();
+        let mut rows = Vec::<game_set_row>::new();
+        for row in reader.deserialize() {
+            if let Ok(row) = row {
+                let row: game_set_row = row;
+                rows.push(row);
+            } else {
+                return Err(format!("Failed to parse game set CSV: {path}"));
+            }
+        }
+
+        Ok(game_set { entries: rows })
+    }
 }
 
 

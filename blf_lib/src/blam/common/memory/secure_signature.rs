@@ -1,5 +1,5 @@
 use std::io::{Cursor, Read};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserializer, Serialize, Serializer};
 use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib::io::packed_encoding::PackedEncoder;
 use blf_lib_derivable::io::endian::Endianness;
@@ -47,7 +47,7 @@ impl TryFrom<Vec<u8>> for s_network_http_request_hash {
     type Error = &'static str;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        let mut data: [u8; 20];
+        let data: [u8; 20];
         data = value.try_into().unwrap();
 
         Ok(s_network_http_request_hash {

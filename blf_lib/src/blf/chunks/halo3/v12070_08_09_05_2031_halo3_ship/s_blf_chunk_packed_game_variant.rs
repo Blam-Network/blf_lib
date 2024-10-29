@@ -1,8 +1,6 @@
 use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
-use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_packed_map_variant;
 use blf_lib::blf_chunk;
-use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer, close_bitstream_writer, create_bitstream_writer, e_bitstream_byte_order};
+use blf_lib::io::bitstream::{c_bitstream_reader, close_bitstream_writer, create_bitstream_writer, e_bitstream_byte_order};
 use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
 
 blf_chunk!(

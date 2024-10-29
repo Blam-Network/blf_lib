@@ -1,7 +1,7 @@
 use crate::io::bitstream::{create_bitstream_writer, e_bitstream_byte_order};
 use crate::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
 use blf_lib::blf_chunk;
-use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer, close_bitstream_writer};
+use blf_lib::io::bitstream::{c_bitstream_reader, close_bitstream_writer};
 use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
 
 blf_chunk!(
