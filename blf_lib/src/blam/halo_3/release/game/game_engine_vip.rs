@@ -3,7 +3,7 @@ use blf_lib_derive::PackedSerialize;
 use blf_lib::blam::halo_3::release::game::game_engine_player_traits::c_player_traits;
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib::{SET_BIT, TEST_BIT};
-use crate::types::array::Array;
+use crate::types::array::StaticArray;
 
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
 pub struct c_game_engine_vip_variant {
@@ -21,13 +21,13 @@ pub struct c_game_engine_vip_variant {
     m_zone_movement: u8,
     m_zone_order: u8,
     #[serde(skip_serializing,skip_deserializing)]
-    m_pad1: Array<u8, 1>,
+    m_pad1: StaticArray<u8, 1>,
     m_influence_radius: u16,
     m_vip_team_traits: c_player_traits,
     m_vip_influence_traits: c_player_traits,
     m_vip_traits: c_player_traits,
     #[serde(skip_serializing,skip_deserializing)]
-    m_pad2: Array<u8, 2>,
+    m_pad2: StaticArray<u8, 2>,
 }
 
 impl c_game_engine_vip_variant {

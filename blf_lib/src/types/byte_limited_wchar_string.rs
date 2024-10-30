@@ -6,18 +6,18 @@ use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::{Packing, PACK1};
 use crate::io::packed_encoding::PackedEncoder;
 use widestring::U16CString;
-use crate::types::array::Array;
+use crate::types::array::StaticArray;
 use serde::de::Error;
 
 #[derive(PartialEq, Debug, Clone, Default)]
 pub struct ByteLimitedWcharString<const N: usize> {
-    buf: Array<u16, N>,
+    buf: StaticArray<u16, N>,
 }
 
 impl<const N: usize> ByteLimitedWcharString<N> {
     pub fn from_string(value: &String) -> Result<Self, String> {
         let mut new = Self {
-            buf: Array::default()
+            buf: StaticArray::default()
         };
 
         let result = new.set_string(value);
@@ -60,7 +60,7 @@ impl<const N: usize> PackedDecoder for ByteLimitedWcharString<N> {
             buf[i] = u16::decode_packed(reader, endian, PACK1)?;
         }
         Ok(Self {
-            buf: Array::from_slice(&buf).unwrap(),
+            buf: StaticArray::from_slice(&buf).unwrap(),
         })
     }
 }

@@ -1,6 +1,6 @@
 use std::u32;
 use blf_lib::blf_chunk;
-use blf_lib::types::byte_limited_utf8_string::FixedSizeUTF8String;
+use blf_lib::types::byte_limited_utf8_string::StaticString;
 
 const MAX_MATCHMAKING_TIP_COUNT: usize = 32usize;
 const TIP_LENGTH: usize = 0x100;
@@ -12,7 +12,7 @@ blf_chunk!(
     pub struct s_blf_chunk_matchmaking_tips
     {
         tip_count: u32,
-        pub tips: Vec<FixedSizeUTF8String<TIP_LENGTH>> // UTF bytes,
+        pub tips: Vec<StaticString<TIP_LENGTH>> // UTF bytes,
     }
 );
 
@@ -28,7 +28,7 @@ impl s_blf_chunk_matchmaking_tips {
 
         self.tips = Vec::with_capacity(tips.len());
         for tip in tips.iter() {
-            let tip = FixedSizeUTF8String::<TIP_LENGTH>::from_string(tip);
+            let tip = StaticString::<TIP_LENGTH>::from_string(tip);
 
             if !tip.is_ok() {
                 return Err(format!("Tip: {}", tip.unwrap_err()))

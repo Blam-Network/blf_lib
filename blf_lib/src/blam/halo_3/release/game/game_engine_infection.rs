@@ -4,7 +4,7 @@ use blf_lib::blam::halo_3::release::game::game_engine_player_traits::c_player_tr
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib::SET_BIT;
 use crate::TEST_BIT;
-use crate::types::array::Array;
+use crate::types::array::StaticArray;
 
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
 pub struct c_game_engine_infection_variant {
@@ -24,7 +24,7 @@ pub struct c_game_engine_infection_variant {
     m_safe_haven_defender_traits: c_player_traits,
     m_last_human_traits: c_player_traits,
     #[serde(skip_serializing,skip_deserializing)]
-    m_pad1: Array<u8, 4>,
+    m_pad1: StaticArray<u8, 4>,
 }
 
 impl c_game_engine_infection_variant {

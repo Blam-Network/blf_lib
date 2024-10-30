@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use blf_lib_derive::PackedSerialize;
-use crate::types::array::Array;
+use crate::types::array::StaticArray;
 use blf_lib::blam::halo_3::release::game::game_engine_player_traits::c_player_traits;
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib::{SET_BIT, TEST_BIT};
@@ -18,7 +18,7 @@ pub struct c_game_engine_oddball_variant {
     m_ball_inactive_respawn_delay: u16,
     m_carrier_traits: c_player_traits,
     #[serde(skip_serializing,skip_deserializing)]
-    m_pad1: Array<u8, 2>,
+    m_pad1: StaticArray<u8, 2>,
 }
 
 impl c_game_engine_oddball_variant {

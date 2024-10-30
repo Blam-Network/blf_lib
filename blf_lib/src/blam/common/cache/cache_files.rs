@@ -1,12 +1,12 @@
 use std::fs::File;
 use std::io::{Cursor, Read};
 use libc::c_char;
-use blf_lib::types::array::Array;
+use blf_lib::types::array::StaticArray;
 use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::PACK1;
 use blf_lib_derive::{PackedSerialize};
 use crate::io::packed_decoding::PackedDecoder;
-use crate::types::byte_limited_utf8_string::FixedSizeUTF8String;
+use crate::types::byte_limited_utf8_string::StaticString;
 use crate::types::c_string::to_string;
 
 #[derive(PackedSerialize, Debug)]
@@ -14,12 +14,12 @@ pub struct s_cache_file_header_v11 {
     head: [c_char; 4], // "head"
     pub version: u32, // 11
     pub size: u32,
-    unknown1: Array<u8, 0x180>,
-    pub map_name: FixedSizeUTF8String<0x20>,
+    unknown1: StaticArray<u8, 0x180>,
+    pub map_name: StaticString<0x20>,
     pub map_language: u32,
-    unknown2: Array<u8, 0x1BC>,
-    pub rsa_signature: Array<u8, 0x100>,
-    unknown3: Array<u8, 0x2B90>,
+    unknown2: StaticArray<u8, 0x1BC>,
+    pub rsa_signature: StaticArray<u8, 0x100>,
+    unknown3: StaticArray<u8, 0x2B90>,
     foot: [c_char; 4], // "foot"
 }
 

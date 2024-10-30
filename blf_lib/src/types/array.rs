@@ -7,11 +7,11 @@ use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::Packing;
 
 #[derive(PartialEq, Debug, Clone)]
-pub struct Array<E: 'static, const N: usize> {
+pub struct StaticArray<E: 'static, const N: usize> {
     _data: Vec<E> // 1984
 }
 
-impl<E: Default + Copy + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> Array<E, N> {
+impl<E: Default + Copy + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> StaticArray<E, N> {
     pub fn get(&self) -> &Vec<E> {
          &self._data
     }
@@ -32,7 +32,7 @@ impl<E: Default + Copy + Serialize + for <'de2> Deserialize<'de2> + 'static, con
     }
 }
 
-impl<E: Default + Clone, const N: usize> Default for Array<E, N> {
+impl<E: Default + Clone, const N: usize> Default for StaticArray<E, N> {
     fn default() -> Self {
         Self {
             _data: vec![E::default(); N]
@@ -40,7 +40,7 @@ impl<E: Default + Clone, const N: usize> Default for Array<E, N> {
     }
 }
 
-impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> PackedDecoder for Array<E, N> {
+impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> PackedDecoder for StaticArray<E, N> {
     fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>
     where
         Self: Sized
@@ -57,7 +57,7 @@ impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> 
     }
 }
 
-impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> PackedEncoder for Array<E, N> {
+impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> PackedEncoder for StaticArray<E, N> {
     fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
         let mut buffer = Vec::<u8>::new();
         self._data.iter().for_each(|&e| {
@@ -68,7 +68,7 @@ impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> 
     }
 }
 
-impl<E, const N: usize> Index<usize> for Array<E, N> {
+impl<E, const N: usize> Index<usize> for StaticArray<E, N> {
     type Output = E;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -76,7 +76,7 @@ impl<E, const N: usize> Index<usize> for Array<E, N> {
     }
 }
 
-impl<E: Serialize, const N: usize> Serialize for Array<E, N> {
+impl<E: Serialize, const N: usize> Serialize for StaticArray<E, N> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer
@@ -85,7 +85,7 @@ impl<E: Serialize, const N: usize> Serialize for Array<E, N> {
     }
 }
 
-impl<'de, E: Deserialize<'de>, const N: usize> serde::Deserialize<'de> for Array<E, N> {
+impl<'de, E: Deserialize<'de>, const N: usize> serde::Deserialize<'de> for StaticArray<E, N> {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         Ok(Self {
             _data: Vec::<E>::deserialize(d)?

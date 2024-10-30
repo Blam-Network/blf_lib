@@ -1,6 +1,6 @@
 use std::u32;
 use blf_lib::blf_chunk;
-use blf_lib::types::byte_limited_utf8_string::FixedSizeUTF8String;
+use blf_lib::types::byte_limited_utf8_string::StaticString;
 
 const MAX_BANHAMMER_MESSAGE_COUNT: usize = 32usize;
 const BANHAMMER_MESSAGE_LENGTH: usize = 0x100;
@@ -12,7 +12,7 @@ blf_chunk!(
     pub struct s_blf_chunk_banhammer_messages
     {
         message_count: u32,
-        pub messages: Vec<FixedSizeUTF8String<BANHAMMER_MESSAGE_LENGTH>> // UTF bytes,
+        pub messages: Vec<StaticString<BANHAMMER_MESSAGE_LENGTH>> // UTF bytes,
     }
 );
 
@@ -28,7 +28,7 @@ impl s_blf_chunk_banhammer_messages {
 
         self.messages = Vec::with_capacity(messages.len());
         for message in messages.iter() {
-            let message = FixedSizeUTF8String::<BANHAMMER_MESSAGE_LENGTH>::from_string(message);
+            let message = StaticString::<BANHAMMER_MESSAGE_LENGTH>::from_string(message);
 
             if !message.is_ok() {
                 return Err(format!("Banhammer message: {}", message.unwrap_err()))

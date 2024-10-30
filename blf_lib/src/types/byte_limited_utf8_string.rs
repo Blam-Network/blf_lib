@@ -8,11 +8,11 @@ use blf_lib_derivable::io::packing::Packing;
 use crate::io::packed_encoding::PackedEncoder;
 
 #[derive(PartialEq, Debug, Clone, Copy)]
-pub struct FixedSizeUTF8String<const N: usize> {
+pub struct StaticString<const N: usize> {
     buf: [u8; N],
 }
 
-impl<const N: usize> FixedSizeUTF8String<N> {
+impl<const N: usize> StaticString<N> {
     pub fn from_string(value: &String) -> Result<Self, String> {
         let mut new = Self {
             buf: [0; N],
@@ -38,13 +38,13 @@ impl<const N: usize> FixedSizeUTF8String<N> {
     }
 }
 
-impl<const N: usize> PackedEncoder for FixedSizeUTF8String<N> {
+impl<const N: usize> PackedEncoder for StaticString<N> {
     fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
         self.buf.encode_packed(endian, packing)
     }
 }
 
-impl<const N: usize> PackedDecoder for FixedSizeUTF8String<N> {
+impl<const N: usize> PackedDecoder for StaticString<N> {
     fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String> {
         Ok(Self {
             buf: PackedDecoder::decode_packed(reader, endian, packing)?,
@@ -52,7 +52,7 @@ impl<const N: usize> PackedDecoder for FixedSizeUTF8String<N> {
     }
 }
 
-impl<const N: usize> Default for FixedSizeUTF8String<N>  {
+impl<const N: usize> Default for StaticString<N>  {
     fn default() -> Self {
         Self{
             buf: [0; N],
@@ -60,7 +60,7 @@ impl<const N: usize> Default for FixedSizeUTF8String<N>  {
     }
 }
 
-impl<const N: usize> Serialize for FixedSizeUTF8String<N> {
+impl<const N: usize> Serialize for StaticString<N> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer
@@ -69,7 +69,7 @@ impl<const N: usize> Serialize for FixedSizeUTF8String<N> {
     }
 }
 
-impl<'de, const N: usize> serde::Deserialize<'de> for FixedSizeUTF8String<N> {
+impl<'de, const N: usize> serde::Deserialize<'de> for StaticString<N> {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let s = String::deserialize(d)?;
         let res = Self::from_string(&s);

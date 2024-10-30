@@ -5,7 +5,7 @@ use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib::TEST_BIT;
 use crate::blam::common::math::real_math::{real_point3d, real_rectangle3d};
 use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
-use blf_lib::types::array::Array;
+use blf_lib::types::array::StaticArray;
 use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::PACK1;
 use blf_lib_derive::PackedSerialize;
@@ -36,10 +36,10 @@ pub struct c_map_variant {
     __pad12A: [u8; 2],
     #[serde(with = "SerHex::<StrictCap>")]
     m_map_variant_checksum: u32,
-    m_variant_objects: Array<s_variant_object_datum, 640>,
-    m_object_type_start_index: Array<i16, k_object_type_count>,
-    m_quotas: Array<s_variant_quota, 256>,
-    m_chunk_simulation_object_glue_indices: Array<u32, k_number_of_map_variant_simulation_entities>,
+    m_variant_objects: StaticArray<s_variant_object_datum, 640>,
+    m_object_type_start_index: StaticArray<i16, k_object_type_count>,
+    m_quotas: StaticArray<s_variant_quota, 256>,
+    m_chunk_simulation_object_glue_indices: StaticArray<u32, k_number_of_map_variant_simulation_entities>,
 }
 
 impl c_map_variant {

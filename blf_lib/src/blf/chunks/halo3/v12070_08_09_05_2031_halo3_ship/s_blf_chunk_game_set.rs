@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use blf_lib::blam::common::memory::secure_signature::s_network_http_request_hash;
 use blf_lib::blf_chunk;
 use blf_lib::io::bitstream::{create_bitstream_reader, create_bitstream_writer, e_bitstream_byte_order};
-use blf_lib::types::byte_limited_utf8_string::FixedSizeUTF8String;
+use blf_lib::types::byte_limited_utf8_string::StaticString;
 use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
 use crate::io::bitstream::close_bitstream_writer;
 
@@ -14,9 +14,9 @@ pub struct s_blf_chunk_game_set_entry {
     pub optional: bool,
     pub map_id: u32,
     pub map_variant_file_hash: s_network_http_request_hash,
-    pub map_variant_file_name: FixedSizeUTF8String<32>,
+    pub map_variant_file_name: StaticString<32>,
     pub game_variant_file_hash: s_network_http_request_hash,
-    pub game_variant_file_name: FixedSizeUTF8String<32>,
+    pub game_variant_file_name: StaticString<32>,
 }
 
 pub const k_maximum_game_sets: usize = 63;

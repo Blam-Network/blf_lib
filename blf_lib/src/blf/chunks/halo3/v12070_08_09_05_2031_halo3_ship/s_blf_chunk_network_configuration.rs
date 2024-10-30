@@ -1,4 +1,4 @@
-use blf_lib::types::array::Array;
+use blf_lib::types::array::StaticArray;
 use crate::blf_chunk;
 
 blf_chunk!(
@@ -8,6 +8,6 @@ blf_chunk!(
     pub struct s_blf_chunk_network_configuration
     {
         // TODO: Map
-        data: Array<u8, 8300>,
+        data: StaticArray<u8, 8300>,
     }
 );

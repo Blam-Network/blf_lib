@@ -133,6 +133,7 @@ pub const k_language_suffixes: [&str; 10] = [
 
 lazy_static! {
     static ref hopper_folder_regex: Regex = Regex::new(r"^[0-9]{5}.*").unwrap();
+    static ref hopper_config_folder_identifier_regex: Regex = Regex::new(r"^[0-9]{1,5}").unwrap();
     static ref map_variant_regex: Regex = Regex::new(r"_012.bin$").unwrap();
     static ref game_variant_regex: Regex = Regex::new(r"_010.bin$").unwrap();
 }
@@ -894,7 +895,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
-    fn read_game_set_configuration(hoppers_config_path: &String, active_hoppers: &String) -> Vec<game_set> {
+    fn read_game_set_configuration(hoppers_config_path: &String, active_hoppers: &String) -> HashMap<u16, game_set> {
         let mut task = console_task::start(String::from("Reading Game Sets..."));
 
         let mut game_sets = Vec::<game_set>::new();
@@ -921,8 +922,8 @@ impl v12070_08_09_05_2031_halo3_ship {
             ]);
 
             if !exists(&game_set_csv_path).unwrap() {
-                task.add_warning(format!("No game set was found for hopper \"{subfolder}\""));
-                continue;
+                task.add_error(format!("No game set was found for hopper \"{subfolder}\""));
+                // panic!();
             }
 
             let game_set = game_set::read(game_set_csv_path).unwrap_or_else(|err| {

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use blf_lib::blam::halo_3::release::game::game_engine_player_traits::c_player_traits;
 use blf_lib::blam::halo_3::release::game::game_engine_traits::{c_game_engine_miscellaneous_options, c_game_engine_respawn_options};
-use blf_lib::types::array::Array;
+use blf_lib::types::array::StaticArray;
 use blf_lib_derive::PackedSerialize;
 use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
@@ -86,7 +86,7 @@ pub struct c_game_engine_base_variant {
     #[serde(skip_serializing,skip_deserializing)]
     m_checksum: u32,
     #[serde(skip_serializing,skip_deserializing)]
-    pad: Array<u32, 1>,
+    pad: StaticArray<u32, 1>,
     m_metadata: s_content_item_metadata,
     m_miscellaneous_options: c_game_engine_miscellaneous_options,
     m_respawn_options: c_game_engine_respawn_options,
