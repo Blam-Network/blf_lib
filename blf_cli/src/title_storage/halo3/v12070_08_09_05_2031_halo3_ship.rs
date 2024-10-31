@@ -25,6 +25,7 @@ use tokio::sync::{mpsc, Mutex};
 use blf_lib::blam::common::memory::secure_signature::s_network_http_request_hash;
 use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
 use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_hopper_configuration_table;
 use crate::title_storage::halo3::release::blf_files::game_variant::game_variant;
 use crate::title_storage::halo3::release::blf_files::map_variant::map_variant;
 use crate::title_storage::halo3::release::config_files::game_set::{build_game_set_csv, game_set};
@@ -102,6 +103,16 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
+            let hopper_config_path = build_path(vec![
+                &config_path,
+                &hopper_directory,
+            ]);
+
+            let hopper_blfs_path = build_path(vec![
+                &blfs_path,
+                &hopper_directory,
+            ]);
+
             println!("{style_bold}Converting {color_bright_white}{}{style_reset}...", hopper_directory);
             Self::build_config_banhammer_messages(blfs_path, &hopper_directory, config_path);
             Self::build_config_matchmaking_tips(blfs_path, &hopper_directory, config_path);
@@ -112,6 +123,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             Self::build_config_map_variants(blfs_path, &hopper_directory, config_path);
             Self::build_config_game_variants(blfs_path, &hopper_directory, config_path);
             Self::build_config_game_sets(blfs_path, &hopper_directory, config_path);
+            Self::build_config_hoppers(&hopper_blfs_path, &hopper_config_path);
         }
     }
 }
@@ -410,7 +422,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             panic!();
         });
 
-        let mut maps_count = 0;
+        let mut converted_maps = Vec::<String>::new();
 
         for subfolder in hopper_directory_subfolders {
             if !hopper_folder_regex.is_match(&subfolder) {
@@ -447,6 +459,13 @@ impl v12070_08_09_05_2031_halo3_ship {
                     &map_variant_file_name.replace("_012.bin", ".json"),
                 ]);
 
+                if converted_maps.contains(&map_variant_file_name) {
+                    continue;
+                }
+                else {
+                    converted_maps.push(map_variant_file_name);
+                }
+
                 if exists(&map_variant_json_file_path).unwrap() {
                     remove_file(&map_variant_json_file_path).unwrap()
                 }
@@ -455,11 +474,10 @@ impl v12070_08_09_05_2031_halo3_ship {
                 let map_variant_json = serde_json::to_string_pretty(&packed_map_variant.map_variant).unwrap();
                 let mut map_variant_json_file = File::create_new(map_variant_json_file_path).unwrap();
                 map_variant_json_file.write_all(map_variant_json.as_bytes()).unwrap();
-                maps_count += 1;
             }
         }
 
-        task.add_message(format!("Converted {maps_count} map variants."));
+        task.add_message(format!("Converted {} map variants.", converted_maps.len()));
 
         task.complete();
     }
@@ -597,6 +615,40 @@ impl v12070_08_09_05_2031_halo3_ship {
         }
 
         task.add_message(format!("Converted {game_sets_count} game sets."));
+
+        task.complete();
+    }
+
+    fn build_config_hoppers(hoppers_blfs_path: &String, hoppers_config_path: &String) {
+        let mut task = console_task::start(String::from("Converting Hopper Configuration..."));
+
+        // Iterate through hopper folders. eg default_hoppers/00101
+        let hopper_directory_subfolders = get_directories_in_folder(&hoppers_blfs_path).unwrap_or_else(|err|{
+            task.fail(format!("{}", err));
+            panic!();
+        });
+
+        let hopper_configuration_blf_path = build_path(vec![
+            hoppers_blfs_path,
+            &String::from("matchmaking_hopper_011.bin")
+        ]);
+
+        let hopper_configuration_table = find_chunk_in_file::<s_blf_chunk_hopper_configuration_table>(&hopper_configuration_blf_path).unwrap();
+        let hopper_configurations = hopper_configuration_table.get_hopper_configurations();
+
+        // Generate active_hoppers.txt
+        let active_hopper_ids = hopper_configurations.iter().map(|config|config.hopper_identifier);
+        let active_hoppers_txt_path = build_path(vec![
+            hoppers_config_path,
+            &String::from("active_hoppers.txt"),
+        ]);
+        let mut active_hoppers_txt_file = File::create(active_hoppers_txt_path).unwrap();
+        active_hoppers_txt_file.write_all(
+            active_hopper_ids.map(|id|format!("{id:0>5}")).collect::<Vec<_>>().join("\r\n").as_bytes()
+        ).unwrap();
+
+
+        task.add_message(format!("Converted {} hopper configurations.", hopper_configuration_table.hopper_configuration_count));
 
         task.complete();
     }
@@ -895,7 +947,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
-    fn read_game_set_configuration(hoppers_config_path: &String, active_hoppers: &String) -> HashMap<u16, game_set> {
+    fn read_game_set_configuration(hoppers_config_path: &String, active_hoppers: &String) -> Vec<game_set> {
         let mut task = console_task::start(String::from("Reading Game Sets..."));
 
         let mut game_sets = Vec::<game_set>::new();

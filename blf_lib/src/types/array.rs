@@ -11,7 +11,7 @@ pub struct StaticArray<E: 'static, const N: usize> {
     _data: Vec<E> // 1984
 }
 
-impl<E: Default + Copy + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> StaticArray<E, N> {
+impl<E: Default + Clone, const N: usize> StaticArray<E, N> {
     pub fn get(&self) -> &Vec<E> {
          &self._data
     }
@@ -27,7 +27,7 @@ impl<E: Default + Copy + Serialize + for <'de2> Deserialize<'de2> + 'static, con
         let mut new = Self {
             _data: vec![E::default(); N],
         };
-        new._data.copy_from_slice(slice);
+        new._data.clone_from_slice(slice);
         Ok(new)
     }
 }

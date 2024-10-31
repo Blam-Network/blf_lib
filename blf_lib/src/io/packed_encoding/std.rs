@@ -74,6 +74,15 @@ impl PackedEncoder for u64 {
     }
 }
 
+impl PackedEncoder for i64 {
+    fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
+        match endian {
+            Endianness::Little => { packing.create_packed_buffer_from_slice(self.to_le_bytes().as_slice()) }
+            Endianness::Big => { packing.create_packed_buffer_from_slice(self.to_be_bytes().as_slice()) }
+        }
+    }
+}
+
 impl PackedEncoder for f32 {
     fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
         match endian {

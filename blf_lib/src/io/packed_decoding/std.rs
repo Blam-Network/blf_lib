@@ -108,6 +108,19 @@ impl PackedDecoder for u64 {
     }
 }
 
+impl PackedDecoder for i64 {
+    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>  {
+        let mut bytes = [0u8; 8];
+        reader.read_exact(&mut bytes).map_err(|_|"Failed to read bytes.")?;
+        seek_pad(reader, &bytes, packing)?;
+
+        Ok(match endian {
+            Endianness::Little => { i64::from_le_bytes(bytes) }
+            Endianness::Big => { i64::from_be_bytes(bytes) }
+        })
+    }
+}
+
 impl PackedDecoder for f32 {
     fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>  {
         let mut bytes = [0u8; 4];
