@@ -11,7 +11,7 @@ use lazy_static::lazy_static;
 use blf_lib::blam::common::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::{get_blf_file_hash, BlfFile};
 use blf_lib::blf::chunks::find_chunk_in_file;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_game_set, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_game_set, s_blf_chunk_hopper_description_table, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
 use crate::console::console_task;
 use crate::title_storage::halo3::release::blf_files::{motd, rsa_manifest};
 use crate::title_storage::halo3::release::config_files::motd_popup::motd_popup as motd_popup_config;
@@ -619,14 +619,57 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
+    // Ideally, we'd separate hopper and category descriptions separately to avoid ID conflicts...
+    // But foreunner doesn't seem to make this distinction, so why should I?
+    fn read_hopper_description_blfs(
+        hoppers_blfs_folder: &String,
+    ) -> HashMap<String, HashMap<u16, String>> {
+        let mut task = console_task::start(String::from("Reading Hopper Descriptions..."));
+
+        let mut language_descriptions_map = HashMap::<String, HashMap<u16, String>>::new();
+
+        for language_code in k_language_suffixes {
+            let hopper_descriptions_path = build_path(vec![
+                hoppers_blfs_folder,
+                &String::from(language_code),
+                &String::from("matchmaking_hopper_descriptions_003.bin")
+            ]);
+
+
+            if !check_file_exists(&hopper_descriptions_path) {
+                task.add_warning(format!(
+                    "No {} hopper descriptions are present.",
+                    get_language_string(language_code),
+                ));
+
+                continue;
+            }
+
+            let hopper_description_table =
+                find_chunk_in_file::<s_blf_chunk_hopper_description_table>(&hopper_descriptions_path);
+
+            if hopper_description_table.is_err() {
+                task.fail(format!("Failed to read hopper descriptions file at: {hopper_descriptions_path}"));
+                panic!()
+            }
+
+            let mut hoppers_description_map = HashMap::<u16, String>::new();
+
+            hopper_description_table.unwrap().descriptions.iter().for_each(|hopper_description| {
+                hoppers_description_map.insert(hopper_description.identifier, hopper_description.description.get_string());
+            });
+
+            language_descriptions_map.insert(String::from(language_code), hoppers_description_map);
+        }
+
+        language_descriptions_map
+    }
+
     fn build_config_hoppers(hoppers_blfs_path: &String, hoppers_config_path: &String) {
         let mut task = console_task::start(String::from("Converting Hopper Configuration..."));
 
-        // Iterate through hopper folders. eg default_hoppers/00101
-        let hopper_directory_subfolders = get_directories_in_folder(&hoppers_blfs_path).unwrap_or_else(|err|{
-            task.fail(format!("{}", err));
-            panic!();
-        });
+        let language_hopper_descriptions
+            = Self::read_hopper_description_blfs(hoppers_blfs_path);
 
         let hopper_configuration_blf_path = build_path(vec![
             hoppers_blfs_path,
@@ -1014,8 +1057,6 @@ impl v12070_08_09_05_2031_halo3_ship {
             .worker_threads(4)
             .build()
             .unwrap();
-
-
 
         create_dir_all(&game_variants_temp_build_path).unwrap();
 

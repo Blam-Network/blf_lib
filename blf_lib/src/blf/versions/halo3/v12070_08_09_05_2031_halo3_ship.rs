@@ -16,6 +16,7 @@ pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_game_variant::s_blf_
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_packed_game_variant::s_blf_chunk_packed_game_variant;
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_game_set::s_blf_chunk_game_set;
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_hopper_configuration_table::s_blf_chunk_hopper_configuration_table;
+pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_hopper_description_table::s_blf_chunk_hopper_description_table;
 
 #[derive(ChunkFactory)]
 #[Title("Halo 3")]
@@ -36,5 +37,6 @@ pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_hopper_configuration
     s_blf_chunk_packed_game_variant,
     s_blf_chunk_game_set,
     s_blf_chunk_hopper_configuration_table,
+    s_blf_chunk_hopper_description_table,
 )]
 pub struct v12070_08_09_05_2031_halo3_ship {}
