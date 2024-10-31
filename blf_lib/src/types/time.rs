@@ -35,7 +35,7 @@ impl<'de> Deserialize<'de> for time_t {
         let s = String::deserialize(deserializer)?;
         let datetime = NaiveDateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S")
             .map_err(serde::de::Error::custom)?;
-        Ok(time_t(datetime.timestamp() as u64))
+        Ok(time_t(datetime.and_utc().timestamp() as u64))
     }
 }
 impl PackedEncoder for time_t {
