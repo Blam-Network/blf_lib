@@ -103,8 +103,8 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             Self::build_blf_game_sets(&hopper_blfs_path, game_sets, &game_variant_hashes, &map_variant_hashes, &map_variant_map_ids, &build_temp_dir_path);
         }
 
-        let seconds = start_time.elapsed().unwrap().as_secs();
-        println!("Finished conversion in {seconds} seconds.");
+        let seconds = start_time.elapsed().unwrap().as_secs_f32();
+        println!("Finished conversion in {seconds:.2} seconds.");
     }
 
     fn build_config(&mut self, blfs_path: &String, config_path: &String) {

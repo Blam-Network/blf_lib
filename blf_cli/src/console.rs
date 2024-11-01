@@ -24,7 +24,7 @@ impl console_task {
     }
 
     pub fn complete(&self){
-        println!("{color_green}done{style_reset}.{} {}",
+        println!("{color_green}done ✓{style_reset}{} {}",
                  if self.errors.len() > 0 { format!(" ⛔  {} Errors", self.errors.len()) } else { String::new() },
                  if self.warnings.len() > 0 { format!(" ⚠ {} Warnings", self.warnings.len()) } else { String::new() }
         );
@@ -42,9 +42,9 @@ impl console_task {
     }
 
     fn log_duration(&self) {
-        let seconds = self.start_time.elapsed().unwrap().as_secs();
-        if seconds > 5 {
-            println!("  ⏱ Task completed in {seconds} seconds", );
+        let seconds = self.start_time.elapsed().unwrap().as_secs_f32();
+        if seconds > 5f32 {
+            println!("  ⏱ Task completed in {seconds:.2} seconds", );
         }
     }
 
@@ -53,7 +53,7 @@ impl console_task {
     }
 
     fn log_error(message: &String) {
-        println!("  ⛔  {color_bright_white}{bg_red}{message}{style_reset}");
+        println!("  ⛔  {style_bold}{color_black}{bg_bright_red}{message}{style_reset}");
     }
 
     pub fn add_message(&mut self, message: String) {
