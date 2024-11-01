@@ -68,7 +68,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             let build_temp_dir = TempDir::new("blf_cli").unwrap();
             let build_temp_dir_path = String::from(build_temp_dir.path().to_str().unwrap());
 
-            println!("Using temp directory: {build_temp_dir_path}");
+            // println!("Using temp directory: {build_temp_dir_path}");
 
             let hopper_config_path = build_path(vec![
                 &config_path,
@@ -573,7 +573,7 @@ impl v12070_08_09_05_2031_halo3_ship {
     }
 
     fn build_config_game_sets(blfs_path: &String, hopper_directory: &String, config_path: &String) {
-        let mut task = console_task::start(String::from("Converting Game Sets..."));
+        let mut task = console_task::start(String::from("Building Game Sets"));
 
         let hoppers_folder = build_path(vec![
             config_path,
@@ -1095,13 +1095,13 @@ impl v12070_08_09_05_2031_halo3_ship {
         let mut rsa_manifest = rsa_manifest::rsa_manifest::create(&map_manifest);
         rsa_manifest.write(&output_file_path);
 
-        task.add_message(format!("Added {} RSA signatures.", map_manifest.get_rsa_signatures().len()));
+        // task.add_message(format!("Added {} RSA signatures.", map_manifest.get_rsa_signatures().len()));
 
         task.complete();
     }
 
     fn read_active_hopper_configuration(hoppers_config_path: &String) -> Vec<String> {
-        let task = console_task::start(String::from("Reading Active Hoppers..."));
+        let task = console_task::start(String::from("Reading Active Hoppers"));
 
         let active_hoppers_folders = read_active_hoppers(hoppers_config_path).unwrap_or_else(|err| {
             task.fail(err);
@@ -1115,7 +1115,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
     fn read_game_set_configuration(hoppers_config_path: &String, active_hopper_folders: &Vec<String>) -> HashMap<u16, game_set>
     {
-        let task = console_task::start(String::from("Reading Game Sets..."));
+        let task = console_task::start(String::from("Reading Game Set Config"));
 
         let mut game_sets = HashMap::<u16, game_set>::new();
 
@@ -1270,7 +1270,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         variant_map_ids: &mut HashMap<String, u32>
     )
     {
-        let task = Arc::new(Mutex::new(console_task::start(String::from("Building Map Variants"))));
+        let task = console_task::start(String::from("Building Map Variants"));
 
         let scenario_crc32s = Arc::new(Self::get_scenario_rsa_crc32s(&hoppers_config_path));
 
@@ -1304,8 +1304,8 @@ impl v12070_08_09_05_2031_halo3_ship {
             ]);
 
             if !Path::new(&map_variant_json_path).exists() {
-                eprintln!("Map variant \"{}\" could not be found.", map_variant);
-                continue;
+                task.fail(format!("Map variant \"{}\" could not be found.", map_variant));
+                panic!();
             }
 
             let mut file = File::open(&map_variant_json_path).unwrap();
@@ -1314,6 +1314,8 @@ impl v12070_08_09_05_2031_halo3_ship {
 
             json_queue.push((map_variant, map_variant_json));
         }
+
+        let task = Arc::new(Mutex::new(task));
 
         let json_queue = Arc::new(Mutex::new(VecDeque::from(json_queue)));
 
@@ -1360,7 +1362,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                                 let expected_scenario_crc = expected_scenario_crc.unwrap();
                                 if expected_scenario_crc != &map_variant_json.m_map_variant_checksum {
                                     let mut task = task.lock().await;
-                                    task.add_error(format!("Map Variant {map_variant_file_name} has a bad checksum and may not load properly! (expected {:08X})", expected_scenario_crc));
+                                    task.add_error(format!("Map Variant {map_variant_file_name} has a bad checksum and may not load properly! (got {:08X} ,expected {:08X})", &map_variant_json.m_map_variant_checksum, expected_scenario_crc));
                                     map_variant_json.m_map_variant_checksum = expected_scenario_crc.clone();
                                 }
                             }
