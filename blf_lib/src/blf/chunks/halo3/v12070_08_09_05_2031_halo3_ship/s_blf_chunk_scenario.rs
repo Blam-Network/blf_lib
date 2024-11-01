@@ -1,9 +1,22 @@
+use serde::{Deserialize, Serialize};
 use blf_lib::types::byte_limited_wchar_string::StaticWcharString;
 use crate::blf_chunk;
 use crate::types::array::StaticArray;
 use blf_lib::blam::common::cseries::language::k_language_count;
 use blf_lib::blam::halo_3::release::game::game_engine_default::k_game_engine_type_count;
 use blf_lib::types::byte_limited_utf8_string::StaticString;
+use blf_lib_derive::PackedSerialize;
+
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, PackedSerialize)]
+#[PackedSerialize(1, BigEndian)]
+pub struct s_blf_chunk_scenario_insertion {
+    pub visible: bool,
+    pub flags: u8,
+    pub zone_set: u16,
+    __pad4: [u8;4],
+    pub names: StaticArray<StaticWcharString<32>, k_language_count>,
+    pub descriptions: StaticArray<StaticWcharString<128>, k_language_count>,
+}
 
 blf_chunk!(
     #[Signature("levl")]
@@ -23,6 +36,7 @@ blf_chunk!(
         pub multiplayer_maximum_desired_players: u8,
         pub engine_maximum_teams: [u8; k_game_engine_type_count],
         pub allows_saved_films: bool,
-        pub __pad112A: [u8; 6],
+        __pad112A: [u8; 6],
+        pub insertion_points: StaticArray<s_blf_chunk_scenario_insertion, 4>,
     }
 );

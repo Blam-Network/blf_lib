@@ -23,7 +23,7 @@ use crate::title_storage::halo3::release::blf_files::matchmaking_tips::matchmaki
 use regex::Regex;
 use tempdir::TempDir;
 use tokio::runtime;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 use blf_lib::blam::common::memory::crc::crc32;
 use blf_lib::blam::common::memory::secure_signature::s_network_http_request_hash;
@@ -1301,15 +1301,12 @@ impl v12070_08_09_05_2031_halo3_ship {
 
         let shared_variant_hashes = Arc::new(Mutex::new(HashMap::new()));
         let shared_variant_map_ids = Arc::new(Mutex::new(HashMap::new()));
-        let (tx, rx) = mpsc::channel::<String>(100);
 
         let cpu_cores = num_cpus::get();
         rt.block_on(async {
-            let rx = Arc::new(Mutex::new(rx));
             let mut thread_handles = Vec::<JoinHandle<()>>::with_capacity(cpu_cores);
 
             for n in 0..cpu_cores {
-                let rx = Arc::clone(&rx);
                 let shared_variant_hashes = Arc::clone(&shared_variant_hashes);
                 let shared_variant_map_ids = Arc::clone(&shared_variant_map_ids);
                 let map_variants_config_path = map_variants_config_path.clone();
@@ -1481,7 +1478,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                             &map_variant_file_name,
                         ]),
                         build_path(vec![
-                            &hopper_folder_path,
+                            &hopper_folder_map_variants_path,
                             &map_variant_file_name,
                         ])
                     ).unwrap();

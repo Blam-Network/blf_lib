@@ -61,9 +61,9 @@ impl SerializableBlfChunk for s_blf_chunk_game_set {
             bitstream.write_bool(game_entry.optional);
             bitstream.write_integer(game_entry.map_id, 32);
             bitstream.write_string_utf8(&game_entry.game_variant_file_name.get_string(), 32);
-            bitstream.write_raw_data(&game_entry.game_variant_file_hash.data, 0x100);
+            bitstream.write_raw_data(&game_entry.game_variant_file_hash.data, 0xA0);
             bitstream.write_string_utf8(&game_entry.map_variant_file_name.get_string(), 32);
-            bitstream.write_raw_data(&game_entry.map_variant_file_hash.data, 0x100);
+            bitstream.write_raw_data(&game_entry.map_variant_file_hash.data, 0xA0);
         }
 
         close_bitstream_writer(&mut bitstream)
