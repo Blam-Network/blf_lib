@@ -3,6 +3,7 @@ use std::fs;
 use std::fs::{create_dir_all, exists, remove_file, File};
 use std::io::{Read, Write};
 use std::path::Path;
+use std::str::FromStr;
 use std::sync::Arc;
 use crate::io::{build_path, get_directories_in_folder, get_files_in_folder, FILE_SEPARATOR};
 use crate::title_converter;
@@ -23,6 +24,7 @@ use regex::Regex;
 use tempdir::TempDir;
 use tokio::runtime;
 use tokio::sync::{mpsc, Mutex};
+use blf_lib::blam::common::memory::crc::crc32;
 use blf_lib::blam::common::memory::secure_signature::s_network_http_request_hash;
 use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
 use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
@@ -83,7 +85,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             Self::build_blf_motd_popups(config_path, &hopper_directory, blfs_path, true);
             Self::build_blf_map_manifest(config_path, &hopper_directory, blfs_path);
 
-            let game_sets = Self::read_game_set_configuration(&hopper_config_path, &String::new());
+            let game_sets = Self::read_game_set_configuration(&hopper_config_path);
             let mut game_variant_hashes = HashMap::<String, s_network_http_request_hash>::new();
             let mut map_variant_hashes = HashMap::<String, s_network_http_request_hash>::new();
 
@@ -153,6 +155,7 @@ lazy_static! {
     static ref hopper_config_folder_identifier_regex: Regex = Regex::new(r"^[0-9]{1,5}").unwrap();
     static ref map_variant_regex: Regex = Regex::new(r"_012.bin$").unwrap();
     static ref game_variant_regex: Regex = Regex::new(r"_010.bin$").unwrap();
+    static ref config_rsa_signature_file_map_id: Regex = Regex::new(r"^[0-9]{1,}").unwrap();
 }
 
 impl v12070_08_09_05_2031_halo3_ship {
@@ -950,7 +953,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            std::fs::copy(jpeg_file_path, output_jpeg_path).unwrap();
+            fs::copy(jpeg_file_path, output_jpeg_path).unwrap();
         }
 
         task.complete();
@@ -1023,7 +1026,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            std::fs::copy(jpeg_file_path, output_jpeg_path).unwrap();
+            fs::copy(jpeg_file_path, output_jpeg_path).unwrap();
         }
 
         task.complete();
@@ -1088,35 +1091,43 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
-    fn read_game_set_configuration(hoppers_config_path: &String, active_hoppers: &String) -> Vec<game_set> {
+    fn read_game_set_configuration(hoppers_config_path: &String) -> Vec<game_set> {
         let mut task = console_task::start(String::from("Reading Game Sets..."));
 
         let mut game_sets = Vec::<game_set>::new();
+
+        let active_hoppers_file_path = build_path(vec![
+            hoppers_config_path,
+            &String::from("active_hoppers.txt"),
+        ]);
+
+        let mut active_hoppers_file = File::open(&active_hoppers_file_path).unwrap();
+        let mut active_hoppers_string = String::new();
+        active_hoppers_file.read_to_string(&mut active_hoppers_string).unwrap_or_else(|err| {
+            task.fail("Failed to read active_hoppers.txt".to_string());
+            panic!();
+        });
+        let active_hopper_folders = active_hoppers_string.lines();
+
         let hopper_tables_config_path = build_path(vec![
             &hoppers_config_path,
             &String::from("hoppers")
         ]);
 
-        // Iterate through hopper folders. eg default_hoppers/00101
-        let hopper_directory_subfolders = get_directories_in_folder(&hopper_tables_config_path).unwrap_or_else(|err|{
-            println!("{}", err);
-            panic!();
-        });
-
-        for subfolder in hopper_directory_subfolders {
+        for subfolder in active_hopper_folders {
             if !hopper_folder_regex.is_match(&subfolder) {
                 continue;
             }
 
             let game_set_csv_path = build_path(vec![
                 &hopper_tables_config_path,
-                &subfolder,
+                &subfolder.to_string(),
                 &String::from("game_set.csv"),
             ]);
 
             if !exists(&game_set_csv_path).unwrap() {
-                task.add_error(format!("No game set was found for hopper \"{subfolder}\""));
-                // panic!();
+                task.add_warning(format!("No game set was found for hopper \"{subfolder}\""));
+                panic!();
             }
 
             let game_set = game_set::read(game_set_csv_path).unwrap_or_else(|err| {
@@ -1192,6 +1203,46 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
+    pub fn get_scenario_rsa_crc32s(hoppers_config_path: &String) -> HashMap<u32, u32> {
+        let mut result = HashMap::<u32, u32>::new();
+
+        let rsa_folder = build_path(vec![
+            hoppers_config_path,
+            &String::from("rsa_signatures")
+        ]);
+
+        if !exists(&rsa_folder).unwrap() {
+            return result;
+        }
+
+        let rsa_files = get_files_in_folder(&rsa_folder).unwrap_or_else(|err|{
+            panic!();
+        });
+
+        for rsa_file_name in rsa_files {
+            let rsa_file_path = build_path(vec![
+                &rsa_folder,
+                &rsa_file_name,
+            ]);
+            let rsa_file = File::open(&rsa_file_path);
+            if rsa_file.is_err() {
+                continue;
+            }
+            let mut rsa_file = rsa_file.unwrap();
+            let mut rsa_signature = Vec::<u8>::with_capacity(0x100);
+            rsa_file.read_to_end(&mut rsa_signature).unwrap();
+
+            let map_id = config_rsa_signature_file_map_id.captures(rsa_file_name.as_str()).unwrap();
+            let map_id = map_id.get(0).unwrap();
+            let map_id = u32::from_str(map_id.as_str()).unwrap();
+            let crc32 = crc32(0xFFFFFFFF, &rsa_signature);
+
+            result.insert(map_id, crc32);
+        }
+
+        result
+    }
+
     fn build_blf_map_variants(
         hoppers_config_path: &String,
         hoppers_blfs_path: &String,
@@ -1199,7 +1250,9 @@ impl v12070_08_09_05_2031_halo3_ship {
         game_sets: &Vec<game_set>,
         variant_hashes: &mut HashMap<String, s_network_http_request_hash>,
     ) {
-        let mut task = console_task::start(String::from("Building Map Variants"));
+        let task = Arc::new(Mutex::new(console_task::start(String::from("Building Map Variants"))));
+
+        let scenario_crc32s = Arc::new(Self::get_scenario_rsa_crc32s(&hoppers_config_path));
 
         let map_variants_config_path = build_path(vec![
             hoppers_config_path,
@@ -1236,6 +1289,8 @@ impl v12070_08_09_05_2031_halo3_ship {
                 let shared_variant_hashes = Arc::clone(&shared_variant_hashes);
                 let map_variants_config_path = map_variants_config_path.clone();
                 let map_variants_temp_build_path = map_variants_temp_build_path.clone();
+                let scenario_crc32s = Arc::clone(&scenario_crc32s);
+                let task = Arc::clone(&task);
 
                 rt.spawn(async move {
                     loop {
@@ -1262,7 +1317,24 @@ impl v12070_08_09_05_2031_halo3_ship {
                                 }
 
                                 let mut file = File::open(&map_variant_json_path).unwrap();
-                                let map_variant_json: c_map_variant = serde_json::from_reader(&mut file).unwrap();
+                                let mut map_variant_json: c_map_variant = serde_json::from_reader(&mut file).unwrap();
+
+                                // Check the scenario crc
+                                let expected_scenario_crc = scenario_crc32s.get(&map_variant_json.m_map_id);
+                                if expected_scenario_crc.is_none() {
+                                    let mut task = task.lock().await;
+                                    task.add_error(format!("Map Variant {map_variant_file_name} could not be validated due to missing RSA signature!"))
+                                }
+                                else {
+                                    let expected_scenario_crc = expected_scenario_crc.unwrap();
+                                    if expected_scenario_crc != &map_variant_json.m_map_variant_checksum {
+                                        let mut task = task.lock().await;
+                                        task.add_error(format!("Map Variant {map_variant_file_name} has a bad checksum and may not load properly! (expected {:08X})", expected_scenario_crc));
+                                        map_variant_json.m_map_variant_checksum = expected_scenario_crc.clone();
+                                    }
+                                }
+
+
                                 let mut map_variant_blf_file = map_variant::create(map_variant_json);
                                 map_variant_blf_file.write(&map_variant_blf_path);
 
@@ -1282,10 +1354,10 @@ impl v12070_08_09_05_2031_halo3_ship {
 
             let final_hashes = shared_variant_hashes.lock().await;
             variant_hashes.extend(final_hashes.clone());
-        });
 
-        task.add_message(format!("Built {} variants.", variant_hashes.len()));
-        task.add_error("Checksums are not yet generated for map variants.".to_string());
-        task.complete();
+            let mut task = task.lock().await;
+            task.add_message(format!("Built {} variants.", variant_hashes.len()));
+            task.complete();
+        });
     }
 }

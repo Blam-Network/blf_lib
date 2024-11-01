@@ -20,26 +20,26 @@ const k_number_of_map_variant_simulation_entities: usize = 80;
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
 #[PackedSerialize(1, BigEndian)]
 pub struct c_map_variant {
-    m_metadata: s_content_item_metadata,
-    m_map_variant_version: u16,
-    m_number_of_scenario_objects: u16,
-    m_number_of_variant_objects: u16,
-    m_number_of_placeable_object_quotas: u16,
-    m_map_id: u32,
-    m_world_bounds: real_rectangle3d,
-    m_game_engine_subtype: u32,
-    m_maximum_budget: f32,
-    m_spent_budget: f32,
-    m_helpers_enabled: bool,
-    m_built_in: bool,
+    pub m_metadata: s_content_item_metadata,
+    pub m_map_variant_version: u16,
+    pub m_number_of_scenario_objects: u16,
+    pub m_number_of_variant_objects: u16,
+    pub m_number_of_placeable_object_quotas: u16,
+    pub m_map_id: u32,
+    pub m_world_bounds: real_rectangle3d,
+    pub m_game_engine_subtype: u32,
+    pub m_maximum_budget: f32,
+    pub m_spent_budget: f32,
+    pub m_helpers_enabled: bool,
+    pub m_built_in: bool,
     #[serde(skip_serializing,skip_deserializing)]
     __pad12A: [u8; 2],
     #[serde(with = "SerHex::<StrictCap>")]
-    m_map_variant_checksum: u32,
-    m_variant_objects: StaticArray<s_variant_object_datum, 640>,
-    m_object_type_start_index: StaticArray<i16, k_object_type_count>,
-    m_quotas: StaticArray<s_variant_quota, 256>,
-    m_chunk_simulation_object_glue_indices: StaticArray<u32, k_number_of_map_variant_simulation_entities>,
+    pub m_map_variant_checksum: u32,
+    pub m_variant_objects: StaticArray<s_variant_object_datum, 640>,
+    pub m_object_type_start_index: StaticArray<i16, k_object_type_count>,
+    pub m_quotas: StaticArray<s_variant_quota, 256>,
+    pub m_chunk_simulation_object_glue_indices: StaticArray<u32, k_number_of_map_variant_simulation_entities>,
 }
 
 impl c_map_variant {
