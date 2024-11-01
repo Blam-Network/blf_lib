@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::fs;
 use std::fs::{create_dir_all, exists, remove_file, File};
 use std::io::{Read, Write};
 use std::path::Path;
@@ -28,6 +29,7 @@ use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::c_map_var
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_hopper_configuration_table;
 use crate::title_storage::halo3::release::blf_files::game_variant::game_variant;
 use crate::title_storage::halo3::release::blf_files::map_variant::map_variant;
+use crate::title_storage::halo3::release::blf_files::network_configuration::network_configuration;
 use crate::title_storage::halo3::release::config_files::game_set::{build_game_set_csv, game_set};
 use crate::title_storage::halo3::release::config_files::hopper_configuration::hopper_configuration as json_hopper_configuration;
 use crate::title_storage::halo3::release::config_files::categories_configuration::{categories_configuration as json_categories_configuration, category_configuration_and_descriptions};
@@ -126,6 +128,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             Self::build_config_game_variants(blfs_path, &hopper_directory, config_path);
             Self::build_config_game_sets(blfs_path, &hopper_directory, config_path);
             Self::build_config_hoppers(&hopper_blfs_path, &hopper_config_path);
+            Self::build_config_network_configuration(&hopper_blfs_path, &hopper_config_path);
         }
     }
 }
@@ -764,6 +767,29 @@ impl v12070_08_09_05_2031_halo3_ship {
         serde_json::to_writer_pretty(&mut categories_json_file, &categories_config).unwrap();
 
         task.add_message(format!("Converted {} hopper configurations.", hopper_configuration_table.hopper_configuration_count));
+
+        task.complete();
+    }
+
+    fn build_config_network_configuration(hoppers_blfs_path: &String, hoppers_config_path: &String) {
+        // For now we just copy it as is. But we do check that it contains a netc.
+        let task = console_task::start(String::from("Converting Network Configuration"));
+
+        let network_configuration_source_path = build_path(vec![
+            hoppers_blfs_path,
+            &String::from("network_configuration_135.bin"),
+        ]);
+
+        let network_configuration_dest_path = build_path(vec![
+            hoppers_config_path,
+            &String::from("network_configuration_135.bin"),
+        ]);
+
+        // We read and rewrite to tidy any padding and the headers.
+        let mut network_config = network_configuration::read(&network_configuration_source_path);
+        network_config.write(&network_configuration_dest_path);
+
+        fs::copy(network_configuration_source_path, network_configuration_dest_path).unwrap();
 
         task.complete();
     }
