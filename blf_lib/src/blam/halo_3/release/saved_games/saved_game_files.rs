@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib_derive::PackedSerialize;
 use crate::types::byte_limited_utf8_string::StaticString;
-use crate::types::byte_limited_wchar_string::ByteLimitedWcharString;
+use crate::types::byte_limited_wchar_string::StaticWcharString;
 use serde_hex::{SerHex,StrictCap};
 use blf_lib::types::time::time_t;
 
@@ -27,7 +27,7 @@ pub const k_saved_game_file_type_count: u32 = 13;
 #[PackedSerialize(4, BigEndian)]
 pub struct s_content_item_metadata {
     unique_id: u64,
-    name: ByteLimitedWcharString<0x10>,
+    name: StaticWcharString<0x10>,
     description: StaticString<128>,
     author: StaticString<16>,
     file_type: u32,

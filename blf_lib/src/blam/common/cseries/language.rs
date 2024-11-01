@@ -11,8 +11,9 @@ pub const k_language_suffix_chinese_simplified: &str = "chs";
 pub const k_language_suffix_portuguese: &str = "pt";
 pub const k_language_suffix_polish: &str = "pl";
 
+pub const k_language_count: usize = 12;
 
-pub const k_language_suffixes: [&str; 12] = [
+pub const k_language_suffixes: [&str; k_language_count] = [
     k_language_suffix_english,
     k_language_suffix_japanese,
     k_language_suffix_german,

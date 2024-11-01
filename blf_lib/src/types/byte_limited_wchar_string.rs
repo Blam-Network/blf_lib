@@ -10,11 +10,11 @@ use crate::types::array::StaticArray;
 use serde::de::Error;
 
 #[derive(PartialEq, Debug, Clone, Default)]
-pub struct ByteLimitedWcharString<const N: usize> {
+pub struct StaticWcharString<const N: usize> {
     buf: StaticArray<u16, N>,
 }
 
-impl<const N: usize> ByteLimitedWcharString<N> {
+impl<const N: usize> StaticWcharString<N> {
     pub fn from_string(value: &String) -> Result<Self, String> {
         let mut new = Self {
             buf: StaticArray::default()
@@ -45,7 +45,7 @@ impl<const N: usize> ByteLimitedWcharString<N> {
     }
 }
 
-impl<const N: usize> PackedEncoder for ByteLimitedWcharString<N> {
+impl<const N: usize> PackedEncoder for StaticWcharString<N> {
     fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
         let mut out = Vec::<u8>::with_capacity(N);
         self.buf.get().iter().for_each(|&wchar| {out.append(&mut (wchar).encode_packed(endian, PACK1));});
@@ -53,7 +53,7 @@ impl<const N: usize> PackedEncoder for ByteLimitedWcharString<N> {
     }
 }
 
-impl<const N: usize> PackedDecoder for ByteLimitedWcharString<N> {
+impl<const N: usize> PackedDecoder for StaticWcharString<N> {
     fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String> {
         let mut buf = [u16::default(); N];
         for i in 0..N {
@@ -65,7 +65,7 @@ impl<const N: usize> PackedDecoder for ByteLimitedWcharString<N> {
     }
 }
 
-impl<const N: usize> Serialize for ByteLimitedWcharString<N> {
+impl<const N: usize> Serialize for StaticWcharString<N> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer
@@ -74,7 +74,7 @@ impl<const N: usize> Serialize for ByteLimitedWcharString<N> {
     }
 }
 
-impl<'de, const N: usize> serde::Deserialize<'de> for ByteLimitedWcharString<N> {
+impl<'de, const N: usize> serde::Deserialize<'de> for StaticWcharString<N> {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let s = String::deserialize(d)?;
         let res = Self::from_string(&s);

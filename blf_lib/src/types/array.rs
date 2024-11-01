@@ -40,7 +40,7 @@ impl<E: Default + Clone, const N: usize> Default for StaticArray<E, N> {
     }
 }
 
-impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> PackedDecoder for StaticArray<E, N> {
+impl<E: Default + PackedDecoder + PackedEncoder + Serialize + Clone + for <'de2> Deserialize<'de2> + 'static, const N: usize> PackedDecoder for StaticArray<E, N> {
     fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>
     where
         Self: Sized
@@ -57,11 +57,11 @@ impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> 
     }
 }
 
-impl<E: Default + Copy + PackedDecoder + PackedEncoder + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> PackedEncoder for StaticArray<E, N> {
+impl<E: Default + PackedDecoder + PackedEncoder + Serialize + for <'de2> Deserialize<'de2> + 'static, const N: usize> PackedEncoder for StaticArray<E, N> {
     fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
         let mut buffer = Vec::<u8>::new();
-        self._data.iter().for_each(|&e| {
-            buffer.append(&mut PackedEncoder::encode_packed(&e, endian, packing.clone()));
+        self._data.iter().for_each(|e| {
+            buffer.append(&mut PackedEncoder::encode_packed(e, endian, packing.clone()));
         });
 
         buffer

@@ -7,6 +7,8 @@ use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib::{SET_BIT, TEST_BIT};
 
+pub const k_game_engine_type_count: usize = 11;
+
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
 pub struct c_game_engine_social_options {
     m_flags: u16,
