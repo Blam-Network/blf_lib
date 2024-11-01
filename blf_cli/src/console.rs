@@ -53,7 +53,7 @@ impl console_task {
     }
 
     fn log_error(message: &String) {
-        println!("  ⛔ {color_bright_white}{bg_red}{message}{style_reset}");
+        println!("  ⛔  {color_bright_white}{bg_red}{message}{style_reset}");
     }
 
     pub fn add_message(&mut self, message: String) {

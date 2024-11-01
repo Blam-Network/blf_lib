@@ -5,6 +5,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 use std::str::FromStr;
 use std::sync::Arc;
+use std::time::SystemTime;
 use crate::io::{build_path, get_directories_in_folder, get_files_in_folder, FILE_SEPARATOR};
 use crate::title_converter;
 use crate::title_storage::{check_file_exists, TitleConverter};
@@ -52,6 +53,8 @@ const HOPPER_DIRECTORY_NAME_MAX_LENGTH: usize = 64;
 
 impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
     fn build_blfs(&mut self, config_path: &String, blfs_path: &String) {
+        let start_time = SystemTime::now();
+
         println!("{style_bold}Writing Title Storage BLFs to {blfs_path} {style_reset}");
 
         let hopper_directories = get_directories_in_folder(&config_path).unwrap_or_else(|err|{
@@ -98,8 +101,10 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             Self::build_blf_game_variants(&hopper_config_path, &hopper_blfs_path, &build_temp_dir_path, &game_sets, &mut game_variant_hashes);
             Self::build_blf_map_variants(&hopper_config_path, &hopper_blfs_path, &build_temp_dir_path, &game_sets, &mut map_variant_hashes, &mut map_variant_map_ids);
             Self::build_blf_game_sets(&hopper_blfs_path, game_sets, &game_variant_hashes, &map_variant_hashes, &map_variant_map_ids, &build_temp_dir_path);
-
         }
+
+        let seconds = start_time.elapsed().unwrap().as_secs();
+        println!("Finished conversion in {seconds} seconds.");
     }
 
     fn build_config(&mut self, blfs_path: &String, config_path: &String) {
@@ -1168,7 +1173,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         variant_hashes: &mut HashMap<String, s_network_http_request_hash>
     )
     {
-        let mut task = console_task::start(String::from("Building Game Variants"));
+        let task = console_task::start(String::from("Building Game Variants"));
 
         let game_variants_config_path = build_path(vec![
             &hoppers_config_path,
@@ -1180,11 +1185,6 @@ impl v12070_08_09_05_2031_halo3_ship {
             &String::from("game_variants")
         ]);
 
-        let rt = runtime::Builder::new_multi_thread()
-            .worker_threads(4)
-            .build()
-            .unwrap();
-
         create_dir_all(&game_variants_temp_build_path).unwrap();
 
         let game_variants_to_convert: Vec<String> = game_sets.iter().flat_map(|(_, game_set)|
@@ -1193,32 +1193,87 @@ impl v12070_08_09_05_2031_halo3_ship {
 
         let game_variants_to_convert: HashSet<String> = HashSet::from_iter(game_variants_to_convert.iter().cloned());
 
-        for game_variant_file_name in &game_variants_to_convert {
-            let game_variant_json_path = build_path(vec![
+        let mut json_queue: Vec<(String, String)> = Vec::new();
+        for game_variant in game_variants_to_convert {
+            let map_variant_json_path = build_path(vec![
                 &game_variants_config_path,
-                &format!("{game_variant_file_name}.json"),
+                &format!("{game_variant}.json"),
             ]);
 
-            let game_variant_blf_path = build_path(vec![
-                &game_variants_temp_build_path,
-                &format!("{game_variant_file_name}_010.bin"),
-            ]);
-
-            if !exists(&game_variant_json_path).unwrap() {
-                task.fail(format!("Game variant \"{game_variant_file_name}\" could not be found."))
+            if !Path::new(&map_variant_json_path).exists() {
+                task.fail(format!("Game variant \"{}\" could not be found.", game_variant));
+                panic!();
             }
 
-            let mut file = File::open(&game_variant_json_path).unwrap();
-            let game_variant_json: c_game_variant = serde_json::from_reader(&mut file).unwrap();
-            let mut game_variant_blf_file = game_variant::create(game_variant_json);
-            game_variant_blf_file.write(&game_variant_blf_path);
+            let mut file = File::open(&map_variant_json_path).unwrap();
+            let mut game_variant_json = String::new();
+            file.read_to_string(&mut game_variant_json).unwrap();
 
-            variant_hashes.insert(game_variant_file_name.clone(), get_blf_file_hash(game_variant_blf_path));
+            json_queue.push((game_variant, game_variant_json));
         }
 
-        task.add_message(format!("Built {} variants.", game_variants_to_convert.len()));
 
-        task.complete();
+        let rt = runtime::Builder::new_multi_thread()
+            .worker_threads(4)
+            .build()
+            .unwrap();
+
+        let task = Arc::new(Mutex::new(task));
+        let json_queue = Arc::new(Mutex::new(VecDeque::from(json_queue)));
+        let shared_variant_hashes = Arc::new(Mutex::new(HashMap::new()));
+
+        let cpu_cores = num_cpus::get();
+        rt.block_on(async {
+            let mut thread_handles = Vec::<JoinHandle<()>>::with_capacity(cpu_cores);
+
+            for n in 0..cpu_cores {
+                let shared_variant_hashes = Arc::clone(&shared_variant_hashes);
+                let game_variants_config_path = game_variants_config_path.clone();
+                let game_variants_temp_build_path = game_variants_temp_build_path.clone();
+                let task = Arc::clone(&task);
+                let json_queue = Arc::clone(&json_queue);
+
+                thread_handles.push(rt.spawn(async move {
+                    loop {
+                        let mut json_queue = json_queue.lock().await;
+
+                        if let Some((game_variant_file_name, json)) = json_queue.pop_front() {
+                            let remaining = json_queue.len();
+                            drop(json_queue);
+
+                            // println!("[MAPS] Thread {n} got {map_variant_file_name} ({remaining} remaining)");
+
+                            let game_variant_blf_path = build_path(vec![
+                                &game_variants_temp_build_path,
+                                &format!("{game_variant_file_name}_010.bin"),
+                            ]);
+
+                            let game_variant_json: c_game_variant = serde_json::from_str(&json).unwrap();
+
+                            let mut map_variant_blf_file = game_variant::create(game_variant_json);
+                            map_variant_blf_file.write(&game_variant_blf_path);
+
+                            let hash = get_blf_file_hash(game_variant_blf_path);
+                            let mut hashes = shared_variant_hashes.lock().await;
+                            hashes.insert(game_variant_file_name.clone(), hash);
+                        } else {
+                            break;
+                        }
+                    }
+                }));
+            }
+
+            for thread_handle in thread_handles {
+                thread_handle.await.unwrap();
+            }
+
+            let final_hashes = shared_variant_hashes.lock().await;
+            variant_hashes.extend(final_hashes.clone());
+
+            let mut task = task.lock().await;
+            task.add_message(format!("Built {} variants.", variant_hashes.len()));
+            task.complete();
+        });
     }
 
     pub fn get_scenario_rsa_crc32s(hoppers_config_path: &String) -> HashMap<u32, u32> {
@@ -1284,11 +1339,6 @@ impl v12070_08_09_05_2031_halo3_ship {
             &String::from("map_variants"),
         ]);
 
-        let rt = runtime::Builder::new_multi_thread()
-            .worker_threads(4)
-            .build()
-            .unwrap();
-
         create_dir_all(&map_variants_temp_build_path).unwrap();
 
         let map_variants_to_convert: Vec<String> = game_sets.iter().flat_map(|(_, game_set)|
@@ -1315,10 +1365,13 @@ impl v12070_08_09_05_2031_halo3_ship {
             json_queue.push((map_variant, map_variant_json));
         }
 
+        let rt = runtime::Builder::new_multi_thread()
+            .worker_threads(4)
+            .build()
+            .unwrap();
+
         let task = Arc::new(Mutex::new(task));
-
         let json_queue = Arc::new(Mutex::new(VecDeque::from(json_queue)));
-
         let shared_variant_hashes = Arc::new(Mutex::new(HashMap::new()));
         let shared_variant_map_ids = Arc::new(Mutex::new(HashMap::new()));
 
@@ -1362,7 +1415,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                                 let expected_scenario_crc = expected_scenario_crc.unwrap();
                                 if expected_scenario_crc != &map_variant_json.m_map_variant_checksum {
                                     let mut task = task.lock().await;
-                                    task.add_error(format!("Map Variant {map_variant_file_name} has a bad checksum and may not load properly! (got {:08X} ,expected {:08X})", &map_variant_json.m_map_variant_checksum, expected_scenario_crc));
+                                    task.add_error(format!("Map Variant \"{map_variant_file_name}\" has a bad checksum and may not load properly! (got {:08X}, expected {:08X})", &map_variant_json.m_map_variant_checksum, expected_scenario_crc));
                                     map_variant_json.m_map_variant_checksum = expected_scenario_crc.clone();
                                 }
                             }
