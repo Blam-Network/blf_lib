@@ -29,6 +29,8 @@ use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_
 use crate::title_storage::halo3::release::blf_files::game_variant::game_variant;
 use crate::title_storage::halo3::release::blf_files::map_variant::map_variant;
 use crate::title_storage::halo3::release::config_files::game_set::{build_game_set_csv, game_set};
+use crate::title_storage::halo3::release::config_files::hopper_configuration::hopper_configuration as json_hopper_configuration;
+use crate::title_storage::halo3::release::config_files::categories_configuration::{categories_configuration as json_categories_configuration, category_configuration_and_descriptions};
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
 
@@ -623,9 +625,8 @@ impl v12070_08_09_05_2031_halo3_ship {
     // But foreunner doesn't seem to make this distinction, so why should I?
     fn read_hopper_description_blfs(
         hoppers_blfs_folder: &String,
+        task: &mut console_task
     ) -> HashMap<String, HashMap<u16, String>> {
-        let mut task = console_task::start(String::from("Reading Hopper Descriptions..."));
-
         let mut language_descriptions_map = HashMap::<String, HashMap<u16, String>>::new();
 
         for language_code in k_language_suffixes {
@@ -669,7 +670,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         let mut task = console_task::start(String::from("Converting Hopper Configuration..."));
 
         let language_hopper_descriptions
-            = Self::read_hopper_description_blfs(hoppers_blfs_path);
+            = Self::read_hopper_description_blfs(hoppers_blfs_path, &mut task);
 
         let hopper_configuration_blf_path = build_path(vec![
             hoppers_blfs_path,
@@ -678,6 +679,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
         let hopper_configuration_table = find_chunk_in_file::<s_blf_chunk_hopper_configuration_table>(&hopper_configuration_blf_path).unwrap();
         let hopper_configurations = hopper_configuration_table.get_hopper_configurations();
+        let category_configurations = hopper_configuration_table.get_hopper_categories();
 
         // Generate active_hoppers.txt
         let active_hopper_ids = hopper_configurations.iter().map(|config|config.hopper_identifier);
@@ -690,6 +692,76 @@ impl v12070_08_09_05_2031_halo3_ship {
             active_hopper_ids.map(|id|format!("{id:0>5}")).collect::<Vec<_>>().join("\r\n").as_bytes()
         ).unwrap();
 
+        // Build hopper configuration json
+        for hopper_configuration in hopper_configurations {
+            let mut hopper_configuration_json = json_hopper_configuration {
+                descriptions: HashMap::new(),
+                configuration: hopper_configuration,
+            };
+
+            for language_code in k_language_suffixes {
+                if language_hopper_descriptions.contains_key(language_code)
+                    && language_hopper_descriptions.get(language_code).unwrap().contains_key(&hopper_configuration_json.configuration.hopper_identifier)
+                {
+                    hopper_configuration_json.descriptions.insert(
+                        String::from(language_code),
+                        language_hopper_descriptions.get(language_code).unwrap().get(&hopper_configuration_json.configuration.hopper_identifier).unwrap().clone()
+                    );
+                }
+                else {
+                    hopper_configuration_json.descriptions.insert(String::from(language_code), String::new());
+                }
+            }
+
+            let hopper_configuration_json_folder = build_path(vec![
+                hoppers_config_path,
+                &String::from("hoppers"),
+                &format!("{:0>5}", hopper_configuration_json.configuration.hopper_identifier),
+            ]);
+            create_dir_all(&hopper_configuration_json_folder).unwrap();
+
+            let hopper_configuration_json_file = build_path(vec![
+                &hopper_configuration_json_folder,
+                &String::from("configuration.json"),
+            ]);
+            let mut hopper_configuration_json_file = File::create(hopper_configuration_json_file).unwrap();
+            serde_json::to_writer_pretty(&mut hopper_configuration_json_file, &hopper_configuration_json).unwrap();
+        }
+
+        // Build categories json
+        let mut categories_config = json_categories_configuration::default();
+
+        for category_configuration in category_configurations {
+            let mut category_configuration_and_description = category_configuration_and_descriptions {
+                descriptions: HashMap::new(),
+                configuration: category_configuration,
+            };
+
+            for language_code in k_language_suffixes {
+                if language_hopper_descriptions.contains_key(language_code)
+                    && language_hopper_descriptions.get(language_code).unwrap().contains_key(&category_configuration_and_description.configuration.category_identifier)
+                {
+                    category_configuration_and_description.descriptions.insert(
+                        String::from(language_code),
+                        language_hopper_descriptions.get(language_code).unwrap().get(&category_configuration_and_description.configuration.category_identifier).unwrap().clone()
+                    );
+                }
+                else {
+                    category_configuration_and_description.descriptions.insert(String::from(language_code), String::new());
+                }
+            }
+
+            categories_config.categories.push(category_configuration_and_description);
+        }
+
+
+        let categories_json_file = build_path(vec![
+            hoppers_config_path,
+            &String::from("categories.json"),
+        ]);
+
+        let mut categories_json_file = File::create(categories_json_file).unwrap();
+        serde_json::to_writer_pretty(&mut categories_json_file, &categories_config).unwrap();
 
         task.add_message(format!("Converted {} hopper configurations.", hopper_configuration_table.hopper_configuration_count));
 

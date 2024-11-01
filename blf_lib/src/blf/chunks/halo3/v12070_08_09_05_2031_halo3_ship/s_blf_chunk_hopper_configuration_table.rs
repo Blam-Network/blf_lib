@@ -4,9 +4,10 @@ use blf_lib::blf_chunk;
 use blf_lib::io::bitstream::{create_bitstream_reader, create_bitstream_writer, e_bitstream_byte_order};
 use blf_lib::types::array::StaticArray;
 use blf_lib::types::byte_limited_utf8_string::StaticString;
-use blf_lib::types::time::time_t;
+use blf_lib::types::time::{filetime};
 use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
 use crate::io::bitstream::close_bitstream_writer;
+use serde_hex::{SerHex,StrictCap};
 
 #[derive(Clone, Default, PartialEq, Debug, Copy, Serialize, Deserialize)]
 pub struct s_game_hopper_custom_category {
@@ -26,8 +27,9 @@ pub struct c_hopper_configuration {
     pub xlast_index: u8,
     pub rich_presence_id: u16,
     // __data49[0x7];
-    pub start_time: time_t,
-    pub end_time: time_t,
+    pub start_time: filetime,
+    pub end_time: filetime,
+    #[serde(with = "SerHex::<StrictCap>")]
     pub hopper_regions: u32,
     pub minimum_base_xp: u32,
     pub maximum_base_xp: u32,
@@ -291,8 +293,8 @@ impl SerializableBlfChunk for s_blf_chunk_hopper_configuration_table {
             configuration.image_index = bitstream.read_u8(6);
             configuration.xlast_index = bitstream.read_u8(5);
             configuration.rich_presence_id = bitstream.read_u16(16);
-            configuration.start_time = time_t::from_u64(bitstream.read_qword(64));
-            configuration.end_time = time_t::from_u64(bitstream.read_qword(64));
+            configuration.start_time = filetime::from_u64(bitstream.read_qword(64));
+            configuration.end_time = filetime::from_u64(bitstream.read_qword(64));
             configuration.hopper_regions = bitstream.read_integer(32);
             configuration.minimum_base_xp = bitstream.read_integer(17);
             configuration.maximum_base_xp = bitstream.read_integer(17);
