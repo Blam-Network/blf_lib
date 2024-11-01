@@ -1295,9 +1295,27 @@ impl v12070_08_09_05_2031_halo3_ship {
             game_set.entries.iter().map(|entry| entry.map_variant_file_name.clone()).collect::<Vec<String>>()
         ).collect();
         let map_variants_to_convert: HashSet<String> = HashSet::from_iter(map_variants_to_convert.iter().cloned());
-        let map_variants_to_convert: VecDeque<String> = map_variants_to_convert.into_iter().collect();
 
-        let queue = Arc::new(Mutex::new(map_variants_to_convert));
+        let mut json_queue: Vec<(String, String)> = Vec::new();
+        for map_variant in map_variants_to_convert {
+            let map_variant_json_path = build_path(vec![
+                &map_variants_config_path,
+                &format!("{map_variant}.json"),
+            ]);
+
+            if !Path::new(&map_variant_json_path).exists() {
+                eprintln!("Map variant \"{}\" could not be found.", map_variant);
+                continue;
+            }
+
+            let mut file = File::open(&map_variant_json_path).unwrap();
+            let mut map_variant_json = String::new();
+            file.read_to_string(&mut map_variant_json).unwrap();
+
+            json_queue.push((map_variant, map_variant_json));
+        }
+
+        let json_queue = Arc::new(Mutex::new(VecDeque::from(json_queue)));
 
         let shared_variant_hashes = Arc::new(Mutex::new(HashMap::new()));
         let shared_variant_map_ids = Arc::new(Mutex::new(HashMap::new()));
@@ -1313,35 +1331,24 @@ impl v12070_08_09_05_2031_halo3_ship {
                 let map_variants_temp_build_path = map_variants_temp_build_path.clone();
                 let scenario_crc32s = Arc::clone(&scenario_crc32s);
                 let task = Arc::clone(&task);
-                let queue = Arc::clone(&queue);
+                let json_queue = Arc::clone(&json_queue);
 
                 thread_handles.push(rt.spawn(async move {
                     loop {
-                        let mut queue = queue.lock().await;
+                        let mut json_queue = json_queue.lock().await;
 
-                        if let Some(map_variant_file_name) = queue.pop_front() {
-                            let remaining = queue.len();
-                            drop(queue);
+                        if let Some((map_variant_file_name, json)) = json_queue.pop_front() {
+                            let remaining = json_queue.len();
+                            drop(json_queue);
 
-                            println!("[MAPS] Thread {n} got {map_variant_file_name} ({remaining} remaining)");
-
-                            let map_variant_json_path = build_path(vec![
-                                &map_variants_config_path,
-                                &format!("{map_variant_file_name}.json"),
-                            ]);
+                            // println!("[MAPS] Thread {n} got {map_variant_file_name} ({remaining} remaining)");
 
                             let map_variant_blf_path = build_path(vec![
                                 &map_variants_temp_build_path,
                                 &format!("{map_variant_file_name}_012.bin"),
                             ]);
 
-                            if !Path::new(&map_variant_json_path).exists() {
-                                eprintln!("Map variant \"{}\" could not be found.", map_variant_file_name);
-                                continue;
-                            }
-
-                            let mut file = File::open(&map_variant_json_path).unwrap();
-                            let mut map_variant_json: c_map_variant = serde_json::from_reader(&mut file).unwrap();
+                            let mut map_variant_json: c_map_variant = serde_json::from_str(&json).unwrap();
 
                             // Check the scenario crc
                             let expected_scenario_crc = scenario_crc32s.get(&map_variant_json.m_map_id);
