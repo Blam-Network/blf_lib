@@ -6,3 +6,4 @@ pub mod matchmaking_tips;
 pub mod map_variant;
 pub mod game_variant;
 pub mod network_configuration;
+pub mod game_set;

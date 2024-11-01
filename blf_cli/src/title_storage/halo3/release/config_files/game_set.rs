@@ -37,7 +37,7 @@ impl game_set {
 pub fn build_game_set_csv(game_set: &s_blf_chunk_game_set) -> String {
     let mut writer = WriterBuilder::new().from_writer(vec![]);
 
-    game_set.game_entries.iter().for_each(|game_entry| {
+    game_set.get_entries().iter().for_each(|game_entry| {
         writer.serialize(game_set_row {
             map_variant_file_name: game_entry.map_variant_file_name.get_string(),
             game_variant_file_name: game_entry.game_variant_file_name.get_string(),

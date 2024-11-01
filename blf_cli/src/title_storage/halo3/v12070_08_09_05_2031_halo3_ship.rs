@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 use std::fs::{create_dir_all, exists, remove_file, File};
 use std::io::{Read, Write};
@@ -13,7 +13,7 @@ use lazy_static::lazy_static;
 use blf_lib::blam::common::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::{get_blf_file_hash, BlfFile};
 use blf_lib::blf::chunks::find_chunk_in_file;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_game_set, s_blf_chunk_hopper_description_table, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_game_set, s_blf_chunk_game_set_entry, s_blf_chunk_hopper_description_table, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
 use crate::console::console_task;
 use crate::title_storage::halo3::release::blf_files::{motd, rsa_manifest};
 use crate::title_storage::halo3::release::config_files::motd_popup::motd_popup as motd_popup_config;
@@ -24,14 +24,18 @@ use regex::Regex;
 use tempdir::TempDir;
 use tokio::runtime;
 use tokio::sync::{mpsc, Mutex};
+use tokio::task::JoinHandle;
 use blf_lib::blam::common::memory::crc::crc32;
 use blf_lib::blam::common::memory::secure_signature::s_network_http_request_hash;
 use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
 use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_hopper_configuration_table;
+use blf_lib::types::byte_limited_utf8_string::StaticString;
+use crate::title_storage::halo3::release::blf_files;
 use crate::title_storage::halo3::release::blf_files::game_variant::game_variant;
 use crate::title_storage::halo3::release::blf_files::map_variant::map_variant;
 use crate::title_storage::halo3::release::blf_files::network_configuration::network_configuration;
+use crate::title_storage::halo3::release::config_files::active_hoppers::read_active_hoppers;
 use crate::title_storage::halo3::release::config_files::game_set::{build_game_set_csv, game_set};
 use crate::title_storage::halo3::release::config_files::hopper_configuration::hopper_configuration as json_hopper_configuration;
 use crate::title_storage::halo3::release::config_files::categories_configuration::{categories_configuration as json_categories_configuration, category_configuration_and_descriptions};
@@ -50,11 +54,6 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
     fn build_blfs(&mut self, config_path: &String, blfs_path: &String) {
         println!("{style_bold}Writing Title Storage BLFs to {blfs_path} {style_reset}");
 
-        let build_temp_dir = TempDir::new("blf_cli").unwrap();
-        let build_temp_dir_path = String::from(build_temp_dir.path().to_str().unwrap());
-
-        println!("Using temp directory: {build_temp_dir_path}");
-
         let hopper_directories = get_directories_in_folder(&config_path).unwrap_or_else(|err|{
             println!("{}", err);
             panic!()
@@ -65,6 +64,11 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
                 println!("{color_bright_white}{bg_red}Skipping \"{hopper_directory}\" as it's name is too long. ({HOPPER_DIRECTORY_NAME_MAX_LENGTH} characters MAX){style_reset}");
                 continue;
             }
+
+            let build_temp_dir = TempDir::new("blf_cli").unwrap();
+            let build_temp_dir_path = String::from(build_temp_dir.path().to_str().unwrap());
+
+            println!("Using temp directory: {build_temp_dir_path}");
 
             let hopper_config_path = build_path(vec![
                 &config_path,
@@ -85,12 +89,15 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             Self::build_blf_motd_popups(config_path, &hopper_directory, blfs_path, true);
             Self::build_blf_map_manifest(config_path, &hopper_directory, blfs_path);
 
-            let game_sets = Self::read_game_set_configuration(&hopper_config_path);
+            let active_hoppers = Self::read_active_hopper_configuration(&hopper_config_path);
+            let game_sets = Self::read_game_set_configuration(&hopper_config_path, &active_hoppers);
             let mut game_variant_hashes = HashMap::<String, s_network_http_request_hash>::new();
             let mut map_variant_hashes = HashMap::<String, s_network_http_request_hash>::new();
+            let mut map_variant_map_ids = HashMap::<String, u32>::new();
 
             Self::build_blf_game_variants(&hopper_config_path, &hopper_blfs_path, &build_temp_dir_path, &game_sets, &mut game_variant_hashes);
-            Self::build_blf_map_variants(&hopper_config_path, &hopper_blfs_path, &build_temp_dir_path, &game_sets, &mut map_variant_hashes);
+            Self::build_blf_map_variants(&hopper_config_path, &hopper_blfs_path, &build_temp_dir_path, &game_sets, &mut map_variant_hashes, &mut map_variant_map_ids);
+            Self::build_blf_game_sets(&hopper_blfs_path, game_sets, &game_variant_hashes, &map_variant_hashes, &map_variant_map_ids, &build_temp_dir_path);
 
         }
     }
@@ -152,10 +159,10 @@ pub const k_language_suffixes: [&str; 10] = [
 
 lazy_static! {
     static ref hopper_folder_regex: Regex = Regex::new(r"^[0-9]{5}.*").unwrap();
-    static ref hopper_config_folder_identifier_regex: Regex = Regex::new(r"^[0-9]{1,5}").unwrap();
+    static ref config_hopper_folder_identifier_regex: Regex = Regex::new(r"^[0-9]{1,5}").unwrap();
     static ref map_variant_regex: Regex = Regex::new(r"_012.bin$").unwrap();
     static ref game_variant_regex: Regex = Regex::new(r"_010.bin$").unwrap();
-    static ref config_rsa_signature_file_map_id: Regex = Regex::new(r"^[0-9]{1,}").unwrap();
+    static ref config_rsa_signature_file_map_id_regex: Regex = Regex::new(r"^[0-9]{1,}").unwrap();
 }
 
 impl v12070_08_09_05_2031_halo3_ship {
@@ -632,7 +639,8 @@ impl v12070_08_09_05_2031_halo3_ship {
     fn read_hopper_description_blfs(
         hoppers_blfs_folder: &String,
         task: &mut console_task
-    ) -> HashMap<String, HashMap<u16, String>> {
+    ) -> HashMap<String, HashMap<u16, String>>
+    {
         let mut language_descriptions_map = HashMap::<String, HashMap<u16, String>>::new();
 
         for language_code in k_language_suffixes {
@@ -1032,7 +1040,8 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
-    fn build_blf_map_manifest(config_path: &String, hopper_directory: &String, blfs_path: &String) {
+    fn build_blf_map_manifest(config_path: &String, hopper_directory: &String, blfs_path: &String)
+    {
         let mut task = console_task::start(String::from("Building Map Manifest"));
 
         let rsa_folder = build_path(vec![
@@ -1091,23 +1100,24 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
-    fn read_game_set_configuration(hoppers_config_path: &String) -> Vec<game_set> {
-        let mut task = console_task::start(String::from("Reading Game Sets..."));
+    fn read_active_hopper_configuration(hoppers_config_path: &String) -> Vec<String> {
+        let task = console_task::start(String::from("Reading Active Hoppers..."));
 
-        let mut game_sets = Vec::<game_set>::new();
-
-        let active_hoppers_file_path = build_path(vec![
-            hoppers_config_path,
-            &String::from("active_hoppers.txt"),
-        ]);
-
-        let mut active_hoppers_file = File::open(&active_hoppers_file_path).unwrap();
-        let mut active_hoppers_string = String::new();
-        active_hoppers_file.read_to_string(&mut active_hoppers_string).unwrap_or_else(|err| {
-            task.fail("Failed to read active_hoppers.txt".to_string());
+        let active_hoppers_folders = read_active_hoppers(hoppers_config_path).unwrap_or_else(|err| {
+            task.fail(err);
             panic!();
         });
-        let active_hopper_folders = active_hoppers_string.lines();
+
+        task.complete();
+
+        active_hoppers_folders
+    }
+
+    fn read_game_set_configuration(hoppers_config_path: &String, active_hopper_folders: &Vec<String>) -> HashMap<u16, game_set>
+    {
+        let task = console_task::start(String::from("Reading Game Sets..."));
+
+        let mut game_sets = HashMap::<u16, game_set>::new();
 
         let hopper_tables_config_path = build_path(vec![
             &hoppers_config_path,
@@ -1115,9 +1125,16 @@ impl v12070_08_09_05_2031_halo3_ship {
         ]);
 
         for subfolder in active_hopper_folders {
-            if !hopper_folder_regex.is_match(&subfolder) {
+            let hopper_id= config_hopper_folder_identifier_regex.captures(subfolder);
+            if !&hopper_id.is_some() {
                 continue;
             }
+            let hopper_id = hopper_id.unwrap();
+            if !hopper_id.get(0).is_some() {
+                continue;
+            }
+            let hopper_id = hopper_id.get(0).unwrap().as_str();
+            let hopper_id = u16::from_str(hopper_id).unwrap();
 
             let game_set_csv_path = build_path(vec![
                 &hopper_tables_config_path,
@@ -1126,7 +1143,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             ]);
 
             if !exists(&game_set_csv_path).unwrap() {
-                task.add_warning(format!("No game set was found for hopper \"{subfolder}\""));
+                task.fail(format!("No game set was found for hopper \"{subfolder}\""));
                 panic!();
             }
 
@@ -1135,7 +1152,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 panic!();
             });
 
-            game_sets.push(game_set);
+            game_sets.insert(hopper_id, game_set);
         }
 
         task.complete();
@@ -1147,9 +1164,10 @@ impl v12070_08_09_05_2031_halo3_ship {
         hoppers_config_path: &String,
         hoppers_blfs_path: &String,
         build_temp_dir: &String,
-        game_sets: &Vec<game_set>,
+        game_sets: &HashMap<u16, game_set>,
         variant_hashes: &mut HashMap<String, s_network_http_request_hash>
-    ) {
+    )
+    {
         let mut task = console_task::start(String::from("Building Game Variants"));
 
         let game_variants_config_path = build_path(vec![
@@ -1169,7 +1187,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
         create_dir_all(&game_variants_temp_build_path).unwrap();
 
-        let game_variants_to_convert: Vec<String> = game_sets.iter().flat_map(|game_set|
+        let game_variants_to_convert: Vec<String> = game_sets.iter().flat_map(|(_, game_set)|
             game_set.entries.iter().map(|entry|entry.game_variant_file_name.clone()).collect::<Vec<String>>()
         ).collect();
 
@@ -1232,7 +1250,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             let mut rsa_signature = Vec::<u8>::with_capacity(0x100);
             rsa_file.read_to_end(&mut rsa_signature).unwrap();
 
-            let map_id = config_rsa_signature_file_map_id.captures(rsa_file_name.as_str()).unwrap();
+            let map_id = config_rsa_signature_file_map_id_regex.captures(rsa_file_name.as_str()).unwrap();
             let map_id = map_id.get(0).unwrap();
             let map_id = u32::from_str(map_id.as_str()).unwrap();
             let crc32 = crc32(0xFFFFFFFF, &rsa_signature);
@@ -1247,9 +1265,11 @@ impl v12070_08_09_05_2031_halo3_ship {
         hoppers_config_path: &String,
         hoppers_blfs_path: &String,
         build_temp_dir: &String,
-        game_sets: &Vec<game_set>,
+        game_sets: &HashMap<u16, game_set>,
         variant_hashes: &mut HashMap<String, s_network_http_request_hash>,
-    ) {
+        variant_map_ids: &mut HashMap<String, u32>
+    )
+    {
         let task = Arc::new(Mutex::new(console_task::start(String::from("Building Map Variants"))));
 
         let scenario_crc32s = Arc::new(Self::get_scenario_rsa_crc32s(&hoppers_config_path));
@@ -1271,93 +1291,211 @@ impl v12070_08_09_05_2031_halo3_ship {
 
         create_dir_all(&map_variants_temp_build_path).unwrap();
 
-        let map_variants_to_convert: Vec<String> = game_sets.iter().flat_map(|game_set|
+        let map_variants_to_convert: Vec<String> = game_sets.iter().flat_map(|(_, game_set)|
             game_set.entries.iter().map(|entry| entry.map_variant_file_name.clone()).collect::<Vec<String>>()
         ).collect();
-
         let map_variants_to_convert: HashSet<String> = HashSet::from_iter(map_variants_to_convert.iter().cloned());
+        let map_variants_to_convert: VecDeque<String> = map_variants_to_convert.into_iter().collect();
+
+        let queue = Arc::new(Mutex::new(map_variants_to_convert));
 
         let shared_variant_hashes = Arc::new(Mutex::new(HashMap::new()));
-        let (tx, rx) = mpsc::channel(100);
+        let shared_variant_map_ids = Arc::new(Mutex::new(HashMap::new()));
+        let (tx, rx) = mpsc::channel::<String>(100);
 
         let cpu_cores = num_cpus::get();
         rt.block_on(async {
             let rx = Arc::new(Mutex::new(rx));
+            let mut thread_handles = Vec::<JoinHandle<()>>::with_capacity(cpu_cores);
 
-            for _ in 0..cpu_cores {
+            for n in 0..cpu_cores {
                 let rx = Arc::clone(&rx);
                 let shared_variant_hashes = Arc::clone(&shared_variant_hashes);
+                let shared_variant_map_ids = Arc::clone(&shared_variant_map_ids);
                 let map_variants_config_path = map_variants_config_path.clone();
                 let map_variants_temp_build_path = map_variants_temp_build_path.clone();
                 let scenario_crc32s = Arc::clone(&scenario_crc32s);
                 let task = Arc::clone(&task);
+                let queue = Arc::clone(&queue);
 
-                rt.spawn(async move {
+                thread_handles.push(rt.spawn(async move {
                     loop {
-                        let map_variant_file_name = {
-                            let mut rx = rx.lock().await;
-                            rx.recv().await
-                        };
+                        let mut queue = queue.lock().await;
 
-                        match map_variant_file_name {
-                            Some(map_variant_file_name) => {
-                                let map_variant_json_path = build_path(vec![
-                                    &map_variants_config_path,
-                                    &format!("{map_variant_file_name}.json"),
-                                ]);
+                        if let Some(map_variant_file_name) = queue.pop_front() {
+                            let remaining = queue.len();
+                            drop(queue);
 
-                                let map_variant_blf_path = build_path(vec![
-                                    &map_variants_temp_build_path,
-                                    &format!("{map_variant_file_name}_012.bin"),
-                                ]);
+                            println!("[MAPS] Thread {n} got {map_variant_file_name} ({remaining} remaining)");
 
-                                if !Path::new(&map_variant_json_path).exists() {
-                                    eprintln!("Map variant \"{}\" could not be found.", map_variant_file_name);
-                                    continue;
-                                }
+                            let map_variant_json_path = build_path(vec![
+                                &map_variants_config_path,
+                                &format!("{map_variant_file_name}.json"),
+                            ]);
 
-                                let mut file = File::open(&map_variant_json_path).unwrap();
-                                let mut map_variant_json: c_map_variant = serde_json::from_reader(&mut file).unwrap();
+                            let map_variant_blf_path = build_path(vec![
+                                &map_variants_temp_build_path,
+                                &format!("{map_variant_file_name}_012.bin"),
+                            ]);
 
-                                // Check the scenario crc
-                                let expected_scenario_crc = scenario_crc32s.get(&map_variant_json.m_map_id);
-                                if expected_scenario_crc.is_none() {
-                                    let mut task = task.lock().await;
-                                    task.add_error(format!("Map Variant {map_variant_file_name} could not be validated due to missing RSA signature!"))
-                                }
-                                else {
-                                    let expected_scenario_crc = expected_scenario_crc.unwrap();
-                                    if expected_scenario_crc != &map_variant_json.m_map_variant_checksum {
-                                        let mut task = task.lock().await;
-                                        task.add_error(format!("Map Variant {map_variant_file_name} has a bad checksum and may not load properly! (expected {:08X})", expected_scenario_crc));
-                                        map_variant_json.m_map_variant_checksum = expected_scenario_crc.clone();
-                                    }
-                                }
-
-
-                                let mut map_variant_blf_file = map_variant::create(map_variant_json);
-                                map_variant_blf_file.write(&map_variant_blf_path);
-
-                                let hash = get_blf_file_hash(map_variant_blf_path);
-                                let mut hashes = shared_variant_hashes.lock().await;
-                                hashes.insert(map_variant_file_name, hash);
+                            if !Path::new(&map_variant_json_path).exists() {
+                                eprintln!("Map variant \"{}\" could not be found.", map_variant_file_name);
+                                continue;
                             }
-                            None => break,
+
+                            let mut file = File::open(&map_variant_json_path).unwrap();
+                            let mut map_variant_json: c_map_variant = serde_json::from_reader(&mut file).unwrap();
+
+                            // Check the scenario crc
+                            let expected_scenario_crc = scenario_crc32s.get(&map_variant_json.m_map_id);
+                            if expected_scenario_crc.is_none() {
+                                let mut task = task.lock().await;
+                                task.add_error(format!("Map Variant {map_variant_file_name} could not be validated due to missing RSA signature!"))
+                            }
+                            else {
+                                let expected_scenario_crc = expected_scenario_crc.unwrap();
+                                if expected_scenario_crc != &map_variant_json.m_map_variant_checksum {
+                                    let mut task = task.lock().await;
+                                    task.add_error(format!("Map Variant {map_variant_file_name} has a bad checksum and may not load properly! (expected {:08X})", expected_scenario_crc));
+                                    map_variant_json.m_map_variant_checksum = expected_scenario_crc.clone();
+                                }
+                            }
+
+                            let mut map_ids = shared_variant_map_ids.lock().await;
+                            map_ids.insert(map_variant_file_name.clone(), map_variant_json.m_map_id);
+
+                            let mut map_variant_blf_file = map_variant::create(map_variant_json);
+                            map_variant_blf_file.write(&map_variant_blf_path);
+
+                            let hash = get_blf_file_hash(map_variant_blf_path);
+                            let mut hashes = shared_variant_hashes.lock().await;
+                            hashes.insert(map_variant_file_name.clone(), hash);
+                        } else {
+                            break;
                         }
                     }
-                });
+                }));
             }
 
-            for map_variant_file_name in map_variants_to_convert {
-                tx.send(map_variant_file_name).await.unwrap();
+            for thread_handle in thread_handles {
+                thread_handle.await.unwrap();
             }
 
             let final_hashes = shared_variant_hashes.lock().await;
             variant_hashes.extend(final_hashes.clone());
 
+            let final_map_ids = shared_variant_map_ids.lock().await;
+            variant_map_ids.extend(final_map_ids.clone());
+
             let mut task = task.lock().await;
             task.add_message(format!("Built {} variants.", variant_hashes.len()));
             task.complete();
         });
+    }
+
+    fn build_blf_game_sets(
+        hoppers_blf_path: &String,
+        active_game_sets: HashMap<u16, game_set>,
+        game_variant_hashes: &HashMap<String, s_network_http_request_hash>,
+        map_variant_hashes: &HashMap<String, s_network_http_request_hash>,
+        map_variant_map_ids: &HashMap<String, u32>,
+        build_temp_dir_path: &String,
+    )
+    {
+        let task = console_task::start(String::from("Building Game Sets"));
+
+        for (hopper_id, game_set) in active_game_sets {
+            let hopper_folder_path = build_path(vec![
+                hoppers_blf_path,
+                &format!("{hopper_id:0>5}"),
+            ]);
+
+            let hopper_folder_map_variants_path = build_path(vec![
+                &hopper_folder_path,
+                &"map_variants".to_string(),
+            ]);
+
+            let game_variants_temp_build_path = build_path(vec![
+                build_temp_dir_path,
+                &String::from("game_variants")
+            ]);
+
+            let map_variants_temp_build_path = build_path(vec![
+                build_temp_dir_path,
+                &String::from("map_variants")
+            ]);
+
+            create_dir_all(&hopper_folder_map_variants_path).unwrap();
+
+            let mut game_sets_blf_chunk = s_blf_chunk_game_set::default();
+
+            let copied_maps = HashSet::<String>::new();
+            let copied_games = HashSet::<String>::new();
+
+            for game_set_row in game_set.entries {
+                let map_id = map_variant_map_ids.get(&game_set_row.map_variant_file_name)
+                    .expect("No map ID found for map in game set!")
+                    .clone();
+
+                let map_hash = map_variant_hashes.get(&game_set_row.map_variant_file_name)
+                    .expect("No map hash found for map in game set!")
+                    .clone();
+
+                let game_hash = game_variant_hashes.get(&game_set_row.game_variant_file_name)
+                    .expect("No game hash found for map in game set!")
+                    .clone();
+
+                // Create the game set entry...
+                game_sets_blf_chunk.add_entry(s_blf_chunk_game_set_entry {
+                    map_id,
+                    map_variant_file_name: StaticString::from_string(&game_set_row.map_variant_file_name).unwrap(),
+                    game_variant_file_name: StaticString::from_string(&game_set_row.game_variant_file_name).unwrap(),
+                    map_variant_file_hash: map_hash,
+                    game_variant_file_hash: game_hash,
+                    weight: game_set_row.weight,
+                    optional: game_set_row.optional,
+                    skip_after_veto: game_set_row.skip_after_veto,
+                    minimum_player_count: game_set_row.minimum_player_count,
+                }).unwrap();
+
+                // Copy the game and map variants over...
+                if !copied_games.contains(&game_set_row.game_variant_file_name) {
+                    let game_variant_file_name = format!("{}_010.bin", game_set_row.game_variant_file_name);
+                    fs::copy(
+                        build_path(vec![
+                            &game_variants_temp_build_path,
+                            &game_variant_file_name,
+                        ]),
+                        build_path(vec![
+                            &hopper_folder_path,
+                            &game_variant_file_name,
+                        ])
+                    ).unwrap();
+                }
+
+                if !copied_maps.contains(&game_set_row.map_variant_file_name) {
+                    let map_variant_file_name = format!("{}_012.bin", game_set_row.map_variant_file_name);
+                    fs::copy(
+                        build_path(vec![
+                            &map_variants_temp_build_path,
+                            &map_variant_file_name,
+                        ]),
+                        build_path(vec![
+                            &hopper_folder_path,
+                            &map_variant_file_name,
+                        ])
+                    ).unwrap();
+                }
+            }
+
+            // Write the game set file
+            let mut game_set_blf_file = blf_files::game_set::game_set::create(game_sets_blf_chunk);
+            game_set_blf_file.write(&build_path(vec![
+                &hopper_folder_path,
+                &String::from(blf_files::game_set::k_game_set_file_name),
+            ]))
+        }
+
+        task.complete();
     }
 }

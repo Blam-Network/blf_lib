@@ -26,10 +26,26 @@ blf_chunk!(
     #[Version(6.1)]
     pub struct s_blf_chunk_game_set
     {
-        pub game_entry_count: usize,
-        pub game_entries: Vec<s_blf_chunk_game_set_entry>,
+        game_entry_count: usize,
+        game_entries: Vec<s_blf_chunk_game_set_entry>,
     }
 );
+
+impl s_blf_chunk_game_set {
+    pub fn get_entries(&self) -> Vec<s_blf_chunk_game_set_entry> {
+        self.game_entries.clone()
+    }
+
+    pub fn add_entry(&mut self, entry: s_blf_chunk_game_set_entry) -> Result<(),String> {
+        if self.game_entry_count == k_maximum_game_sets {
+            return Err("Tried to add an entry to a full game set!".to_string())
+        }
+
+        self.game_entries.push(entry);
+        self.game_entry_count = self.game_entries.len();
+        Ok(())
+    }
+}
 
 impl SerializableBlfChunk for s_blf_chunk_game_set {
     fn encode_body(&mut self, previously_written: &Vec<u8>) -> Vec<u8> {
