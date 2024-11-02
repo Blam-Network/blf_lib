@@ -5,7 +5,7 @@ pub mod motd_popup;
 pub mod matchmaking_tips;
 pub mod map_variant;
 pub mod game_variant;
-pub mod network_configuration;
 pub mod game_set;
 pub mod matchmaking_hopper;
 pub mod matchmaking_hopper_descriptions;
+pub mod manifest;

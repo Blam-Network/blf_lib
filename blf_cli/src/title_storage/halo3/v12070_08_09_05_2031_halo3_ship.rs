@@ -1,3 +1,4 @@
+mod blf_files;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 use std::fs::{create_dir_all, exists, remove_file, File};
@@ -14,13 +15,13 @@ use lazy_static::lazy_static;
 use blf_lib::blam::common::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::{get_blf_file_hash, BlfFile};
 use blf_lib::blf::chunks::find_chunk_in_file;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_game_set, s_blf_chunk_game_set_entry, s_blf_chunk_hopper_description_table, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_game_set, s_blf_chunk_game_set_entry, s_blf_chunk_hopper_description_table, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_online_file_manifest, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
 use crate::console::console_task;
 use crate::title_storage::halo3::release::blf_files::{motd, rsa_manifest};
 use crate::title_storage::halo3::release::config_files::motd_popup::motd_popup as motd_popup_config;
 use crate::title_storage::halo3::release::blf_files::motd_popup::motd_popup as motd_popup_blf;
-use crate::title_storage::halo3::release::blf_files::matchmaking_banhammer_messages::{matchmaking_banhammer_messages as matchmaking_banhammer_messages_blf};
-use crate::title_storage::halo3::release::blf_files::matchmaking_tips::matchmaking_tips as matchmaking_tips_blf;
+use crate::title_storage::halo3::release::blf_files::matchmaking_banhammer_messages::{k_matchmaking_banhammer_messages_file_name, matchmaking_banhammer_messages as matchmaking_banhammer_messages_blf};
+use crate::title_storage::halo3::release::blf_files::matchmaking_tips::{k_matchmaking_tips_file_name, matchmaking_tips as matchmaking_tips_blf};
 use regex::Regex;
 use tempdir::TempDir;
 use tokio::runtime;
@@ -32,16 +33,19 @@ use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
 use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_hopper_configuration_table;
 use blf_lib::types::byte_limited_utf8_string::StaticString;
-use crate::title_storage::halo3::release::blf_files;
 use crate::title_storage::halo3::release::blf_files::game_variant::game_variant;
+use crate::title_storage::halo3::release::blf_files::manifest::{k_manifest_file_name, manifest};
 use crate::title_storage::halo3::release::blf_files::map_variant::map_variant;
 use crate::title_storage::halo3::release::blf_files::matchmaking_hopper::{k_matchmaking_hopper_file_name, matchmaking_hopper};
 use crate::title_storage::halo3::release::blf_files::matchmaking_hopper_descriptions::{k_matchmaking_hopper_descriptions_file_name, matchmaking_hopper_descriptions};
-use crate::title_storage::halo3::release::blf_files::network_configuration::network_configuration;
+use blf_files::network_configuration::network_configuration;
+use crate::title_storage::halo3::release;
+use crate::title_storage::halo3::release::blf_files::rsa_manifest::k_rsa_manifest_file_name;
 use crate::title_storage::halo3::release::config_files::active_hoppers::read_active_hoppers;
 use crate::title_storage::halo3::release::config_files::game_set::{build_game_set_csv, game_set};
 use crate::title_storage::halo3::release::config_files::hopper_configuration::{hopper_configuration as json_hopper_configuration, hopper_configuration};
 use crate::title_storage::halo3::release::config_files::categories_configuration::{categories_configuration as json_categories_configuration, categories_configuration, category_configuration_and_descriptions};
+use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::blf_files::network_configuration::k_network_configuration_file_name;
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
 
@@ -104,6 +108,8 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             Self::build_blf_map_variants(&hopper_config_path, &hopper_blfs_path, &build_temp_dir_path, &game_sets, &mut map_variant_hashes, &mut map_variant_map_ids);
             Self::build_blf_game_sets(&hopper_blfs_path, game_sets, &game_variant_hashes, &map_variant_hashes, &map_variant_map_ids, &build_temp_dir_path);
             Self::build_blf_hoppers(&hopper_config_path, &hopper_blfs_path, &active_hoppers);
+            Self::build_blf_network_configuration(&hopper_config_path, &hopper_blfs_path);
+            Self::build_blf_manifest(&hopper_blfs_path);
         }
 
         let seconds = start_time.elapsed().unwrap().as_secs_f32();
@@ -1551,10 +1557,10 @@ impl v12070_08_09_05_2031_halo3_ship {
             }
 
             // Write the game set file
-            let mut game_set_blf_file = blf_files::game_set::game_set::create(game_sets_blf_chunk);
+            let mut game_set_blf_file = release::blf_files::game_set::game_set::create(game_sets_blf_chunk);
             game_set_blf_file.write(&build_path(vec![
                 &hopper_folder_path,
-                &String::from(blf_files::game_set::k_game_set_file_name),
+                &String::from(release::blf_files::game_set::k_game_set_file_name),
             ]))
         }
 
@@ -1611,7 +1617,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             let game_set_blf_file_path = build_path(vec![
                 hoppers_blfs_path,
                 &format!("{hopper_identifier:0>5}"),
-                &String::from(blf_files::game_set::k_game_set_file_name),
+                &String::from(release::blf_files::game_set::k_game_set_file_name),
             ]);
             hopper_config.game_set_hash = get_blf_file_hash(game_set_blf_file_path);
             hopper_configuration_table.add_hopper_configuration(hopper_config).unwrap()
@@ -1712,6 +1718,117 @@ impl v12070_08_09_05_2031_halo3_ship {
         matchmaking_hopper_blf.write(&build_path(vec![
             hoppers_blfs_path,
             &k_matchmaking_hopper_file_name.to_string()
+        ]));
+
+        task.complete();
+    }
+
+    fn build_blf_network_configuration(
+        hoppers_config_path: &String,
+        hoppers_blfs_path: &String,
+    ) {
+        let task = console_task::start("Building Network Configuration".to_string());
+        let netc = find_chunk_in_file(&build_path(vec![
+            hoppers_config_path,
+            &k_network_configuration_file_name.to_string()
+        ])).unwrap();
+
+        let mut network_configuration_blf_file = network_configuration::create(netc);
+        network_configuration_blf_file.write(
+            &build_path(vec![
+                hoppers_blfs_path,
+                &k_network_configuration_file_name.to_string()
+            ])
+        );
+
+        task.complete();
+    }
+
+    fn build_blf_manifest(
+        hoppers_blfs_path: &String,
+    ) {
+        let task = console_task::start("Building Manifest File".to_string());
+
+        let mut manifest_chunk = s_blf_chunk_online_file_manifest::default();
+        let hopper_directory_name = Path::new(hoppers_blfs_path).file_name().unwrap().to_str().unwrap();
+
+        // h3 manifest includes:
+        // - hopper config file
+        // - network config
+        // - rsa manifest
+        // - banhammer messages
+        // - hopper descriptions
+        // - matchmaking tips
+
+        let hopper_config_file_hash = get_blf_file_hash(build_path(vec![
+            &hoppers_blfs_path,
+            &k_matchmaking_hopper_file_name.to_string(),
+        ]));
+
+        let network_config_file_hash = get_blf_file_hash(build_path(vec![
+            &hoppers_blfs_path,
+            &k_network_configuration_file_name.to_string(),
+        ]));
+
+        let rsa_manifest_file_hash = get_blf_file_hash(build_path(vec![
+            &hoppers_blfs_path,
+            &k_rsa_manifest_file_name.to_string(),
+        ]));
+
+        manifest_chunk.add_file_hash(
+            format!("/title/{hopper_directory_name}/{k_matchmaking_hopper_file_name}"),
+            hopper_config_file_hash,
+        ).unwrap();
+
+        manifest_chunk.add_file_hash(
+            format!("/title/{hopper_directory_name}/{k_network_configuration_file_name}"),
+            network_config_file_hash,
+        ).unwrap();
+
+        manifest_chunk.add_file_hash(
+            format!("/title/{hopper_directory_name}/{k_rsa_manifest_file_name}"),
+            rsa_manifest_file_hash,
+        ).unwrap();
+
+        for language_code in k_language_suffixes {
+            let banhammer_messages_file_hash = get_blf_file_hash(build_path(vec![
+                &hoppers_blfs_path,
+                &language_code.to_string(),
+                &k_matchmaking_banhammer_messages_file_name.to_string(),
+            ]));
+
+            let hopper_descriptions_file_hash = get_blf_file_hash(build_path(vec![
+                &hoppers_blfs_path,
+                &language_code.to_string(),
+                &k_matchmaking_hopper_descriptions_file_name.to_string(),
+            ]));
+
+            let matchmaking_tips_file_hash = get_blf_file_hash(build_path(vec![
+                &hoppers_blfs_path,
+                &language_code.to_string(),
+                &k_matchmaking_tips_file_name.to_string(),
+            ]));
+
+            manifest_chunk.add_file_hash(
+                format!("/title/{hopper_directory_name}/{language_code}/{k_matchmaking_banhammer_messages_file_name}"),
+                banhammer_messages_file_hash,
+            ).unwrap();
+
+            manifest_chunk.add_file_hash(
+                format!("/title/{hopper_directory_name}/{language_code}/{k_matchmaking_hopper_descriptions_file_name}"),
+                hopper_descriptions_file_hash,
+            ).unwrap();
+
+            manifest_chunk.add_file_hash(
+                format!("/title/{hopper_directory_name}/{language_code}/{k_matchmaking_tips_file_name}"),
+                matchmaking_tips_file_hash,
+            ).unwrap();
+        }
+
+        let mut manifest_blf_file = manifest::create(manifest_chunk);
+        manifest_blf_file.write(&build_path(vec![
+            hoppers_blfs_path,
+            &k_manifest_file_name.to_string(),
         ]));
 
         task.complete();

@@ -3,6 +3,8 @@ use blf_lib::blf::versions::v12070_08_09_05_2031_halo3_ship;
 use blf_lib::blf_file;
 use blf_lib::types::byte_order_mark::little_endian;
 
+pub const k_network_configuration_file_name: &str = "network_configuration_135.bin";
+
 blf_file! {
     pub struct network_configuration {
         _blf: s_blf_chunk_start_of_file,

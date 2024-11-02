@@ -13,12 +13,12 @@ pub struct StaticString<const N: usize> {
 }
 
 impl<const N: usize> StaticString<N> {
-    pub fn from_string(value: &String) -> Result<Self, String> {
+    pub fn from_string(value: impl Into<String>) -> Result<Self, String> {
         let mut new = Self {
             buf: [0; N],
         };
 
-        let result = new.set_string(value);
+        let result = new.set_string(&value.into());
         if result.is_ok() { Ok(new) }
         else { Err(result.unwrap_err()) }
     }
