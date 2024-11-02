@@ -35,7 +35,7 @@ pub fn get_language_string(language_code: &str) -> &str {
         k_language_suffix_german => "German",
         k_language_suffix_french => "French",
         k_language_suffix_spanish => "Spanish",
-        k_language_suffix_mexican => "Mexican",
+        k_language_suffix_mexican => "Spanish (Mexican)", // This is just "Mexican" in halo.
         k_language_suffix_italian => "Italian",
         k_language_suffix_korean => "Korean",
         k_language_suffix_chinese_traditional => "Chinese (Traditional)",

@@ -35,11 +35,13 @@ use blf_lib::types::byte_limited_utf8_string::StaticString;
 use crate::title_storage::halo3::release::blf_files;
 use crate::title_storage::halo3::release::blf_files::game_variant::game_variant;
 use crate::title_storage::halo3::release::blf_files::map_variant::map_variant;
+use crate::title_storage::halo3::release::blf_files::matchmaking_hopper::{k_matchmaking_hopper_file_name, matchmaking_hopper};
+use crate::title_storage::halo3::release::blf_files::matchmaking_hopper_descriptions::{k_matchmaking_hopper_descriptions_file_name, matchmaking_hopper_descriptions};
 use crate::title_storage::halo3::release::blf_files::network_configuration::network_configuration;
 use crate::title_storage::halo3::release::config_files::active_hoppers::read_active_hoppers;
 use crate::title_storage::halo3::release::config_files::game_set::{build_game_set_csv, game_set};
-use crate::title_storage::halo3::release::config_files::hopper_configuration::hopper_configuration as json_hopper_configuration;
-use crate::title_storage::halo3::release::config_files::categories_configuration::{categories_configuration as json_categories_configuration, category_configuration_and_descriptions};
+use crate::title_storage::halo3::release::config_files::hopper_configuration::{hopper_configuration as json_hopper_configuration, hopper_configuration};
+use crate::title_storage::halo3::release::config_files::categories_configuration::{categories_configuration as json_categories_configuration, categories_configuration, category_configuration_and_descriptions};
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
 
@@ -101,6 +103,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
             Self::build_blf_game_variants(&hopper_config_path, &hopper_blfs_path, &build_temp_dir_path, &game_sets, &mut game_variant_hashes);
             Self::build_blf_map_variants(&hopper_config_path, &hopper_blfs_path, &build_temp_dir_path, &game_sets, &mut map_variant_hashes, &mut map_variant_map_ids);
             Self::build_blf_game_sets(&hopper_blfs_path, game_sets, &game_variant_hashes, &map_variant_hashes, &map_variant_map_ids, &build_temp_dir_path);
+            Self::build_blf_hoppers(&hopper_config_path, &hopper_blfs_path, &active_hoppers);
         }
 
         let seconds = start_time.elapsed().unwrap().as_secs_f32();
@@ -675,7 +678,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
             let mut hoppers_description_map = HashMap::<u16, String>::new();
 
-            hopper_description_table.unwrap().descriptions.iter().for_each(|hopper_description| {
+            hopper_description_table.unwrap().get_descriptions().iter().for_each(|hopper_description| {
                 hoppers_description_map.insert(hopper_description.identifier, hopper_description.description.get_string());
             });
 
@@ -782,7 +785,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         let mut categories_json_file = File::create(categories_json_file).unwrap();
         serde_json::to_writer_pretty(&mut categories_json_file, &categories_config).unwrap();
 
-        task.add_message(format!("Converted {} hopper configurations.", hopper_configuration_table.hopper_configuration_count));
+        task.add_message(format!("Converted {} hopper configurations.", hopper_configuration_table.hopper_configuration_count()));
 
         task.complete();
     }
@@ -1554,6 +1557,162 @@ impl v12070_08_09_05_2031_halo3_ship {
                 &String::from(blf_files::game_set::k_game_set_file_name),
             ]))
         }
+
+        task.complete();
+    }
+
+    fn build_blf_hoppers(
+        hoppers_config_path: &String,
+        hoppers_blfs_path: &String,
+        active_hopper_folders: &Vec<String>,
+    )
+    {
+        let mut task = console_task::start(String::from("Building Hopper Configuration"));
+
+        let mut hopper_configuration_table = s_blf_chunk_hopper_configuration_table::default();
+
+        // Load the configuration.json files for each hopper
+        let mut hopper_configuration_jsons = HashMap::<u16, hopper_configuration>::new();
+        for active_hopper_folder in active_hopper_folders {
+            let configuration_path = build_path(vec![
+                hoppers_config_path,
+                &String::from("hoppers"),
+                active_hopper_folder,
+                &String::from("configuration.json"),
+            ]);
+
+            if !exists(&configuration_path).unwrap() {
+                task.fail(format!("Couldn't find a configuration file for hopper {active_hopper_folder}!"));
+                panic!();
+            }
+
+            let mut configuration_file = File::open(&configuration_path).unwrap();
+
+            // TODO: Refactor out
+            let hopper_id= config_hopper_folder_identifier_regex.captures(active_hopper_folder);
+            if !&hopper_id.is_some() {
+                continue;
+            }
+            let hopper_id = hopper_id.unwrap();
+            if !hopper_id.get(0).is_some() {
+                continue;
+            }
+            let hopper_id = hopper_id.get(0).unwrap().as_str();
+            let hopper_id = u16::from_str(hopper_id).unwrap();
+
+            hopper_configuration_jsons.insert(
+                hopper_id,
+                serde_json::from_reader(&mut configuration_file).unwrap()
+            );
+        }
+
+        for (hopper_identifier, hopper_configuration_json) in &hopper_configuration_jsons {
+            let mut hopper_config = hopper_configuration_json.configuration.clone();
+            let game_set_blf_file_path = build_path(vec![
+                hoppers_blfs_path,
+                &format!("{hopper_identifier:0>5}"),
+                &String::from(blf_files::game_set::k_game_set_file_name),
+            ]);
+            hopper_config.game_set_hash = get_blf_file_hash(game_set_blf_file_path);
+            hopper_configuration_table.add_hopper_configuration(hopper_config).unwrap()
+        }
+
+        // Load category configuration
+        // TODO: Refactor out read.
+        let categories_configuration_path = build_path(vec![
+            hoppers_config_path,
+            &String::from("categories.json"),
+        ]);
+        let categories_configuration: categories_configuration = serde_json::from_reader(&mut File::open(&categories_configuration_path).unwrap()).unwrap();
+
+        let active_hopper_categories = hopper_configuration_table
+            .get_hopper_configurations()
+            .iter().map(|hopper|hopper.hopper_category)
+            .collect::<HashSet<_>>();
+        let active_hopper_category_configurations = categories_configuration.categories
+            .iter().filter(|category_configuration|active_hopper_categories.contains(&category_configuration.configuration.category_identifier))
+            .cloned()
+            .collect::<Vec<category_configuration_and_descriptions>>();
+
+        for active_hopper_category in &active_hopper_category_configurations {
+            hopper_configuration_table.add_category_configuration(active_hopper_category.configuration.clone()).unwrap();
+        }
+
+        // Initialize language_hopper_descriptions
+        for language_code in k_language_suffixes {
+            let mut language_descriptions = s_blf_chunk_hopper_description_table::default();
+
+            for (hopper_identifier, hopper_configuration_json) in &hopper_configuration_jsons {
+                if !hopper_configuration_json.descriptions.contains_key(&language_code.to_string()) {
+                    task.add_warning(format!(
+                        "No {} description was found for hopper {hopper_identifier} ({})",
+                        get_language_string(language_code),
+                        hopper_configuration_json.configuration.hopper_name.get_string(),
+                    ));
+                    continue;
+                }
+
+                let description = hopper_configuration_json.descriptions.get(&language_code.to_string()).unwrap();
+                if description.is_empty() {
+                    task.add_warning(format!(
+                        "No {} description was found for hopper {hopper_identifier} ({})",
+                        get_language_string(language_code),
+                        hopper_configuration_json.configuration.hopper_name.get_string(),
+                    ));
+                    continue;
+                }
+
+                language_descriptions.add_description((
+                    hopper_identifier.clone(),
+                    &description.to_string()
+                )).unwrap();
+            }
+
+            for active_hopper_category in &active_hopper_category_configurations {
+                if !active_hopper_category.descriptions.contains_key(&language_code.to_string()) {
+                    task.add_warning(format!(
+                        "No {} description was found for category {} ({})",
+                        get_language_string(language_code),
+                        active_hopper_category.configuration.category_identifier,
+                        active_hopper_category.configuration.category_name.get_string(),
+                    ));
+                    continue;
+                }
+
+                let description = active_hopper_category.descriptions.get(&language_code.to_string()).unwrap();
+                if description.is_empty() {
+                    task.add_warning(format!(
+                        "No {} description was found for category {} ({})",
+                        get_language_string(language_code),
+                        active_hopper_category.configuration.category_identifier,
+                        active_hopper_category.configuration.category_name.get_string(),
+                    ));
+                    continue;
+                }
+
+                language_descriptions.add_description((
+                    active_hopper_category.configuration.category_identifier.clone(),
+                    &description
+                )).unwrap();
+            }
+
+            // Write description file
+            let descriptions_blf_path = build_path(vec![
+                hoppers_blfs_path,
+                &language_code.to_string(),
+                &String::from(k_matchmaking_hopper_descriptions_file_name),
+            ]);
+
+            let mut matchmaking_hopper_descriptions = matchmaking_hopper_descriptions::create(language_descriptions);
+            matchmaking_hopper_descriptions.write(&descriptions_blf_path);
+        }
+
+        // Write the hopper config file.
+        let mut matchmaking_hopper_blf = matchmaking_hopper::create(hopper_configuration_table);
+        matchmaking_hopper_blf.write(&build_path(vec![
+            hoppers_blfs_path,
+            &k_matchmaking_hopper_file_name.to_string()
+        ]));
 
         task.complete();
     }

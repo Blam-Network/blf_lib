@@ -119,22 +119,45 @@ blf_chunk!(
     #[Version(11.1)]
     pub struct s_blf_chunk_hopper_configuration_table
     {
-        pub hopper_category_count: u8,
-        pub hopper_categories: StaticArray<s_game_hopper_custom_category, 4>,
+        hopper_category_count: u8,
+        hopper_categories: Vec<s_game_hopper_custom_category>,
 
-        pub hopper_configuration_count: u8,
-        pub hopper_configurations: StaticArray<c_hopper_configuration, k_hopper_maximum_hopper_count>,
+        hopper_configuration_count: u8,
+        hopper_configurations: Vec<c_hopper_configuration>,
     }
 );
 
 impl s_blf_chunk_hopper_configuration_table {
     pub fn get_hopper_categories(&self) -> Vec<s_game_hopper_custom_category> {
-        self.hopper_categories.get().as_slice()[0..self.hopper_category_count as usize].to_vec()
+        self.hopper_categories.as_slice()[0..self.hopper_category_count as usize].to_vec()
     }
 
     pub fn get_hopper_configurations(&self) -> Vec<c_hopper_configuration> {
-        self.hopper_configurations.get().as_slice()[0..self.hopper_configuration_count as usize].to_vec()
+        self.hopper_configurations.as_slice()[0..self.hopper_configuration_count as usize].to_vec()
     }
+
+    pub fn add_hopper_configuration(&mut self, config: c_hopper_configuration) -> Result<(), String> {
+        if self.hopper_configuration_count as usize >= k_hopper_maximum_hopper_count {
+            return Err("The hopper config chunk is full!".to_string());
+        }
+        self.hopper_configuration_count += 1;
+        self.hopper_configurations.push(config);
+        Ok(())
+    }
+
+    pub fn add_category_configuration(&mut self, config: s_game_hopper_custom_category) -> Result<(), String> {
+        if self.hopper_category_count as usize >= 4 {
+            return Err("The hopper config chunk is full!".to_string());
+        }
+        self.hopper_category_count += 1;
+        self.hopper_categories.push(config);
+        Ok(())
+    }
+
+    pub fn hopper_configuration_count(&self) -> usize {
+        self.hopper_configuration_count as usize
+    }
+
 }
 
 impl SerializableBlfChunk for s_blf_chunk_hopper_configuration_table {
@@ -173,8 +196,8 @@ impl SerializableBlfChunk for s_blf_chunk_hopper_configuration_table {
             bitstream.write_integer(configuration.maximum_base_xp, 17);
             bitstream.write_integer(configuration.minimum_games_played, 17);
             bitstream.write_integer(configuration.maximum_games_played, 17);
-            bitstream.write_integer((configuration.minimum_party_size - 1) as u32, 4);
-            bitstream.write_integer((configuration.maximum_party_size - 1) as u32, 4);
+            bitstream.write_integer(configuration.minimum_party_size - 1, 4);
+            bitstream.write_integer(configuration.maximum_party_size - 1, 4);
             bitstream.write_integer((configuration.hopper_access_bit as i32 + 1) as u32, 4);
             bitstream.write_integer(configuration.account_type_access as u32, 2);
             bitstream.write_bool(configuration.require_all_party_members_meet_games_played_requirements);
@@ -275,7 +298,7 @@ impl SerializableBlfChunk for s_blf_chunk_hopper_configuration_table {
         self.hopper_category_count = bitstream.read_u8(3);
 
         for i in 0..self.hopper_category_count as usize {
-            let category = &mut self.hopper_categories.get_mut()[i];
+            let category = &mut self.hopper_categories[i];
             category.category_identifier = bitstream.read_u16(16);
             category.category_image_index = bitstream.read_u8(6);
             category.category_name.set_string(&bitstream.read_string_utf8(32)).unwrap();
@@ -284,7 +307,7 @@ impl SerializableBlfChunk for s_blf_chunk_hopper_configuration_table {
         self.hopper_configuration_count = bitstream.read_u8(6);
 
         for i in 0..self.hopper_configuration_count as usize {
-            let configuration = &mut self.hopper_configurations.get_mut()[i];
+            let configuration = &mut self.hopper_configurations[i];
             configuration.hopper_name.set_string(&bitstream.read_string_utf8(32)).unwrap();
             configuration.game_set_hash = s_network_http_request_hash::try_from(bitstream.read_raw_data(0xA0)).unwrap();
             configuration.hopper_identifier = bitstream.read_u16(16);

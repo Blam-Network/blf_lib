@@ -8,7 +8,7 @@ use crate::io::bitstream::close_bitstream_writer;
 #[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
 pub struct s_game_hopper_description {
     pub identifier: u16,
-    pub hopper_type: bool,
+    hopper_type: bool,
     pub description: StaticString<256>,
 }
 
@@ -18,10 +18,29 @@ blf_chunk!(
     #[Signature("mhdf")]
     #[Version(3.1)]
     pub struct s_blf_chunk_hopper_description_table {
-        pub description_count: usize,
-        pub descriptions: Vec<s_game_hopper_description>,
+        description_count: usize,
+        descriptions: Vec<s_game_hopper_description>,
     }
 );
+
+impl s_blf_chunk_hopper_description_table {
+    pub fn get_descriptions(&self) -> Vec<s_game_hopper_description> {
+        self.descriptions.as_slice()[0..self.description_count].to_vec()
+    }
+
+    pub fn add_description(&mut self, config: (u16, &String)) -> Result<(), String> {
+        if self.description_count >= MAX_DESCRIPTIONS {
+            return Err("The hopper desciptions chunk is full!".to_string());
+        }
+        self.description_count += 1;
+        self.descriptions.push(s_game_hopper_description {
+            identifier: config.0,
+            hopper_type: false, // seems unused
+            description: StaticString::from_string(config.1)?,
+        });
+        Ok(())
+    }
+}
 
 impl SerializableBlfChunk for s_blf_chunk_hopper_description_table {
     fn encode_body(&mut self, previously_written: &Vec<u8>) -> Vec<u8> {
