@@ -91,6 +91,10 @@ impl filetime {
 
 impl Serialize for filetime {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        if self.0 == 0 {
+            return serializer.serialize_str("None")
+        }
+
         let seconds_since_unix_epoch = self.to_time_t();
         let datetime = Utc.timestamp_opt(seconds_since_unix_epoch as i64, 0)
             .single()
@@ -103,6 +107,11 @@ impl Serialize for filetime {
 impl<'de> Deserialize<'de> for filetime {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let s = String::deserialize(deserializer)?;
+
+        if s == "None" {
+            return Ok(Self(0))
+        }
+
         let datetime = NaiveDateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S")
             .map_err(serde::de::Error::custom)?;
         Ok(Self::from_time_t(datetime.and_utc().timestamp() as u64))

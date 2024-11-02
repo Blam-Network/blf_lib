@@ -296,6 +296,7 @@ impl SerializableBlfChunk for s_blf_chunk_hopper_configuration_table {
         let mut bitstream = create_bitstream_reader(buffer, e_bitstream_byte_order::_bitstream_byte_order_big_endian);
 
         self.hopper_category_count = bitstream.read_u8(3);
+        self.hopper_categories.resize(self.hopper_category_count as usize, s_game_hopper_custom_category::default());
 
         for i in 0..self.hopper_category_count as usize {
             let category = &mut self.hopper_categories[i];
@@ -305,6 +306,7 @@ impl SerializableBlfChunk for s_blf_chunk_hopper_configuration_table {
         }
 
         self.hopper_configuration_count = bitstream.read_u8(6);
+        self.hopper_configurations.resize(self.hopper_configuration_count as usize, c_hopper_configuration::default());
 
         for i in 0..self.hopper_configuration_count as usize {
             let configuration = &mut self.hopper_configurations[i];
