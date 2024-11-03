@@ -1721,10 +1721,10 @@ impl v12070_08_09_05_2031_halo3_ship {
             task.fail();
         })?;
 
-        manifest_blf_file.write(&build_path(vec![
+        manifest_blf_file.write(build_path!(
             hoppers_blfs_path,
-            &k_manifest_file_name.to_string(),
-        ]));
+            &k_manifest_file_name.to_string()
+        ));
 
         やった!(task)
     }
