@@ -45,7 +45,7 @@ jobs:
         working-directory: ./blf_cli
         run: cargo test --verbose
       - name: Upload Binaries
-            uses: actions/upload-artifact@v3
-            with:
-              name: binaries
-              path: target
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries
+          path: target
