@@ -2,8 +2,8 @@ use std::u32;
 use blf_lib::blf_chunk;
 use blf_lib::types::byte_limited_utf8_string::StaticString;
 
-const MAX_BANHAMMER_MESSAGE_COUNT: usize = 32usize;
-const BANHAMMER_MESSAGE_LENGTH: usize = 0x100;
+const k_banhammmer_messages_max_messages: usize = 32usize;
+const k_banhammer_message_max_length: usize = 0x100;
 
 blf_chunk!(
     #[Signature("bhms")]
@@ -12,7 +12,7 @@ blf_chunk!(
     pub struct s_blf_chunk_banhammer_messages
     {
         message_count: u32,
-        pub messages: Vec<StaticString<BANHAMMER_MESSAGE_LENGTH>> // UTF bytes,
+        pub messages: Vec<StaticString<k_banhammer_message_max_length>> // UTF bytes,
     }
 );
 
@@ -22,13 +22,13 @@ impl s_blf_chunk_banhammer_messages {
     }
 
     fn set_messages(&mut self, messages: Vec<String>) -> Result<(), String> {
-        if messages.len() > MAX_BANHAMMER_MESSAGE_COUNT {
-            return Err(format!("Too many banhammer messages! {}/{MAX_BANHAMMER_MESSAGE_COUNT}", messages.len()))
+        if messages.len() > k_banhammmer_messages_max_messages {
+            return Err(format!("Too many banhammer messages! {}/{k_banhammmer_messages_max_messages}", messages.len()))
         }
 
         self.messages = Vec::with_capacity(messages.len());
         for message in messages.iter() {
-            let message = StaticString::<BANHAMMER_MESSAGE_LENGTH>::from_string(message);
+            let message = StaticString::<k_banhammer_message_max_length>::from_string(message);
 
             if !message.is_ok() {
                 return Err(format!("Banhammer message: {}", message.unwrap_err()))

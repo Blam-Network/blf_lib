@@ -24,7 +24,7 @@ use crate::title_storage::halo3::release::blf_files::{motd, rsa_manifest};
 use crate::title_storage::halo3::release::config_files::motd_popup::motd_popup as motd_popup_config;
 use crate::title_storage::halo3::release::blf_files::motd_popup::motd_popup as motd_popup_blf;
 use crate::title_storage::halo3::release::blf_files::matchmaking_banhammer_messages::{k_matchmaking_banhammer_messages_file_name, matchmaking_banhammer_messages};
-use crate::title_storage::halo3::release::blf_files::matchmaking_tips::{matchmaking_tips as matchmaking_tips_blf};
+use crate::title_storage::halo3::release::blf_files::matchmaking_tips::{k_matchmaking_tips_file_name, matchmaking_tips};
 use regex::Regex;
 use tempdir::TempDir;
 use tokio::runtime;
@@ -97,7 +97,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
 
                 println!("{style_bold}Converting {color_bright_white}{}{style_reset}...", hopper_directory);
                 Self::build_blf_banhammer_messages(&hopper_config_path, &hopper_blfs_path)?;
-                Self::build_blf_matchmaking_tips(config_path, &hopper_directory, blfs_path);
+                Self::build_blf_matchmaking_tips(&hopper_config_path, &hopper_blfs_path)?;
                 Self::build_blf_motds(config_path, &hopper_directory, blfs_path, false);
                 Self::build_blf_motds(config_path, &hopper_directory, blfs_path, true);
                 Self::build_blf_motd_popups(config_path, &hopper_directory, blfs_path, false);
@@ -814,7 +814,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
     fn build_config_network_configuration(hoppers_blfs_path: &String, hoppers_config_path: &String) {
         // For now we just copy it as is. But we do check that it contains a netc.
-        let task = console_task::start(String::from("Converting Network Configuration"));
+        let mut task = console_task::start(String::from("Converting Network Configuration"));
 
         let network_configuration_source_path = build_path(vec![
             hoppers_blfs_path,
@@ -836,13 +836,13 @@ impl v12070_08_09_05_2031_halo3_ship {
     }
 
     fn build_blf_banhammer_messages(hoppers_config_folder: &String, hoppers_blf_folder: &String) -> Result<(), Box<dyn Error>> {
-        let mut task = console_task::start(String::from("Building Banhammer Messages"));
+        let mut task = console_task::start("Building Banhammer Messages");
 
         for language_code in k_language_suffixes {
             let mut matchmaking_banhammer_messages = matchmaking_banhammer_messages::build_banhammer_messages_for_language(
                 hoppers_config_folder,
                 language_code,
-            ).inspect(|err|{
+            ).inspect_err(|err|{
                 task.fail();
             })?;
 
@@ -853,54 +853,28 @@ impl v12070_08_09_05_2031_halo3_ship {
             ));
         }
 
-        task.complete();
-
-        やった!()
+        やった!(task)
     }
 
-    fn build_blf_matchmaking_tips(config_path: &String, hopper_directory: &String, blfs_path: &String) {
-        let mut task = console_task::start(String::from("Converting Matchmaking Tips"));
-
-        let config_banhammer_messages_folder = build_path(vec![
-            config_path,
-            hopper_directory,
-            &String::from("matchmaking_tips"),
-        ]);
-
-        let blf_hoppers_folder = build_path(vec![
-            blfs_path,
-            hopper_directory,
-        ]);
+    fn build_blf_matchmaking_tips(hoppers_config_folder: &String, hoppers_blf_folder: &String) -> Result<(), Box<dyn Error>> {
+        let mut task = console_task::start("Building Matchmaking Tips");
 
         for language_code in k_language_suffixes {
-            let relative_file_path = format!("{language_code}.txt");
-            let config_file_path = format!("{config_banhammer_messages_folder}{FILE_SEPARATOR}{relative_file_path}");
+            let mut matchmaking_tips = matchmaking_tips::build_matchmaking_tips_for_language(
+                hoppers_config_folder,
+                language_code,
+            ).inspect_err(|err|{
+                task.fail();
+            })?;
 
-            let output_file_name = "matchmaking_tips.bin";
-            let output_hopper_folder = format!("{blf_hoppers_folder}{FILE_SEPARATOR}{language_code}");
-            let output_blf_path = format!("{output_hopper_folder}{FILE_SEPARATOR}{output_file_name}");
-
-            create_dir_all(&output_hopper_folder).unwrap();
-
-            if !check_file_exists(&config_file_path) {
-                task.add_warning(format!(
-                    "No {} matchmaking tips are present.",
-                    get_language_string(language_code),
-                ));
-
-                continue;
-            }
-
-            let mut config_file = File::open(config_file_path).unwrap();
-            let mut matchmaking_tips: String = String::new();
-            config_file.read_to_string(&mut matchmaking_tips).unwrap();
-
-            let matchmaking_tips = matchmaking_tips.lines().map(String::from).collect();
-            let mut matchmaking_tips = matchmaking_tips_blf::create(matchmaking_tips);
-            matchmaking_tips.write(&output_blf_path);
+            matchmaking_tips.write(build_path!(
+                hoppers_blf_folder,
+                language_code,
+                k_matchmaking_tips_file_name
+            ));
         }
 
-        task.complete();
+        やった!(task)
     }
 
     fn build_blf_motds(config_path: &String, hopper_directory: &String, blfs_path: &String, mythic: bool) {
@@ -1109,7 +1083,7 @@ impl v12070_08_09_05_2031_halo3_ship {
     }
 
     fn read_active_hopper_configuration(hoppers_config_path: &String) -> Vec<String> {
-        let task = console_task::start(String::from("Reading Active Hoppers"));
+        let mut task = console_task::start(String::from("Reading Active Hoppers"));
 
         let active_hoppers_folders = read_active_hoppers(hoppers_config_path).unwrap_or_else(|err| {
             task.fail_with_error(err);
@@ -1123,7 +1097,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
     fn read_game_set_configuration(hoppers_config_path: &String, active_hopper_folders: &Vec<String>) -> HashMap<u16, game_set>
     {
-        let task = console_task::start(String::from("Reading Game Set Config"));
+        let mut task = console_task::start(String::from("Reading Game Set Config"));
 
         let mut game_sets = HashMap::<u16, game_set>::new();
 
@@ -1176,7 +1150,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         variant_hashes: &mut HashMap<String, s_network_http_request_hash>
     )
     {
-        let task = console_task::start(String::from("Building Game Variants"));
+        let mut task = console_task::start(String::from("Building Game Variants"));
 
         let game_variants_config_path = build_path!(
             hoppers_config_path,
@@ -1328,7 +1302,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         variant_map_ids: &mut HashMap<String, u32>
     )
     {
-        let task = console_task::start(String::from("Building Map Variants"));
+        let mut task = console_task::start("Building Map Variants");
 
         let scenario_crc32s = Arc::new(Self::get_scenario_rsa_crc32s(&hoppers_config_path));
 
@@ -1464,7 +1438,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         build_temp_dir_path: &String,
     )
     {
-        let task = console_task::start(String::from("Building Game Sets"));
+        let mut task = console_task::start(String::from("Building Game Sets"));
 
         for (hopper_id, game_set) in active_game_sets {
             let hopper_folder_path = build_path(vec![
@@ -1721,7 +1695,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         hoppers_config_path: &String,
         hoppers_blfs_path: &String,
     ) -> Result<(), Box<dyn Error>> {
-        let task = console_task::start("Building Network Configuration".to_string());
+        let mut task = console_task::start("Building Network Configuration".to_string());
         let netc = find_chunk_in_file(&build_path(vec![
             hoppers_config_path,
             &k_network_configuration_file_name.to_string()
@@ -1735,17 +1709,15 @@ impl v12070_08_09_05_2031_halo3_ship {
             ])
         );
 
-        task.complete();
-
-        やった!()
+        やった!(task)
     }
 
     fn build_blf_manifest(
         hoppers_blfs_path: &String,
     ) -> Result<(), Box<dyn Error>> {
-        let task = console_task::start("Building Manifest File");
+        let mut task = console_task::start("Building Manifest File");
 
-        let mut manifest_blf_file = manifest::build_for_hoppers::<s_blf_chunk_network_configuration>(hoppers_blfs_path).inspect(|err|{
+        let mut manifest_blf_file = manifest::build_for_hoppers::<s_blf_chunk_network_configuration>(hoppers_blfs_path).inspect_err(|err|{
             task.fail();
         })?;
 
@@ -1754,8 +1726,6 @@ impl v12070_08_09_05_2031_halo3_ship {
             &k_manifest_file_name.to_string(),
         ]));
 
-        task.complete();
-
-        やった!()
+        やった!(task)
     }
 }

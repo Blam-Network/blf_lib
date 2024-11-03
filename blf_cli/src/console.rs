@@ -2,10 +2,12 @@ use std::time::SystemTime;
 use inline_colorization::*;
 
 pub struct console_task {
+    name: String,
     messages: Vec<String>,
     warnings: Vec<String>,
     errors: Vec<String>,
     start_time: SystemTime,
+    finished: bool,
 }
 
 #[macro_export]
@@ -16,9 +18,25 @@ macro_rules! debug_log {
     ($($arg:tt)*) => {{
         #[cfg(debug_assertions)]
         {
-            print!("##### DEBUG: ");
+            print!("### DEBUG: ");
             print!($($arg)*);
-            print!(" #####");
+            print!(" ###");
+            println!();
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! debug_warning {
+    () => {
+        std::print!("\n")
+    };
+    ($($arg:tt)*) => {{
+        #[cfg(debug_assertions)]
+        {
+            print!("{color_yellow}### WARNING: ");
+            print!($($arg)*);
+            print!(" ###{style_reset}");
             println!();
         }
     }};
@@ -26,24 +44,49 @@ macro_rules! debug_log {
 
 impl console_task {
     pub fn start(task: impl Into<String>) -> Self {
-        print!("● {}... ", task.into());
-        console_task {
+        let task = console_task {
+            name: task.into(),
             messages: vec![],
             warnings: vec![],
             errors: vec![],
-            start_time: SystemTime::now()
+            start_time: SystemTime::now(),
+            finished: false,
+        };
+
+        print!("● {}... ", task.name);
+
+        task
+    }
+
+    pub fn fail(&mut self) {
+        if self.finished {
+            debug_warning!("Tried to fail finished task {}.", self.name);
+            return;
         }
-    }
-    pub fn fail(&self) {
+
         println!("{color_red}failed{style_reset}.");
+
+        self.finished = true;
     }
 
-    pub fn fail_with_error(&self, error: impl Into<String>) {
+    pub fn fail_with_error(&mut self, error: impl Into<String>) {
+        if self.finished {
+            debug_warning!("Tried to fail finished task {}.", self.name);
+            return;
+        }
+
         println!("{color_red}failed{style_reset}.");
-        Self::log_error(&error.into())
+        Self::log_error(&error.into());
+
+        self.finished = true;
     }
 
-    pub fn complete(&self){
+    pub fn complete(&mut self){
+        if self.finished {
+            debug_warning!("Tried to complete finished task {}.", self.name);
+            return;
+        }
+
         println!("{color_green}done ✓{style_reset}{} {}",
                  if self.errors.len() > 0 { format!(" ⛔  {} Errors", self.errors.len()) } else { String::new() },
                  if self.warnings.len() > 0 { format!(" ⚠ {} Warnings", self.warnings.len()) } else { String::new() }
@@ -59,6 +102,8 @@ impl console_task {
         }
 
         self.log_duration();
+
+        self.finished = true;
     }
 
     fn log_duration(&self) {
