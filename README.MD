@@ -79,7 +79,7 @@ This command imports a Game or Map variant into the provided Title Storage Confi
 #### Example Invocation
 ```console
 $ blf_cli
-  import-rsa-signatures
+  import-variant
   "~/Blam-Title-Storage/Halo 3/Release/default_hoppers"
   "~/variants/cavern"
   "Halo 3"
