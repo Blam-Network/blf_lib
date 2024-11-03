@@ -15,18 +15,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install Linux and Windows Cross Compilers
-      run: sudo apt-get install --yes --no-install-recommends musl-tools gcc-mingw-w64-x86-64-win32
-    - name: Set up MacOS Cross Compiler
-      uses: Timmmm/setup-osxcross@v2
-      with:
-        osx-version: "12.3"
-    - name: Install Rustup targets
-      run: rustup target add x86_64-unknown-linux-musl x86_64-pc-windows-gnu x86_64-apple-darwin aarch64-apple-darwin
     - uses: actions/checkout@v4
     - name: Build
       working-directory: ./blf_lib
-      run: cargo build --target x86_64-unknown-linux-musl --target x86_64-pc-windows-gnu --target x86_64-apple-darwin --target aarch64-apple-darwin --verbose
+      run: cargo build --verbose
     - name: Run tests
       working-directory: ./blf_lib
       run: cargo test --verbose
@@ -36,10 +28,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install Linux and Windows Cross Compilers
+        run: sudo apt-get install --yes --no-install-recommends musl-tools gcc-mingw-w64-x86-64-win32
+      - name: Set up MacOS Cross Compiler
+        uses: Timmmm/setup-osxcross@v2
+        with:
+          osx-version: "12.3"
+      - name: Install Rustup targets
+        run: rustup target add x86_64-unknown-linux-musl x86_64-pc-windows-gnu x86_64-apple-darwin aarch64-apple-darwin
       - uses: actions/checkout@v4
       - name: Build
         working-directory: ./blf_cli
-        run: cargo build --verbose --release
+        run: cargo build --target x86_64-unknown-linux-musl --target x86_64-pc-windows-gnu --target x86_64-apple-darwin --target aarch64-apple-darwin --verbose --release
       - name: Run tests
         working-directory: ./blf_cli
         run: cargo test --verbose
