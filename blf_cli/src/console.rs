@@ -121,16 +121,16 @@ impl console_task {
         println!("  ⛔  {style_bold}{color_black}{bg_bright_red}{message}{style_reset}");
     }
 
-    pub fn add_message(&mut self, message: String) {
-        self.messages.push(message);
+    pub fn add_message(&mut self, message: impl Into<String>) {
+        self.messages.push(message.into());
     }
 
-    pub fn add_warning(&mut self, message: String) {
-        self.warnings.push(message);
+    pub fn add_warning(&mut self, message: impl Into<String>) {
+        self.warnings.push(message.into());
     }
 
-    pub fn add_error(&mut self, message: String) {
-        self.errors.push(message);
+    pub fn add_error(&mut self, message: impl Into<String>) {
+        self.errors.push(message.into());
     }
 
     fn log_warning(message: &String) {
