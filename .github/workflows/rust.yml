@@ -37,12 +37,15 @@ jobs:
       - name: Install Rustup targets
         run: rustup target add x86_64-unknown-linux-musl x86_64-pc-windows-gnu x86_64-apple-darwin aarch64-apple-darwin
       - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
       - name: Build
         working-directory: ./blf_cli
         run: cargo build --target x86_64-unknown-linux-musl --target x86_64-pc-windows-gnu --target x86_64-apple-darwin --target aarch64-apple-darwin --verbose --release
       - name: Run tests
         working-directory: ./blf_cli
         run: cargo test --verbose
-      - uses: actions/upload-artifact@v4
-        with:
-          path: blf_cli/target/release/blf_cli
+      - name: Upload Binaries
+            uses: actions/upload-artifact@v3
+            with:
+              name: binaries
+              path: target
