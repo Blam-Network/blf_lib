@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
 use lazy_static::lazy_static;
@@ -73,15 +74,18 @@ lazy_static!{
         .expect("Failed to generate hash salt!");
 }
 
-pub fn get_blf_file_hash(path: String) -> s_network_http_request_hash {
-    let mut file = File::open(path).unwrap();
+pub fn get_blf_file_hash(path: String) -> Result<s_network_http_request_hash, Box<dyn Error>> {
+    let mut file = File::open(&path).map_err(|err| {
+        Box::<dyn Error>::from(format!("get_blf_file_hash(\"{}\"): {}", path, err))
+    })?;
     let mut bytes = Vec::new();
-    file.read_to_end(&mut bytes).unwrap();
+    file.read_to_end(&mut bytes)?;
 
     let mut hasher = Sha1::new();
     Update::update(&mut hasher, &k_gen3_salt);
     Update::update(&mut hasher, &bytes);
-    s_network_http_request_hash::try_from(hasher.finalize().to_vec()).unwrap()
+    let parsed = s_network_http_request_hash::try_from(hasher.finalize().to_vec());
+    parsed
 }
 
 #[macro_export]

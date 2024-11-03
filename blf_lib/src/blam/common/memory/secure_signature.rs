@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::io::{Cursor, Read};
 use serde::{Deserializer, Serialize, Serializer};
 use blf_lib::io::packed_decoding::PackedDecoder;
@@ -44,7 +45,7 @@ impl PackedDecoder for s_network_http_request_hash {
 }
 
 impl TryFrom<Vec<u8>> for s_network_http_request_hash {
-    type Error = &'static str;
+    type Error = Box<dyn Error>;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         let data: [u8; 20];

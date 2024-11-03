@@ -8,6 +8,22 @@ pub struct console_task {
     start_time: SystemTime,
 }
 
+#[macro_export]
+macro_rules! debug_log {
+    () => {
+        std::print!("\n")
+    };
+    ($($arg:tt)*) => {{
+        #[cfg(debug_assertions)]
+        {
+            print!("##### DEBUG: ");
+            print!($($arg)*);
+            print!(" #####");
+            println!();
+        }
+    }};
+}
+
 impl console_task {
     pub fn start(task: String) -> Self {
         print!("● {}... ", task);
