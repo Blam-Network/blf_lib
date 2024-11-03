@@ -18,7 +18,7 @@ use lazy_static::lazy_static;
 use blf_lib::blam::common::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::{get_blf_file_hash, BlfFile};
 use blf_lib::blf::chunks::find_chunk_in_file;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_game_set, s_blf_chunk_game_set_entry, s_blf_chunk_hopper_description_table, s_blf_chunk_map_manifest, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_network_configuration, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_game_set, s_blf_chunk_game_set_entry, s_blf_chunk_hopper_description_table, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_network_configuration, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
 use crate::console::console_task;
 use crate::title_storage::halo3::release::config_files::motd_popup::{motd_popup as motd_popup_config, motd_popup};
 use crate::title_storage::halo3::release::blf_files::motd_popup::{k_motd_popup_file_name, k_motd_popup_image_file_name, k_mythic_motd_popup_file_name, k_mythic_popup_image_file_name};
@@ -49,7 +49,7 @@ use crate::title_storage::halo3::release::config_files::hopper_configuration::{h
 use crate::title_storage::halo3::release::config_files::categories_configuration::{categories_configuration as json_categories_configuration, categories_configuration, category_configuration_and_descriptions};
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::blf_files::network_configuration::k_network_configuration_file_name;
 use crate::title_storage::halo3::release::blf_files::motd::{k_motd_image_file_name, k_mythic_motd_file_name, k_mythic_motd_image_file_name, motd};
-use crate::title_storage::halo3::release::blf_files::rsa_manifest::rsa_manifest;
+use crate::title_storage::halo3::release::blf_files::rsa_manifest::{k_rsa_manifest_file_name, rsa_manifest};
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
 
@@ -104,7 +104,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
                 Self::build_blf_motds(&hopper_config_path, &hopper_blfs_path, true)?;
                 Self::build_blf_motd_popups(&hopper_config_path, &hopper_blfs_path, false)?;
                 Self::build_blf_motd_popups(&hopper_config_path, &hopper_blfs_path, true)?;
-                Self::build_blf_map_manifest(config_path, &hopper_directory, blfs_path);
+                Self::build_blf_map_manifest(&hopper_config_path, &hopper_blfs_path)?;
 
                 let active_hoppers = Self::read_active_hopper_configuration(&hopper_config_path);
                 let game_sets = Self::read_game_set_configuration(&hopper_config_path, &active_hoppers);
@@ -945,7 +945,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
     fn build_blf_motd_popups(hoppers_config_folder: &String, hoppers_blf_folder: &String, mythic: bool) -> Result<(), Box<dyn Error>>{
         let mut task = console_task::start(format!(
-            "Converting {}MOTD Popups",
+            "Building {}MOTD Popups",
             if mythic { "Mythic " } else { "" }
         ));
 
@@ -999,64 +999,19 @@ impl v12070_08_09_05_2031_halo3_ship {
         やった!(task)
     }
 
-    fn build_blf_map_manifest(config_path: &String, hopper_directory: &String, blfs_path: &String)
+    fn build_blf_map_manifest(hoppers_config_path: &String, hoppers_blf_path: &String) -> Result<(), Box<dyn Error>>
     {
         let mut task = console_task::start("Building Map Manifest");
 
-        let rsa_folder = build_path!(
-            config_path,
-            hopper_directory,
-            "rsa_signatures"
-        );
+        let mut rsa_manifest = rsa_manifest::build_for_hoppers(hoppers_config_path)
+            .inspect_err(|_| { task.fail() })?;
 
-        let rsa_files = get_files_in_folder(&rsa_folder).unwrap_or_else(|err|{
-            task.add_error(err);
-            task.complete();
-            panic!();
-        });
+        rsa_manifest.write(build_path!(
+            hoppers_blf_path,
+            k_rsa_manifest_file_name
+        ));
 
-        if rsa_files.len() < 1 {
-            task.fail_with_error("No RSA signatures found.");
-            return;
-        }
-
-        let mut map_manifest = s_blf_chunk_map_manifest::default();
-
-        for rsa_file_name in rsa_files {
-            let rsa_file_path = build_path!(
-                &rsa_folder,
-                &rsa_file_name
-            );
-            let rsa_file = File::open(&rsa_file_path);
-            if rsa_file.is_err() {
-                task.add_error(format!("Failed to open RSA signature: {rsa_file_path}"));
-                task.complete();
-                return;
-            }
-            let mut rsa_file = rsa_file.unwrap();
-            let mut rsa_signature = Vec::<u8>::with_capacity(0x100);
-            rsa_file.read_to_end(&mut rsa_signature).unwrap();
-
-            let result = map_manifest.add_rsa_signature(rsa_signature.as_slice());
-            if result.is_err() {
-                task.add_error(format!("Failed to add RSA signature {rsa_file_name} to manifest: {}", result.unwrap_err()));
-                task.complete();
-                return;
-            }
-        }
-
-        let output_file_path = build_path!(
-            blfs_path,
-            hopper_directory,
-            "rsa_manifest.bin"
-        );
-
-        let mut rsa_manifest = rsa_manifest::create(&map_manifest);
-        rsa_manifest.write(&output_file_path);
-
-        // task.add_message(format!("Added {} RSA signatures.", map_manifest.get_rsa_signatures().len()));
-
-        task.complete();
+        やった!(task)
     }
 
     fn read_active_hopper_configuration(hoppers_config_path: &String) -> Vec<String> {
