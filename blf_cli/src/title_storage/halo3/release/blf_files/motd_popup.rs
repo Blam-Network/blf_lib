@@ -3,6 +3,11 @@ use blf_lib::blf::versions::v12070_08_09_05_2031_halo3_ship;
 use blf_lib::blf_file;
 use blf_lib::types::byte_order_mark::little_endian;
 
+pub const k_motd_popup_file_name: &str = "motd_popup.bin";
+pub const k_mythic_motd_popup_file_name: &str = "blue_motd_popup.bin";
+pub const k_motd_popup_image_file_name: &str = "motd_popup_image.bin";
+pub const k_mythic_popup_image_file_name: &str = "blue_motd_popup_image.bin";
+
 blf_file! {
     pub struct motd_popup {
         _blf: s_blf_chunk_start_of_file,

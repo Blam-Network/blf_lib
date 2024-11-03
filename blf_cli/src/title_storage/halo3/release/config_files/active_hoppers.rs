@@ -1,14 +1,14 @@
 use std::fs::File;
 use std::io::Read;
-use crate::io::build_path;
+use crate::build_path;
 
 const active_hoppers_file_name: &str = "active_hoppers.txt";
 
 pub fn read_active_hoppers(hoppers_config_folder: &String) -> Result<Vec<String>, String> {
-    let active_hoppers_file_path = build_path(vec![
+    let active_hoppers_file_path = build_path!(
         hoppers_config_folder,
-        &String::from(active_hoppers_file_name),
-    ]);
+        active_hoppers_file_name
+    );
 
     let active_hoppers_file = File::open(&active_hoppers_file_path);
     if active_hoppers_file.is_err() {

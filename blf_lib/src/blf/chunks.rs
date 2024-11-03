@@ -22,8 +22,8 @@ pub fn find_chunk<'a, T: BlfChunk + SerializableBlfChunk + ReadableBlfChunk>(buf
     Err("Could not find chunk")
 }
 
-pub fn find_chunk_in_file<T: BlfChunk + SerializableBlfChunk + ReadableBlfChunk>(path: &str) -> Result<T, String> {
-    let mut file = File::open(path).unwrap();
+pub fn find_chunk_in_file<T: BlfChunk + SerializableBlfChunk + ReadableBlfChunk>(path: impl Into<String>) -> Result<T, String> {
+    let mut file = File::open(path.into()).unwrap();
     let mut headerBytes = [0u8; s_blf_header::size()];
     let mut header: s_blf_header;
 

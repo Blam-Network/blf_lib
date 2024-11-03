@@ -15,7 +15,7 @@ use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::config_rsa_sig
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::variant_importer::mcc::object_indexes::get_h3_index_for_mcc_object;
 
 pub fn import_variant(hoppers_config_path: &String, variant_path: &String) {
-    let mut task = console_task::start("Importing Variant".to_string());
+    let mut task = console_task::start("Importing Variant");
 
     let mut game_variant: Option<c_game_variant> = None;
     let game_variant_chunk = search_for_chunk_in_file::<s_blf_chunk_game_variant>(variant_path);
@@ -33,7 +33,7 @@ pub fn import_variant(hoppers_config_path: &String, variant_path: &String) {
             .to_lowercase());
         let output_file = File::create(build_path!(
             hoppers_config_path,
-            &"game_variants".to_string(),
+            "game_variants",
             &output_file_name
         )).unwrap();
         serde_json::to_writer_pretty(output_file, &game_variant.clone()).unwrap();
@@ -65,7 +65,7 @@ pub fn import_variant(hoppers_config_path: &String, variant_path: &String) {
 
         let output_file = File::create(build_path!(
             hoppers_config_path,
-            &"map_variants".to_string(),
+            "map_variants",
             &output_file_name
         )).unwrap();
 
@@ -135,7 +135,7 @@ fn convert_mcc_map(task: &mut console_task, hoppers_config_folder: &String, map:
     // Update the checksum
     let rsa_folder = build_path!(
         hoppers_config_folder,
-        &String::from("rsa_signatures")
+        "rsa_signatures"
     );
 
     if !exists(&rsa_folder).unwrap() {

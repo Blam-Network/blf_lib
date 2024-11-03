@@ -1,12 +1,13 @@
-use std::fs::{create_dir_all, File};
+use std::fs::File;
 use std::io::Write;
 use blf_lib::blam::common::cache::cache_files::s_cache_file_header_v11;
 use blf_lib::blf::chunks::find_chunk_in_file;
 use blf_lib::blf::versions::halo3::k_title_halo3;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_scenario;
 use blf_lib::TEST_BIT;
+use crate::build_path;
 use crate::console::console_task;
-use crate::io::{build_path, get_files_in_folder};
+use crate::io::get_files_in_folder;
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::k_build_string_halo3_ship_12070;
 
 pub fn import_rsa_signatures(
@@ -19,22 +20,20 @@ pub fn import_rsa_signatures(
 
     if version == k_build_string_halo3_ship_12070 && title == k_title_halo3 {
 
-        let map_info_folder = build_path(vec![
+        let map_info_folder = build_path!(
             &halo_maps_folder,
-            &String::from("info"),
-        ]);
+            "info"
+        );
 
         let map_info_file_names = get_files_in_folder(&map_info_folder).unwrap_or_else(|err|{
             task.fail_with_error(err);
             panic!()
         });
 
-        let rsa_signatures_config_path = build_path(vec![
+        let rsa_signatures_config_path = build_path!(
             &hoppers_config_path,
-            &"rsa_signatures".to_string(),
-        ]);
-
-        create_dir_all(&map_info_folder).unwrap();
+            "rsa_signatures"
+        );
 
         let mut multiplayer_maps = Vec::<(u32, String)>::new();
 
@@ -43,10 +42,10 @@ pub fn import_rsa_signatures(
                 continue;
             }
 
-            let map_info_file_path = build_path(vec![
+            let map_info_file_path = build_path!(
                 &map_info_folder,
-                &map_info_file_name,
-            ]);
+                &map_info_file_name
+            );
 
             let scenario_chunk = find_chunk_in_file::<s_blf_chunk_scenario>(&map_info_file_path);
 
@@ -63,10 +62,10 @@ pub fn import_rsa_signatures(
         }
 
         for (map_id, map_file_name) in multiplayer_maps {
-            let map_file_path = build_path(vec![
+            let map_file_path = build_path!(
                 &halo_maps_folder,
-                &format!("{map_file_name}.map"),
-            ]);
+                format!("{map_file_name}.map")
+            );
 
 
             let cache_file = s_cache_file_header_v11::read(map_file_path);
@@ -77,10 +76,10 @@ pub fn import_rsa_signatures(
 
             let cache_file = cache_file.unwrap();
 
-            let output_file_path = build_path(vec![
+            let output_file_path = build_path!(
                 &rsa_signatures_config_path,
-                &format!("{map_id}_{map_file_name}"),
-            ]);
+                format!("{map_id}_{map_file_name}")
+            );
 
             task.add_message(format!("{map_id}_{map_file_name}"));
 
@@ -88,7 +87,10 @@ pub fn import_rsa_signatures(
             output_file.write_all(cache_file.rsa_signature.get()).unwrap();
         }
     } else {
-        task.add_error("Unsupported title and version.".to_string());
+        task.add_error("Unsupported title and version.");
+
+        task.fail();
+        return;
     }
 
     task.complete();

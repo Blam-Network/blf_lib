@@ -3,7 +3,7 @@ use std::path::Path;
 use blf_lib::blf::get_blf_file_hash;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_end_of_file, s_blf_chunk_online_file_manifest, s_blf_chunk_start_of_file};
 use blf_lib::blf_file;
-use crate::io::build_path;
+use crate::build_path;
 use crate::title_storage::halo3::release::blf_files::matchmaking_banhammer_messages::k_matchmaking_banhammer_messages_file_name;
 use crate::title_storage::halo3::release::blf_files::matchmaking_hopper::k_matchmaking_hopper_file_name;
 use crate::title_storage::halo3::release::blf_files::matchmaking_hopper_descriptions::k_matchmaking_hopper_descriptions_file_name;
@@ -44,20 +44,20 @@ impl manifest {
         // - hopper descriptions
         // - matchmaking tips
 
-        let hopper_config_file_hash = get_blf_file_hash(build_path(vec![
-            &hoppers_blf_folder,
-            &k_matchmaking_hopper_file_name.to_string(),
-        ]))?;
+        let hopper_config_file_hash = get_blf_file_hash(build_path!(
+            hoppers_blf_folder,
+            k_matchmaking_hopper_file_name
+        ))?;
 
-        let network_config_file_hash = get_blf_file_hash(build_path(vec![
-            &hoppers_blf_folder,
-            &network_configuration_file_name,
-        ]))?;
+        let network_config_file_hash = get_blf_file_hash(build_path!(
+            hoppers_blf_folder,
+            &network_configuration_file_name
+        ))?;
 
-        let rsa_manifest_file_hash = get_blf_file_hash(build_path(vec![
-            &hoppers_blf_folder,
-            &k_rsa_manifest_file_name.to_string(),
-        ]))?;
+        let rsa_manifest_file_hash = get_blf_file_hash(build_path!(
+            hoppers_blf_folder,
+            k_rsa_manifest_file_name
+        ))?;
 
         manifest_chunk.add_file_hash(
             format!("/title/{hopper_directory_name}/{k_matchmaking_hopper_file_name}"),
@@ -75,23 +75,23 @@ impl manifest {
         )?;
 
         for language_code in k_language_suffixes {
-            let banhammer_messages_file_hash = get_blf_file_hash(build_path(vec![
-                &hoppers_blf_folder,
-                &language_code.to_string(),
-                &k_matchmaking_banhammer_messages_file_name.to_string(),
-            ]))?;
+            let banhammer_messages_file_hash = get_blf_file_hash(build_path!(
+                hoppers_blf_folder,
+                language_code,
+                k_matchmaking_banhammer_messages_file_name
+            ))?;
 
-            let hopper_descriptions_file_hash = get_blf_file_hash(build_path(vec![
-                &hoppers_blf_folder,
-                &language_code.to_string(),
-                &k_matchmaking_hopper_descriptions_file_name.to_string(),
-            ]))?;
+            let hopper_descriptions_file_hash = get_blf_file_hash(build_path!(
+                hoppers_blf_folder,
+                language_code,
+                k_matchmaking_hopper_descriptions_file_name
+            ))?;
 
-            let matchmaking_tips_file_hash = get_blf_file_hash(build_path(vec![
-                &hoppers_blf_folder,
-                &language_code.to_string(),
-                &k_matchmaking_tips_file_name.to_string(),
-            ]))?;
+            let matchmaking_tips_file_hash = get_blf_file_hash(build_path!(
+                hoppers_blf_folder,
+                language_code,
+                k_matchmaking_tips_file_name
+            ))?;
 
             manifest_chunk.add_file_hash(
                 format!("/title/{hopper_directory_name}/{language_code}/{k_matchmaking_banhammer_messages_file_name}"),
