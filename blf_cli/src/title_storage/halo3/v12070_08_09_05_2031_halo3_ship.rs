@@ -34,7 +34,7 @@ use blf_lib::blam::common::memory::secure_signature::s_network_http_request_hash
 use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
 use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_hopper_configuration_table;
-use blf_lib::types::byte_limited_utf8_string::StaticString;
+use blf_lib::types::c_string::StaticString;
 use crate::title_storage::halo3::release::blf_files::game_variant::game_variant;
 use crate::title_storage::halo3::release::blf_files::manifest::{k_manifest_file_name, manifest};
 use crate::title_storage::halo3::release::blf_files::map_variant::map_variant;

@@ -1,6 +1,6 @@
 use std::u32;
 use blf_lib::blf_chunk;
-use blf_lib::types::byte_limited_utf8_string::StaticString;
+use crate::types::c_string::StaticString;
 
 const MAX_MATCHMAKING_TIP_COUNT: usize = 32usize;
 const TIP_LENGTH: usize = 0x100;

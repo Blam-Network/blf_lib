@@ -1,6 +1,6 @@
 use std::u32;
 use blf_lib::blf_chunk;
-use blf_lib::types::byte_limited_wchar_string::StaticWcharString;
+use crate::types::c_string::StaticWcharString;
 const k_motd_popup_title_max_length: usize = 48;
 const k_motd_popup_header_max_length: usize = 48;
 const k_motd_popup_button_key_max_length: usize = 48;

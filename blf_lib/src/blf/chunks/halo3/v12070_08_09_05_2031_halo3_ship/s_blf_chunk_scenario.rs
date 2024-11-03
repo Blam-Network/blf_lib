@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
-use blf_lib::types::byte_limited_wchar_string::StaticWcharString;
+use crate::types::c_string::StaticWcharString;
 use crate::blf_chunk;
 use crate::types::array::StaticArray;
 use blf_lib::blam::common::cseries::language::k_language_count;
 use blf_lib::blam::halo_3::release::game::game_engine_default::k_game_engine_type_count;
-use blf_lib::types::byte_limited_utf8_string::StaticString;
+use crate::types::c_string::StaticString;
 use blf_lib_derive::PackedSerialize;
 
 #[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, PackedSerialize)]

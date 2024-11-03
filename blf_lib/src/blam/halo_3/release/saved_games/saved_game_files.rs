@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib_derive::PackedSerialize;
-use crate::types::byte_limited_utf8_string::StaticString;
-use crate::types::byte_limited_wchar_string::StaticWcharString;
+use crate::types::c_string::StaticString;
+use crate::types::c_string::StaticWcharString;
 use serde_hex::{SerHex,StrictCap};
 use blf_lib::types::time::time_t;
 

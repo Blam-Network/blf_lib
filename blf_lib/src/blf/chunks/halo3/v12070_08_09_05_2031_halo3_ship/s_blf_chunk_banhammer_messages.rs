@@ -1,6 +1,6 @@
 use std::u32;
 use blf_lib::blf_chunk;
-use blf_lib::types::byte_limited_utf8_string::StaticString;
+use crate::types::c_string::StaticString;
 
 const k_banhammmer_messages_max_messages: usize = 32usize;
 const k_banhammer_message_max_length: usize = 0x100;

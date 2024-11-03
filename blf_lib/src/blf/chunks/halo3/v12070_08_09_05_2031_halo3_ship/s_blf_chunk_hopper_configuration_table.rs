@@ -3,7 +3,7 @@ use blf_lib::blam::common::memory::secure_signature::s_network_http_request_hash
 use blf_lib::blf_chunk;
 use blf_lib::io::bitstream::{create_bitstream_reader, create_bitstream_writer, e_bitstream_byte_order};
 use blf_lib::types::array::StaticArray;
-use blf_lib::types::byte_limited_utf8_string::StaticString;
+use crate::types::c_string::StaticString;
 use blf_lib::types::time::{filetime};
 use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
 use crate::io::bitstream::close_bitstream_writer;
