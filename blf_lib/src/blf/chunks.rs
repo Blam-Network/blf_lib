@@ -42,6 +42,23 @@ pub fn find_chunk_in_file<T: BlfChunk + SerializableBlfChunk + ReadableBlfChunk>
     Err(format!("{} Chunk not found!", T::get_signature().to_string()))
 }
 
+pub fn search_for_chunk_in_file<T: BlfChunk + SerializableBlfChunk + ReadableBlfChunk>(path: &str) -> Option<T> {
+    let mut fileBytes = Vec::<u8>::new();
+    File::open(path).unwrap().read_to_end(&mut fileBytes).unwrap();
+
+    for i in 0..(fileBytes.len() - 0xC) {
+        let header_bytes = &fileBytes.as_slice()[i..i+0xC];
+        let header = s_blf_header::decode(&header_bytes);
+
+        if header.signature == T::get_signature() && header.version == T::get_version() {
+            let body_bytes = fileBytes.as_slice()[i+0xC..i+header.chunk_size as usize].to_vec();
+            return Some(T::read(body_bytes, Some(header)));
+        }
+    }
+
+    None
+}
+
 pub fn read_chunk_json<T: BlfChunk + for<'d> Deserialize<'d>>(path: &str) -> Result<T, String> {
     let mut file = File::open(path).unwrap();
     let parsed = serde_json::from_reader(&mut file);

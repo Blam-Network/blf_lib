@@ -8,6 +8,7 @@
 use clap::{command, Parser};
 use crate::commands::Commands;
 use crate::commands::import_rsa_signatures::import_rsa_signatures;
+use crate::commands::import_variant::import_variant;
 
 mod title_storage;
 mod io;
@@ -48,6 +49,9 @@ fn main() {
         },
         Commands::ImportRsaSignatures { hoppers_config_path, halo_maps_folder, title, version } => {
             import_rsa_signatures(hoppers_config_path, halo_maps_folder, title, version);
+        }
+        Commands::ImportVariant { hoppers_config_path, variant_path, title, version } => {
+            import_variant(hoppers_config_path, variant_path, title, version);
         }
     }
 }

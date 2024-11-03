@@ -27,7 +27,7 @@ pub const k_saved_game_file_type_count: u32 = 13;
 #[PackedSerialize(4, BigEndian)]
 pub struct s_content_item_metadata {
     unique_id: u64,
-    name: StaticWcharString<0x10>,
+    pub name: StaticWcharString<0x10>,
     description: StaticString<128>,
     author: StaticString<16>,
     file_type: u32,

@@ -89,7 +89,7 @@ pub struct c_game_engine_base_variant {
     m_checksum: u32,
     #[serde(skip_serializing,skip_deserializing)]
     pad: StaticArray<u32, 1>,
-    m_metadata: s_content_item_metadata,
+    pub m_metadata: s_content_item_metadata,
     m_miscellaneous_options: c_game_engine_miscellaneous_options,
     m_respawn_options: c_game_engine_respawn_options,
     m_social_options: c_game_engine_social_options,

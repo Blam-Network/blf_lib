@@ -4,7 +4,7 @@ use std::ffi::c_char;
 use crate::types::chunk_signature::chunk_signature;
 use crate::types::chunk_version::chunk_version;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct s_blf_header
 {
     pub signature: chunk_signature,

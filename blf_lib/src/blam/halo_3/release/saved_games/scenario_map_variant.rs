@@ -39,7 +39,7 @@ pub struct c_map_variant {
     pub m_variant_objects: StaticArray<s_variant_object_datum, 640>,
     pub m_object_type_start_index: StaticArray<i16, k_object_type_count>,
     pub m_quotas: StaticArray<s_variant_quota, 256>,
-    pub m_chunk_simulation_object_glue_indices: StaticArray<u32, k_number_of_map_variant_simulation_entities>,
+    pub m_chunk_simulation_object_glue_indices: StaticArray<i32, k_number_of_map_variant_simulation_entities>,
 }
 
 impl c_map_variant {
@@ -233,32 +233,32 @@ pub struct s_variant_quota {
 #[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
 #[PackedSerialize(1, BigEndian)]
 pub struct s_variant_multiplayer_object_properties_definition {
-    game_engine_flags: u16,
-    symmetry_placement_flags: u8, // foo
-    owner_team: i8, // byte?
-    shared_storage: u8, // spare_clips, teleporter_channel, spawn_rate
-    spawn_time: u8,
-    object_type: i8,
-    boundary_shape: u8,
-    boundary_size: f32, // width or radius
-    boundary_box_length: f32,
-    boundary_positive_height: f32,
-    boundary_negative_height: f32,
+    pub game_engine_flags: u16,
+    pub symmetry_placement_flags: u8, // foo
+    pub owner_team: i8, // byte?
+    pub shared_storage: u8, // spare_clips, teleporter_channel, spawn_rate
+    pub spawn_time: u8,
+    pub object_type: i8,
+    pub boundary_shape: u8,
+    pub boundary_size: f32, // width or radius
+    pub boundary_box_length: f32,
+    pub boundary_positive_height: f32,
+    pub boundary_negative_height: f32,
 }
 
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Copy, Serialize, Deserialize)]
 #[PackedSerialize(4, BigEndian)]
 pub struct s_variant_object_datum {
-    flags: u16,
+    pub flags: u16,
     // pad 16
-    object_datum_index: i32,
-    editor_object_index: i32,
-    variant_quota_index: i32,
-    position: real_point3d,
-    forward: vector3d,
-    up: vector3d,
-    parent_object_identifier: c_object_identifier,
-    multiplayer_game_object_properties: s_variant_multiplayer_object_properties_definition,
+    pub object_datum_index: i32,
+    pub editor_object_index: i32,
+    pub variant_quota_index: i32,
+    pub position: real_point3d,
+    pub forward: vector3d,
+    pub up: vector3d,
+    pub parent_object_identifier: c_object_identifier,
+    pub multiplayer_game_object_properties: s_variant_multiplayer_object_properties_definition,
 }
 
 #[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]

@@ -1,4 +1,5 @@
 pub mod import_rsa_signatures;
+pub mod import_variant;
 
 use clap::Subcommand;
 
@@ -22,6 +23,13 @@ pub enum Commands {
     ImportRsaSignatures {
         hoppers_config_path: String,
         halo_maps_folder: String,
+        title: String,
+        version: String,
+    },
+    #[command(arg_required_else_help = true)]
+    ImportVariant {
+        hoppers_config_path: String,
+        variant_path: String,
         title: String,
         version: String,
     },

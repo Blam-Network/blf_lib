@@ -1,4 +1,6 @@
 mod blf_files;
+pub mod variant_importer;
+
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 use std::fs::{create_dir_all, exists, remove_file, File};
