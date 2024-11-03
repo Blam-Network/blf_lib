@@ -8,8 +8,9 @@ use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
 use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::{c_map_variant, s_variant_object_datum, s_variant_quota};
 use blf_lib::blf::chunks::search_for_chunk_in_file;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_game_variant, s_blf_chunk_map_variant, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
+use crate::build_path;
 use crate::console::console_task;
-use crate::io::{build_path, get_files_in_folder};
+use crate::io::get_files_in_folder;
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::config_rsa_signature_file_map_id_regex;
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::variant_importer::mcc::object_indexes::get_h3_index_for_mcc_object;
 
@@ -30,11 +31,11 @@ pub fn import_variant(hoppers_config_path: &String, variant_path: &String) {
         let output_file_name = format!("{}.json", game_variant.m_base_variant.m_metadata.name.get_string()
             .replace(" ", "_")
             .to_lowercase());
-        let output_file = File::create(build_path(vec![
+        let output_file = File::create(build_path!(
             hoppers_config_path,
             &"game_variants".to_string(),
-            &output_file_name,
-        ])).unwrap();
+            &output_file_name
+        )).unwrap();
         serde_json::to_writer_pretty(output_file, &game_variant.clone()).unwrap();
 
         task.add_message(format!("Added game variant: {output_file_name}"));
@@ -62,11 +63,11 @@ pub fn import_variant(hoppers_config_path: &String, variant_path: &String) {
             .replace(" ", "_")
             .to_lowercase());
 
-        let output_file = File::create(build_path(vec![
+        let output_file = File::create(build_path!(
             hoppers_config_path,
             &"map_variants".to_string(),
             &output_file_name
-        ])).unwrap();
+        )).unwrap();
 
         serde_json::to_writer_pretty(output_file, &map_variant.clone()).unwrap();
 
@@ -75,7 +76,7 @@ pub fn import_variant(hoppers_config_path: &String, variant_path: &String) {
         return;
     }
 
-    task.fail("Unable to parse variant file.".to_string());
+    task.fail_with_error("Unable to parse variant file.");
 }
 
 fn convert_mcc_map(task: &mut console_task, hoppers_config_folder: &String, map: &mut c_map_variant, ) {
@@ -132,10 +133,10 @@ fn convert_mcc_map(task: &mut console_task, hoppers_config_folder: &String, map:
     map.m_map_variant_version = 12;
 
     // Update the checksum
-    let rsa_folder = build_path(vec![
+    let rsa_folder = build_path!(
         hoppers_config_folder,
         &String::from("rsa_signatures")
-    ]);
+    );
 
     if !exists(&rsa_folder).unwrap() {
         task.add_warning(format!("Couldn't find an RSA signature for map {}, the map checksum will be incorrect.", map.m_map_id));
@@ -153,10 +154,10 @@ fn convert_mcc_map(task: &mut console_task, hoppers_config_folder: &String, map:
             continue;
         }
 
-        let rsa_file_path = build_path(vec![
+        let rsa_file_path = build_path!(
             &rsa_folder,
-            &rsa_file_name,
-        ]);
+            &rsa_file_name
+        );
 
         let rsa_file = File::open(&rsa_file_path);
         if rsa_file.is_err() {

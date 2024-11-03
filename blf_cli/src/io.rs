@@ -26,8 +26,17 @@ pub fn get_files_in_folder(path: &String) -> Result<Vec<String>, String> {
 
 pub const FILE_SEPARATOR: &str = MAIN_SEPARATOR_STR;
 
-pub fn build_path(parts: Vec<&String>) -> String {
-    parts.iter().map(|part| part.to_string()).collect::<Vec<String>>().join(FILE_SEPARATOR)
+pub fn build_path(parts: Vec<impl Into<String>>) -> String {
+    parts.into_iter().map(|d| d.into()).collect::<Vec<String>>().join(FILE_SEPARATOR)
+}
+
+#[macro_export]
+macro_rules! build_path {
+    ($($x:expr),+) => {{
+        $crate::io::build_path(<[_]>::into_vec(
+            std::boxed::Box::new([$($x),+])
+        ))
+    }};
 }
 
 /// For use with serde's [serialize_with] attribute

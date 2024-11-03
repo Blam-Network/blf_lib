@@ -14,6 +14,7 @@ mod title_storage;
 mod io;
 mod console;
 mod commands;
+mod result;
 
 #[derive(Debug, Parser)]
 #[command(name = "blf_cli")]

@@ -1,6 +1,7 @@
 use std::error::Error;
-use std::fs::File;
+use std::fs::{create_dir_all, File};
 use std::io::{Read, Write};
+use std::path::Path;
 use lazy_static::lazy_static;
 use sha1::{Digest, Sha1};
 use sha1::digest::Update;
@@ -41,12 +42,16 @@ impl BlfFileBuilder {
 }
 
 impl BlfFileBuilder {
-    pub fn write(&mut self, path: &str) {
+    pub fn write(&mut self, path: impl Into<String>) {
+        let path = &path.into();
         let mut data: Vec<u8> = Vec::new();
 
         for chunk in &mut self.chunks.iter_mut()  {
             data.append(&mut chunk.write(&data));
         }
+        
+        let parent_path = Path::new(path).parent().unwrap();
+        create_dir_all(parent_path).unwrap();
 
         let file = File::create(path)
             .unwrap()

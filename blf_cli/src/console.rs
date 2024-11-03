@@ -25,8 +25,8 @@ macro_rules! debug_log {
 }
 
 impl console_task {
-    pub fn start(task: String) -> Self {
-        print!("● {}... ", task);
+    pub fn start(task: impl Into<String>) -> Self {
+        print!("● {}... ", task.into());
         console_task {
             messages: vec![],
             warnings: vec![],
@@ -34,9 +34,13 @@ impl console_task {
             start_time: SystemTime::now()
         }
     }
-    pub fn fail(&self, error: String) {
+    pub fn fail(&self) {
         println!("{color_red}failed{style_reset}.");
-        Self::log_error(&error)
+    }
+
+    pub fn fail_with_error(&self, error: impl Into<String>) {
+        println!("{color_red}failed{style_reset}.");
+        Self::log_error(&error.into())
     }
 
     pub fn complete(&self){

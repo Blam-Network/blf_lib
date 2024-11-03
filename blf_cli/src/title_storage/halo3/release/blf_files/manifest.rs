@@ -30,7 +30,7 @@ impl manifest {
         }
     }
 
-    pub fn build<T: BlfChunk>(hoppers_blf_folder: &String) -> Result<manifest, Box<dyn Error>> {
+    pub fn build_for_hoppers<T: BlfChunk>(hoppers_blf_folder: &String) -> Result<manifest, Box<dyn Error>> {
         let mut manifest_chunk = s_blf_chunk_online_file_manifest::default();
         let hopper_directory_name = Path::new(hoppers_blf_folder).file_name().unwrap().to_str().unwrap();
 

@@ -25,7 +25,7 @@ pub fn import_rsa_signatures(
         ]);
 
         let map_info_file_names = get_files_in_folder(&map_info_folder).unwrap_or_else(|err|{
-            task.fail(err);
+            task.fail_with_error(err);
             panic!()
         });
 
