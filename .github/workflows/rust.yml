@@ -48,4 +48,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: binaries
-          path: target
+          path: blf_cli/target
