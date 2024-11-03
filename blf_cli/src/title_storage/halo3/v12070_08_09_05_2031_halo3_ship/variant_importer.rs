@@ -8,7 +8,7 @@ use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
 use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::{c_map_variant, s_variant_object_datum, s_variant_quota};
 use blf_lib::blf::chunks::search_for_chunk_in_file;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_game_variant, s_blf_chunk_map_variant, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
-use crate::build_path;
+use crate::{build_path, debug_log};
 use crate::console::console_task;
 use crate::io::get_files_in_folder;
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::config_rsa_signature_file_map_id_regex;
@@ -98,7 +98,7 @@ fn convert_mcc_map(task: &mut console_task, hoppers_config_folder: &String, map:
         }
     }
 
-    // task.add_message(format!("{} objects were removed from the budget.", bad_budget_indices.len()));
+    debug_log!("{} objects were removed from the budget.", bad_budget_indices.len());
 
     let mut removed_objects_count = 0;
     for i in (0..map.m_number_of_variant_objects as usize).rev() {

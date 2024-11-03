@@ -24,13 +24,11 @@ fn get_title_converters() -> Vec<Box<dyn TitleConverter>> {
 }
 
 pub fn get_title_converter (title: String, build: String) -> Option<Box<dyn TitleConverter>> {
-    for title_converter in get_title_converters() {
-        if title_converter.title() == title && title_converter.build_string() == build {
-            return Some(title_converter);
-        }
-    }
-
-    None
+    get_title_converters()
+        .into_iter()
+        .find(|title_converter| 
+            title_converter.title() == title && title_converter.build_string() == build
+        )
 }
 
 pub fn check_file_exists(path: &String) -> bool {
