@@ -16,3 +16,4 @@ pub mod s_blf_chunk_hopper_configuration_table;
 pub mod s_blf_chunk_hopper_description_table;
 pub mod s_blf_chunk_scenario;
 pub mod s_blf_chunk_online_file_manifest;
+pub mod s_blf_chunk_content_header;

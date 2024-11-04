@@ -10,3 +10,9 @@ blf_chunk!(
         pub game_variant: c_game_variant,
     }
 );
+
+impl s_blf_chunk_game_variant {
+    pub fn create(game_variant: c_game_variant) -> s_blf_chunk_game_variant {
+        s_blf_chunk_game_variant { game_variant }
+    }
+}

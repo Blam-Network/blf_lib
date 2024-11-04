@@ -79,9 +79,28 @@ This command imports a Game or Map variant into the provided Title Storage Confi
 #### Example Invocation
 ```console
 $ blf_cli
-  import-rsa-signatures
+  import-variant
   "~/Blam-Title-Storage/Halo 3/Release/default_hoppers"
-  "~/variants/cavern"
+  ~/variants/cavern
+  "Halo 3"
+  12070.08.09.05.2031.halo3_ship
+```
+### Export Variant
+This command exports a Game or Map variant from a Title Storage Configuration folder. Behaviour may vary by selected Title and Version.
+#### Support
+- Halo 3 12070.08.09.05.2031.halo3_ship
+  - Exported variants can be inserted into an Xbox 360 Console file using Horizon with "Contents > Replace".
+#### Arguments
+1. Variant JSON file path.
+2. Exported variant path.
+3. Title Name
+4. Title Version
+#### Example Invocation
+```console
+$ blf_cli
+  export-variant
+  "~/Blam-Title-Storage/Halo 3/Release/default_hoppers/map_variants/atlas_eightygrit.json"
+  ~/variants/atlas_eightygrit.bin
   "Halo 3"
   12070.08.09.05.2031.halo3_ship
 ```

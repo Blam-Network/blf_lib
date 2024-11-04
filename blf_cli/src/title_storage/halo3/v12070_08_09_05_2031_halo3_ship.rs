@@ -1,5 +1,6 @@
 mod blf_files;
 pub mod variant_importer;
+pub mod variant_exporter;
 
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::error::Error;

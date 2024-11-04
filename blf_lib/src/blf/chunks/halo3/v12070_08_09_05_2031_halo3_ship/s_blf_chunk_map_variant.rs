@@ -17,4 +17,11 @@ blf_chunk!(
 );
 
 impl s_blf_chunk_map_variant {
+    pub fn create(map_variant: c_map_variant) -> Self {
+        Self {
+            pad1: 0,
+            map_variant,
+            pad2: 0,
+        }
+    }
 }

@@ -1,5 +1,6 @@
 pub mod import_rsa_signatures;
 pub mod import_variant;
+pub mod export_variant;
 
 use clap::Subcommand;
 
@@ -30,6 +31,13 @@ pub enum Commands {
     ImportVariant {
         hoppers_config_path: String,
         variant_path: String,
+        title: String,
+        version: String,
+    },
+    #[command(arg_required_else_help = true)]
+    ExportVariant {
+        variant_json_path: String,
+        destination_path: String,
         title: String,
         version: String,
     },
