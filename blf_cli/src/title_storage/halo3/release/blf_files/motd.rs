@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::io::Write;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_author, s_blf_chunk_end_of_file, s_blf_chunk_message_of_the_day, s_blf_chunk_start_of_file};
 use blf_lib::blf::versions::v12070_08_09_05_2031_halo3_ship;
 use blf_lib::blf_file;
@@ -10,6 +11,10 @@ pub const k_motd_file_name: &str = "motd.bin";
 pub const k_mythic_motd_file_name: &str = "blue_motd.bin";
 pub const k_motd_image_file_name: &str = "motd_image.bin";
 pub const k_mythic_motd_image_file_name: &str = "blue_motd_image.bin";
+pub const k_motd_config_folder: &str = "motd";
+pub const k_motd_mythic_config_folder: &str = "motd_mythic";
+
+
 
 
 blf_file! {
@@ -31,7 +36,7 @@ impl motd {
         }
     }
 
-    pub fn build_motd_for_language(
+    pub fn read_from_config(
         hoppers_config_path: &String,
         language_code: &str,
         mythic: bool,
@@ -41,5 +46,21 @@ impl motd {
             if mythic { "motd_mythic" } else { "motd" },
             format!("{language_code}.txt")
         ))?))
+    }
+
+    pub fn write_to_config(&self, hoppers_config_path: &String, language_code: &str, mythic: bool) -> Result<(), Box<dyn Error>> {
+        let config_file_path = build_path!(
+            hoppers_config_path,
+            if mythic { k_motd_mythic_config_folder } else { k_motd_config_folder },
+            format!("{language_code}.txt")
+        );
+
+        let messages_text = self.motd.get_message();
+
+        let mut text_file = File::create(config_file_path).unwrap();
+
+        text_file.write_all(messages_text.as_bytes())?;
+
+        Ok(())
     }
 }

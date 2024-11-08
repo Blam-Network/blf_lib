@@ -19,7 +19,7 @@ use lazy_static::lazy_static;
 use blf_lib::blam::common::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::{get_blf_file_hash, BlfFile};
 use blf_lib::blf::chunks::find_chunk_in_file;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_game_set, s_blf_chunk_game_set_entry, s_blf_chunk_hopper_description_table, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_network_configuration, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_game_set, s_blf_chunk_game_set_entry, s_blf_chunk_hopper_description_table, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_network_configuration, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
 use crate::console::console_task;
 use crate::title_storage::halo3::release::config_files::motd_popup::{motd_popup as motd_popup_config, motd_popup};
 use crate::title_storage::halo3::release::blf_files::motd_popup::{k_motd_popup_file_name, k_motd_popup_image_file_name, k_mythic_motd_popup_file_name, k_mythic_popup_image_file_name};
@@ -50,7 +50,7 @@ use crate::title_storage::halo3::release::config_files::game_set::{build_game_se
 use crate::title_storage::halo3::release::config_files::hopper_configuration::{hopper_configuration as json_hopper_configuration, hopper_configuration};
 use crate::title_storage::halo3::release::config_files::categories_configuration::{categories_configuration as json_categories_configuration, categories_configuration, category_configuration_and_descriptions};
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::blf_files::network_configuration::k_network_configuration_file_name;
-use crate::title_storage::halo3::release::blf_files::motd::{k_motd_image_file_name, k_mythic_motd_file_name, k_mythic_motd_image_file_name, motd};
+use crate::title_storage::halo3::release::blf_files::motd::{k_motd_config_folder, k_motd_file_name, k_motd_image_file_name, k_motd_mythic_config_folder, k_mythic_motd_file_name, k_mythic_motd_image_file_name, motd};
 use crate::title_storage::halo3::release::blf_files::rsa_manifest::{k_rsa_manifest_file_name, rsa_manifest};
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
@@ -180,10 +180,10 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
                 );
 
                 println!("{style_bold}Converting {color_bright_white}{}{style_reset}...", hopper_directory);
-                Self::build_config_banhammer_messages(&hoppers_blf_path, &hoppers_config_path);
+                Self::build_config_banhammer_messages(&hoppers_blf_path, &hoppers_config_path)?;
                 Self::build_config_matchmaking_tips(&hoppers_blf_path, &hoppers_config_path)?;
-                Self::build_config_motds(&hoppers_blf_path, &hoppers_config_path, false);
-                Self::build_config_motds(&hoppers_blf_path, &hoppers_config_path, true);
+                Self::build_config_motds(&hoppers_blf_path, &hoppers_config_path, false)?;
+                Self::build_config_motds(&hoppers_blf_path, &hoppers_config_path, true)?;
                 Self::build_config_motd_popups(&hoppers_blf_path, &hoppers_config_path, false);
                 Self::build_config_motd_popups(&hoppers_blf_path, &hoppers_config_path, true);
                 Self::build_config_map_variants(&hoppers_blf_path, &hoppers_config_path);
@@ -203,24 +203,13 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
 }
 
 impl v12070_08_09_05_2031_halo3_ship {
-    fn build_config_banhammer_messages(hoppers_blfs_path: &String, hoppers_config_path: &String) {
+    fn build_config_banhammer_messages(hoppers_blf_path: &String, hoppers_config_path: &String) -> Result<(), Box<dyn Error>> {
         let mut task = console_task::start("Converting Banhammer Messages");
 
-        let banhammer_messages_folder = build_path!(
-            hoppers_config_path,
-            "banhammer_messages"
-        );
-
-        create_dir_all(&banhammer_messages_folder).unwrap();
-
         for language_code in k_language_suffixes {
-            let file_path = build_path!(
-                hoppers_blfs_path,
-                language_code,
-                k_matchmaking_banhammer_messages_file_name
-            );
+            let blf_file_path = build_path!(hoppers_blf_path, language_code, k_matchmaking_banhammer_messages_file_name);
 
-            if !check_file_exists(&file_path) {
+            if !check_file_exists(&blf_file_path) {
                 task.add_warning(format!(
                     "No {} banhammer messages are present.",
                     get_language_string(language_code),
@@ -229,28 +218,10 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            let banhammer_messages =
-                find_chunk_in_file::<s_blf_chunk_banhammer_messages>(&file_path);
-
-            if banhammer_messages.is_err() {
-                task.fail_with_error(format!("Failed to read banhammer messages file at: {file_path}"));
-                return;
-            }
-
-            let output_text_file_path = build_path!(
-                &banhammer_messages_folder,
-                &format!("{language_code}.txt")
-            );
-
-            let messages_text = banhammer_messages.unwrap().get_messages()
-                .join("\r\n");
-
-            let mut text_file = File::create(output_text_file_path).unwrap();
-
-            text_file.write_all(messages_text.as_bytes()).unwrap()
+            matchmaking_banhammer_messages::read(&blf_file_path)?.write_to_config(hoppers_config_path, language_code)?;
         }
 
-        task.complete();
+        やった!(task)
     }
 
     fn build_config_matchmaking_tips(hoppers_blf_path: &String, hoppers_config_path: &String) -> Result<(), Box<dyn Error>> {
@@ -274,23 +245,20 @@ impl v12070_08_09_05_2031_halo3_ship {
         やった!(task)
     }
 
-    fn build_config_motds(hoppers_blf_path: &String, hoppers_config_path: &String, mythic: bool) {
+    fn build_config_motds(hoppers_blf_path: &String, hoppers_config_path: &String, mythic: bool) -> Result<(), Box<dyn Error>> {
         let mut task = console_task::start(
             if mythic { "Converting Mythic MOTDs" }
             else { "Converting MOTDs" }
         );
 
-        let motd_messages_folder = build_path!(
-            hoppers_config_path,
-            if mythic { "motd_mythic" } else { "motd" }
-        );
-
-        create_dir_all(&motd_messages_folder).unwrap();
-
         // BLFs
         for language_code in k_language_suffixes {
-            let relative_file_path = format!("{language_code}{FILE_SEPARATOR}{}motd.bin", if mythic { "blue_" } else { "" });
-            let file_path = format!("{hoppers_blf_path}{FILE_SEPARATOR}{relative_file_path}");
+            let file_path = build_path!(
+                hoppers_blf_path,
+                language_code,
+                if mythic { k_mythic_motd_file_name } else { k_motd_file_name }
+            );
+
 
             if !check_file_exists(&file_path) {
                 task.add_warning(format!(
@@ -302,35 +270,23 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            let motd =
-                find_chunk_in_file::<s_blf_chunk_message_of_the_day>(&file_path);
-
-            if motd.is_err() {
-                task.fail_with_error(format!("Failed to read MOTD file at {file_path}"));
-                return;
-            }
-
-            let motd = motd.unwrap();
-
-            let output_text_file_path = build_path!(
-                &motd_messages_folder,
-                format!("{language_code}.txt")
-            );
-
-            let message_text = motd.get_message();
-
-            let mut text_file = File::create(output_text_file_path).unwrap();
-
-            text_file.write_all(message_text.as_bytes()).unwrap()
+            motd::read(&file_path)?.write_to_config(hoppers_config_path, language_code, mythic)?;
         }
 
         // JPEGs
         for language_code in k_language_suffixes {
             let relative_file_path = format!("{language_code}{FILE_SEPARATOR}{}motd_image.jpg", if mythic { "blue_" } else { "" });
-            let file_path = format!("{hoppers_blf_path}{FILE_SEPARATOR}{relative_file_path}");
-            let output_path = build_path!(
-                &motd_messages_folder,
+            let file_path = build_path!(
+                hoppers_blf_path,
+                if mythic { k_motd_mythic_config_folder } else { k_motd_config_folder },
                 &format!("{language_code}.jpg")
+
+            );
+
+            let output_path = build_path!(
+                hoppers_config_path,
+                language_code,
+                if mythic { k_mythic_motd_image_file_name } else { k_motd_image_file_name }
             );
 
             if !check_file_exists(&file_path) {
@@ -343,10 +299,10 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            std::fs::copy(file_path, output_path).unwrap();
+            fs::copy(file_path, output_path)?;
         }
 
-        task.complete();
+        やった!(task)
     }
 
     fn build_config_motd_popups(hoppers_blf_path: &String, hoppers_config_path: &String, mythic: bool) {
@@ -797,7 +753,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         let mut task = console_task::start("Building Banhammer Messages");
 
         for language_code in k_language_suffixes {
-            let mut matchmaking_banhammer_messages = matchmaking_banhammer_messages::build_banhammer_messages_for_language(
+            let mut matchmaking_banhammer_messages = matchmaking_banhammer_messages::read_from_config(
                 hoppers_config_folder,
                 language_code,
             ).inspect_err(|err|{
@@ -846,7 +802,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         );
 
         for language_code in k_language_suffixes {
-            let motd = motd::build_motd_for_language(
+            let motd = motd::read_from_config(
                 hoppers_config_path,
                 language_code,
                 mythic
