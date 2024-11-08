@@ -9,3 +9,5 @@ pub mod game_set;
 pub mod matchmaking_hopper;
 pub mod matchmaking_hopper_descriptions;
 pub mod manifest;
+
+pub const k_hopper_directory_name_max_length: usize = 64;

@@ -19,7 +19,7 @@ use lazy_static::lazy_static;
 use blf_lib::blam::common::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::{get_blf_file_hash, BlfFile};
 use blf_lib::blf::chunks::find_chunk_in_file;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_game_set, s_blf_chunk_game_set_entry, s_blf_chunk_hopper_description_table, s_blf_chunk_matchmaking_tips, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_network_configuration, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_banhammer_messages, s_blf_chunk_game_set, s_blf_chunk_game_set_entry, s_blf_chunk_hopper_description_table, s_blf_chunk_message_of_the_day, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_network_configuration, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
 use crate::console::console_task;
 use crate::title_storage::halo3::release::config_files::motd_popup::{motd_popup as motd_popup_config, motd_popup};
 use crate::title_storage::halo3::release::blf_files::motd_popup::{k_motd_popup_file_name, k_motd_popup_image_file_name, k_mythic_motd_popup_file_name, k_mythic_popup_image_file_name};
@@ -44,6 +44,7 @@ use crate::title_storage::halo3::release::blf_files::matchmaking_hopper_descript
 use blf_files::network_configuration::network_configuration;
 use crate::title_storage::halo3::release;
 use crate::title_storage::halo3::release::blf_files::game_set::k_game_set_file_name;
+use crate::title_storage::halo3::release::blf_files::k_hopper_directory_name_max_length;
 use crate::title_storage::halo3::release::config_files::active_hoppers::read_active_hoppers;
 use crate::title_storage::halo3::release::config_files::game_set::{build_game_set_csv, game_set};
 use crate::title_storage::halo3::release::config_files::hopper_configuration::{hopper_configuration as json_hopper_configuration, hopper_configuration};
@@ -60,7 +61,29 @@ title_converter! (
     pub struct v12070_08_09_05_2031_halo3_ship {}
 );
 
-const HOPPER_DIRECTORY_NAME_MAX_LENGTH: usize = 64;
+// Halo 3's xex supports 12 languages, but only 10 were released.
+pub const k_language_suffixes: [&str; 10] = [
+    k_language_suffix_english,
+    k_language_suffix_japanese,
+    k_language_suffix_german,
+    k_language_suffix_french,
+    k_language_suffix_spanish,
+    k_language_suffix_mexican,
+    k_language_suffix_italian,
+    k_language_suffix_korean,
+    k_language_suffix_chinese_traditional,
+    // k_language_suffix_chinese_simplified,
+    k_language_suffix_portuguese,
+    // k_language_suffix_polish,
+];
+
+lazy_static! {
+    static ref hopper_folder_regex: Regex = Regex::new(r"^[0-9]{5}.*").unwrap();
+    static ref config_hopper_folder_identifier_regex: Regex = Regex::new(r"^[0-9]{1,5}").unwrap();
+    static ref map_variant_regex: Regex = Regex::new(r"_012.bin$").unwrap();
+    static ref game_variant_regex: Regex = Regex::new(r"_010.bin$").unwrap();
+    static ref config_rsa_signature_file_map_id_regex: Regex = Regex::new(r"^[0-9]{1,}").unwrap();
+}
 
 impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
     fn build_blfs(&mut self, config_path: &String, blfs_path: &String) {
@@ -75,11 +98,11 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
 
         for hopper_directory in hopper_directories {
             let result = || -> Result<(), Box<dyn Error>> {
-                if hopper_directory.len() > HOPPER_DIRECTORY_NAME_MAX_LENGTH {
+                if hopper_directory.len() > k_hopper_directory_name_max_length {
                     return Err(Box::from(format!(
                         "Hoppers folder \"{hopper_directory}\" is too long and will be skipped. ({} > {} characters)",
                         hopper_directory.len(),
-                        HOPPER_DIRECTORY_NAME_MAX_LENGTH
+                        k_hopper_directory_name_max_length
                     )))
                 }
 
@@ -141,59 +164,42 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
         });
 
         for hopper_directory in hopper_directories {
-            if hopper_directory.len() > HOPPER_DIRECTORY_NAME_MAX_LENGTH {
-                println!("{color_bright_white}{bg_red}Skipping \"{hopper_directory}\" as it's name is too long. ({HOPPER_DIRECTORY_NAME_MAX_LENGTH} characters MAX){style_reset}");
-                continue;
+            let result = || -> Result<(), Box<dyn Error>> {
+                if hopper_directory.len() > k_hopper_directory_name_max_length {
+                    return Err(Box::<dyn Error>::from(format!("Skipping \"{hopper_directory}\" as it's name is too long. ({k_hopper_directory_name_max_length} characters MAX)")))
+                }
+
+                let hoppers_config_path = build_path!(
+                    config_path,
+                    &hopper_directory
+                );
+
+                let hoppers_blf_path = build_path!(
+                    blfs_path,
+                    &hopper_directory
+                );
+
+                println!("{style_bold}Converting {color_bright_white}{}{style_reset}...", hopper_directory);
+                Self::build_config_banhammer_messages(&hoppers_blf_path, &hoppers_config_path);
+                Self::build_config_matchmaking_tips(&hoppers_blf_path, &hoppers_config_path)?;
+                Self::build_config_motds(&hoppers_blf_path, &hoppers_config_path, false);
+                Self::build_config_motds(&hoppers_blf_path, &hoppers_config_path, true);
+                Self::build_config_motd_popups(&hoppers_blf_path, &hoppers_config_path, false);
+                Self::build_config_motd_popups(&hoppers_blf_path, &hoppers_config_path, true);
+                Self::build_config_map_variants(&hoppers_blf_path, &hoppers_config_path);
+                Self::build_config_game_variants(&hoppers_blf_path, &hoppers_config_path);
+                Self::build_config_game_sets(&hoppers_blf_path, &hoppers_config_path);
+                Self::build_config_hoppers(&hoppers_blf_path, &hoppers_config_path);
+                Self::build_config_network_configuration(&hoppers_blf_path, &hoppers_config_path);
+                Ok(())
+            }();
+
+            if result.is_err() {
+                println!("{color_red}Failed to build title storage for hoppers {hopper_directory}{style_reset}");
+                println!("{color_red}{}{style_reset}", result.err().unwrap());
             }
-
-            let hopper_config_path = build_path!(
-                config_path,
-                &hopper_directory
-            );
-
-            let hopper_blfs_path = build_path!(
-                blfs_path,
-                &hopper_directory
-            );
-
-            println!("{style_bold}Converting {color_bright_white}{}{style_reset}...", hopper_directory);
-            Self::build_config_banhammer_messages(&hopper_blfs_path, &hopper_config_path);
-            Self::build_config_matchmaking_tips(blfs_path, &hopper_directory, config_path);
-            Self::build_config_motds(blfs_path, &hopper_directory, config_path, false);
-            Self::build_config_motds(blfs_path, &hopper_directory, config_path, true);
-            Self::build_config_motd_popups(blfs_path, &hopper_directory, config_path, false);
-            Self::build_config_motd_popups(blfs_path, &hopper_directory, config_path, true);
-            Self::build_config_map_variants(blfs_path, &hopper_directory, config_path);
-            Self::build_config_game_variants(blfs_path, &hopper_directory, config_path);
-            Self::build_config_game_sets(blfs_path, &hopper_directory, config_path);
-            Self::build_config_hoppers(&hopper_blfs_path, &hopper_config_path);
-            Self::build_config_network_configuration(&hopper_blfs_path, &hopper_config_path);
         }
     }
-}
-
-// Halo 3's xex supports 12 languages, but only 10 were released.
-pub const k_language_suffixes: [&str; 10] = [
-    k_language_suffix_english,
-    k_language_suffix_japanese,
-    k_language_suffix_german,
-    k_language_suffix_french,
-    k_language_suffix_spanish,
-    k_language_suffix_mexican,
-    k_language_suffix_italian,
-    k_language_suffix_korean,
-    k_language_suffix_chinese_traditional,
-    // k_language_suffix_chinese_simplified,
-    k_language_suffix_portuguese,
-    // k_language_suffix_polish,
-];
-
-lazy_static! {
-    static ref hopper_folder_regex: Regex = Regex::new(r"^[0-9]{5}.*").unwrap();
-    static ref config_hopper_folder_identifier_regex: Regex = Regex::new(r"^[0-9]{1,5}").unwrap();
-    static ref map_variant_regex: Regex = Regex::new(r"_012.bin$").unwrap();
-    static ref game_variant_regex: Regex = Regex::new(r"_010.bin$").unwrap();
-    static ref config_rsa_signature_file_map_id_regex: Regex = Regex::new(r"^[0-9]{1,}").unwrap();
 }
 
 impl v12070_08_09_05_2031_halo3_ship {
@@ -247,63 +253,35 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
-    fn build_config_matchmaking_tips(blfs_path: &String, hopper_directory: &String, config_path: &String) {
+    fn build_config_matchmaking_tips(hoppers_blf_path: &String, hoppers_config_path: &String) -> Result<(), Box<dyn Error>> {
         let mut task = console_task::start("Converting Matchmaking Tips");
 
-        let banhammer_messages_folder = build_path!(
-            config_path,
-            hopper_directory,
-            "matchmaking_tips"
-        );
-
-        create_dir_all(&banhammer_messages_folder).unwrap();
-
         for language_code in k_language_suffixes {
-            let relative_file_path = format!("{language_code}{FILE_SEPARATOR}matchmaking_tips.bin");
-            let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
+            let blf_file_path = build_path!(hoppers_blf_path, language_code, k_matchmaking_tips_file_name);
 
-            if !check_file_exists(&file_path) {
+            if !check_file_exists(&blf_file_path) {
                 task.add_warning(format!(
-                    "No {} banhammer messages are present.",
+                    "No {} matchmaking tips are present.",
                     get_language_string(language_code),
                 ));
 
                 continue;
             }
 
-            let matchmaking_tips =
-                find_chunk_in_file::<s_blf_chunk_matchmaking_tips>(&file_path);
-
-            if matchmaking_tips.is_err() {
-                task.fail_with_error(format!("Failed to read banhammer messages file at: {file_path}"));
-                return;
-            }
-
-            let output_text_file_path = build_path!(
-                &banhammer_messages_folder,
-                &format!("{language_code}.txt")
-            );
-
-            let messages_text = matchmaking_tips.unwrap().get_tips()
-                .join("\r\n");
-
-            let mut text_file = File::create(output_text_file_path).unwrap();
-
-            text_file.write_all(messages_text.as_bytes()).unwrap()
+            matchmaking_tips::read(&blf_file_path)?.write_to_config(hoppers_config_path, language_code)?;
         }
 
-        task.complete();
+        やった!(task)
     }
 
-    fn build_config_motds(blfs_path: &String, hopper_directory: &String, config_path: &String, mythic: bool) {
+    fn build_config_motds(hoppers_blf_path: &String, hoppers_config_path: &String, mythic: bool) {
         let mut task = console_task::start(
             if mythic { "Converting Mythic MOTDs" }
             else { "Converting MOTDs" }
         );
 
         let motd_messages_folder = build_path!(
-            config_path,
-            hopper_directory,
+            hoppers_config_path,
             if mythic { "motd_mythic" } else { "motd" }
         );
 
@@ -312,7 +290,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         // BLFs
         for language_code in k_language_suffixes {
             let relative_file_path = format!("{language_code}{FILE_SEPARATOR}{}motd.bin", if mythic { "blue_" } else { "" });
-            let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
+            let file_path = format!("{hoppers_blf_path}{FILE_SEPARATOR}{relative_file_path}");
 
             if !check_file_exists(&file_path) {
                 task.add_warning(format!(
@@ -349,7 +327,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         // JPEGs
         for language_code in k_language_suffixes {
             let relative_file_path = format!("{language_code}{FILE_SEPARATOR}{}motd_image.jpg", if mythic { "blue_" } else { "" });
-            let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
+            let file_path = format!("{hoppers_blf_path}{FILE_SEPARATOR}{relative_file_path}");
             let output_path = build_path!(
                 &motd_messages_folder,
                 &format!("{language_code}.jpg")
@@ -371,15 +349,14 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
-    fn build_config_motd_popups(blfs_path: &String, hopper_directory: &String, config_path: &String, mythic: bool) {
+    fn build_config_motd_popups(hoppers_blf_path: &String, hoppers_config_path: &String, mythic: bool) {
         let mut task = console_task::start(
             if mythic { "Converting Mythic MOTD Popups" }
             else { "Converting MOTD Popups" }
         );
 
         let motd_messages_folder = build_path!(
-            config_path,
-            hopper_directory,
+            hoppers_config_path,
             if mythic { "popup_mythic" } else { "popup" }
         );
 
@@ -388,7 +365,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         // BLFs
         for language_code in k_language_suffixes {
             let relative_file_path = format!("{language_code}{FILE_SEPARATOR}{}motd_popup.bin", if mythic { "blue_" } else { "" });
-            let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
+            let file_path = format!("{hoppers_blf_path}{FILE_SEPARATOR}{relative_file_path}");
 
             if !check_file_exists(&file_path) {
                 task.add_warning(format!(
@@ -426,7 +403,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         // JPEGs
         for language_code in k_language_suffixes {
             let relative_file_path = format!("{language_code}{FILE_SEPARATOR}{}motd_popup_image.jpg", if mythic { "blue_" } else { "" });
-            let file_path = format!("{blfs_path}{FILE_SEPARATOR}{hopper_directory}{FILE_SEPARATOR}{relative_file_path}");
+            let file_path = format!("{hoppers_blf_path}{FILE_SEPARATOR}{relative_file_path}");
             let output_path = build_path!(
                 &motd_messages_folder,
                 &format!("{language_code}.jpg")
@@ -448,24 +425,18 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
-    fn build_config_map_variants(blfs_path: &String, hopper_directory: &String, config_path: &String) {
+    fn build_config_map_variants(hoppers_blf_path: &String, hoppers_config_path: &String) {
         let mut task = console_task::start("Converting Map Variants");
 
         let map_variants_folder = build_path!(
-            config_path,
-            hopper_directory,
+            hoppers_config_path,
             "map_variants"
         );
 
         create_dir_all(&map_variants_folder).unwrap();
 
-        let current_hoppers_blf_folder = build_path!(
-            blfs_path,
-            hopper_directory
-        );
-
         // Iterate through hopper folders. eg default_hoppers/00101
-        let hopper_directory_subfolders = get_directories_in_folder(&current_hoppers_blf_folder).unwrap_or_else(|err|{
+        let hopper_directory_subfolders = get_directories_in_folder(&hoppers_blf_path).unwrap_or_else(|err|{
             println!("{}", err);
             panic!();
         });
@@ -478,7 +449,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             }
 
             let map_variant_blfs_folder = build_path!(
-                &current_hoppers_blf_folder,
+                hoppers_blf_path,
                 &subfolder,
                 "map_variants"
             );
@@ -530,24 +501,18 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
-    fn build_config_game_variants(blfs_path: &String, hopper_directory: &String, config_path: &String) {
+    fn build_config_game_variants(hoppers_blf_path: &String, hoppers_config_path: &String) {
         let mut task = console_task::start("Converting Game Variants");
 
         let game_variants_folder = build_path!(
-            config_path,
-            hopper_directory,
+            hoppers_config_path,
             "game_variants"
         );
 
         create_dir_all(&game_variants_folder).unwrap();
 
-        let current_hoppers_blf_folder = build_path!(
-            blfs_path,
-            hopper_directory
-        );
-
         // Iterate through hopper folders. eg default_hoppers/00101
-        let hopper_directory_subfolders = get_directories_in_folder(&current_hoppers_blf_folder).unwrap_or_else(|err|{
+        let hopper_directory_subfolders = get_directories_in_folder(&hoppers_blf_path).unwrap_or_else(|err|{
             println!("{}", err);
             panic!();
         });
@@ -560,7 +525,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             }
 
             let game_variant_blfs_folder = build_path!(
-                &current_hoppers_blf_folder,
+                hoppers_blf_path,
                 &subfolder
             );
 
@@ -605,23 +570,13 @@ impl v12070_08_09_05_2031_halo3_ship {
         task.complete();
     }
 
-    fn build_config_game_sets(blfs_path: &String, hopper_directory: &String, config_path: &String) {
+    fn build_config_game_sets(hoppers_blf_path: &String, hoppers_config_path: &String) {
         let mut task = console_task::start("Building Game Sets");
 
-        let hoppers_folder = build_path!(
-            config_path,
-            hopper_directory
-        );
-
-        create_dir_all(&hoppers_folder).unwrap();
-
-        let current_hoppers_blf_folder = build_path!(
-            blfs_path,
-            hopper_directory
-        );
+        create_dir_all(&hoppers_config_path).unwrap();
 
         // Iterate through hopper folders. eg default_hoppers/00101
-        let hopper_directory_subfolders = get_directories_in_folder(&current_hoppers_blf_folder).unwrap_or_else(|err|{
+        let hopper_directory_subfolders = get_directories_in_folder(&hoppers_blf_path).unwrap_or_else(|err|{
             println!("{}", err);
             panic!();
         });
@@ -634,7 +589,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             }
 
             let game_set_blf_path = build_path!(
-                &current_hoppers_blf_folder,
+                hoppers_blf_path,
                 &subfolder,
                 k_game_set_file_name
             );
@@ -647,7 +602,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             let game_set = find_chunk_in_file::<s_blf_chunk_game_set>(&game_set_blf_path).unwrap();
 
             let output_path = build_path!(
-                &hoppers_folder,
+                hoppers_config_path,
                 "hoppers",
                 &subfolder,
                 "game_set.csv"
@@ -830,7 +785,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         );
 
         // We read and rewrite to tidy any padding and the headers.
-        let mut network_config = network_configuration::read(&network_configuration_source_path);
+        let mut network_config = network_configuration::read(&network_configuration_source_path).unwrap();
         network_config.write(&network_configuration_dest_path);
 
         fs::copy(network_configuration_source_path, network_configuration_dest_path).unwrap();
@@ -863,7 +818,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         let mut task = console_task::start("Building Matchmaking Tips");
 
         for language_code in k_language_suffixes {
-            let mut matchmaking_tips = matchmaking_tips::build_matchmaking_tips_for_language(
+            let mut matchmaking_tips = matchmaking_tips::read_from_config(
                 hoppers_config_folder,
                 language_code,
             ).inspect_err(|err|{

@@ -58,8 +58,8 @@ impl BlfFileBuilder {
             .write_all(&data);
     }
 
-    pub fn read(path: &str, version: impl ChunkFactory) -> Self {
-        let mut file = File::open(path).unwrap();
+    pub fn read(path: &str, version: impl ChunkFactory) -> Result<Self, Box<dyn Error>> {
+        let mut file = File::open(path)?;
         let mut headerBytes = [0u8; s_blf_header::size()];
         let mut header: s_blf_header;
         let mut blf_file_builder = BlfFileBuilder::new();
@@ -67,13 +67,14 @@ impl BlfFileBuilder {
         while file.read_exact(&mut headerBytes).is_ok() {
             header = s_blf_header::decode(&headerBytes);
             let body_bytes = vec![0u8; (header.chunk_size as usize) - s_blf_header::size()];
-            blf_file_builder.add_dyn_chunk(version.decode(header.signature, header.version, body_bytes).unwrap());
+            blf_file_builder.add_dyn_chunk(version.decode(header.signature, header.version, body_bytes)?);
         }
 
-        blf_file_builder
+        Ok(blf_file_builder)
     }
 }
 
+// Used for everything we've encountered.
 lazy_static!{
     static ref k_gen3_salt: Vec<u8> = hex::decode("EDD43009666D5C4A5C3657FAB40E022F535AC6C9EE471F01F1A44756B7714F1C36EC")
         .expect("Failed to generate hash salt!");

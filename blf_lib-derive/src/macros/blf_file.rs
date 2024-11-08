@@ -52,16 +52,16 @@ pub fn blf_file_macro(input: TokenStream) -> TokenStream {
                         <File as std::io::Write>::write_all(&mut file, &data).unwrap();
                     }
 
-                    fn read(path: &String) -> Self {
+                    fn read(path: &String) -> Result<Self, Box<dyn std::error::Error>> {
                         let mut headerBytes = [0u8; derive_s_blf_header::size()];
                         let mut header: derive_s_blf_header;
-                        let mut file = File::open(path).unwrap();
+                        let mut file = File::open(path)?;
 
                         let mut blf_file = Self::default();
 
                         #(#reads)*
 
-                        blf_file
+                        Ok(blf_file)
                     }
                 }
             }).into()
