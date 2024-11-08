@@ -69,6 +69,7 @@ impl c_game_engine_vip_variant {
         self.m_vip_selection = bitstream.read_u8(2);
         self.m_zone_movement = bitstream.read_u8(4);
         self.m_zone_order = bitstream.read_u8(1);
+        self.m_influence_radius = bitstream.read_u16(6);
         self.m_vip_traits.decode(bitstream);
         self.m_vip_influence_traits.decode(bitstream);
         self.m_vip_team_traits.decode(bitstream);
