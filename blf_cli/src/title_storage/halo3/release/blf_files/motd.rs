@@ -12,10 +12,7 @@ pub const k_mythic_motd_file_name: &str = "blue_motd.bin";
 pub const k_motd_image_file_name: &str = "motd_image.bin";
 pub const k_mythic_motd_image_file_name: &str = "blue_motd_image.bin";
 pub const k_motd_config_folder: &str = "motd";
-pub const k_motd_mythic_config_folder: &str = "motd_mythic";
-
-
-
+pub const k_mythic_motd_config_folder: &str = "motd_mythic";
 
 blf_file! {
     pub struct motd {
@@ -51,7 +48,7 @@ impl motd {
     pub fn write_to_config(&self, hoppers_config_path: &String, language_code: &str, mythic: bool) -> Result<(), Box<dyn Error>> {
         let config_file_path = build_path!(
             hoppers_config_path,
-            if mythic { k_motd_mythic_config_folder } else { k_motd_config_folder },
+            if mythic { k_mythic_motd_config_folder } else { k_motd_config_folder },
             format!("{language_code}.txt")
         );
 
