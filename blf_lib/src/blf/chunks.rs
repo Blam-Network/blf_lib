@@ -1,4 +1,5 @@
 pub(crate) mod halo3;
+pub(crate) mod halo3odst;
 
 use std::fs::File;
 use std::io::{Read, Seek};

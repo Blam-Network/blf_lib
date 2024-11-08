@@ -4,6 +4,7 @@ use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk
 use blf_lib::blf::versions::v12070_08_09_05_2031_halo3_ship;
 use blf_lib::blf_file;
 use crate::build_path;
+use crate::io::create_parent_folders;
 
 pub const k_matchmaking_banhammer_messages_file_name: &str = "matchmaking_banhammer_messages.bin";
 pub const k_matchmaking_banhammer_messages_config_folder_name: &str = "banhammer_messages";
@@ -56,6 +57,8 @@ impl matchmaking_banhammer_messages {
 
         let messages_text = self.bhms.get_messages()
             .join("\r\n");
+
+        create_parent_folders(&config_file_path)?;
 
         let mut text_file = File::create(config_file_path).unwrap();
 

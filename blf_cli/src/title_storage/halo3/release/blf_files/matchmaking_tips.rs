@@ -4,6 +4,7 @@ use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk
 use blf_lib::blf::versions::v12070_08_09_05_2031_halo3_ship;
 use blf_lib::blf_file;
 use crate::build_path;
+use crate::io::create_parent_folders;
 
 pub const k_matchmaking_tips_file_name: &str = "matchmaking_tips.bin";
 pub const m_matchmaking_tips_config_folder_name: &str = "matchmaking_tips";
@@ -56,6 +57,8 @@ impl matchmaking_tips {
 
         let messages_text = self.mmtp.get_tips()
             .join("\r\n");
+
+        create_parent_folders(&config_file_path)?;
 
         let mut text_file = File::create(config_file_path).unwrap();
 
