@@ -1,9 +1,9 @@
 use std::collections::{BTreeMap, HashMap};
+use std::error::Error;
 use std::fs;
 use std::fs::create_dir_all;
 use std::path::{Path, MAIN_SEPARATOR_STR};
 use serde::{Serialize, Serializer};
-use serde::de::Error;
 use crate::title_storage::check_file_exists;
 
 pub fn get_directories_in_folder(path: &String) -> Result<Vec<String>, String> {
@@ -29,15 +29,16 @@ pub fn get_files_in_folder(path: &String) -> Result<Vec<String>, String> {
 pub const FILE_SEPARATOR: &str = MAIN_SEPARATOR_STR;
 
 pub fn create_parent_folders(path: impl Into<String>) -> Result<(), Box<dyn Error>> {
-    let parent = Path::new(&path.into()).parent();
-    if parent {
-        create_dir_all(parent)?
+    let path = path.into();
+    let parent = Path::new(&path).parent();
+    if parent.is_some() {
+        create_dir_all(parent.unwrap())?
     }
     Ok(())
 }
 
 pub fn build_path(parts: Vec<String>) -> String {
-    parts.into_iter().map(|d| d.into()).collect::<Vec<String>>().join(FILE_SEPARATOR)
+    parts.into_iter().collect::<Vec<String>>().join(FILE_SEPARATOR)
 }
 
 #[macro_export]

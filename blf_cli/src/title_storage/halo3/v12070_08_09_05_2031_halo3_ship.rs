@@ -21,7 +21,7 @@ use blf_lib::blf::{get_blf_file_hash, BlfFile};
 use blf_lib::blf::chunks::find_chunk_in_file;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_game_set, s_blf_chunk_game_set_entry, s_blf_chunk_hopper_description_table, s_blf_chunk_network_configuration, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
 use crate::console::console_task;
-use crate::title_storage::halo3::release::blf_files::motd_popup::{k_motd_popuo_config_folder, k_motd_popup_file_name, k_motd_popup_image_file_name, k_mythic_motd_popup_config_folder, k_mythic_motd_popup_file_name, k_mythic_motd_popup_image_file_name, motd_popup};
+use crate::title_storage::halo3::release::blf_files::motd_popup::{k_motd_popup_config_folder, k_motd_popup_file_name, k_motd_popup_image_file_name, k_mythic_motd_popup_config_folder, k_mythic_motd_popup_file_name, k_mythic_motd_popup_image_file_name, motd_popup};
 use crate::title_storage::halo3::release::blf_files::matchmaking_banhammer_messages::{k_matchmaking_banhammer_messages_file_name, matchmaking_banhammer_messages};
 use crate::title_storage::halo3::release::blf_files::matchmaking_tips::{k_matchmaking_tips_file_name, matchmaking_tips};
 use regex::Regex;
@@ -347,7 +347,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
             let output_path = build_path!(
                 hoppers_config_path,
-                if mythic { k_mythic_motd_popup_config_folder } else { k_motd_popuo_config_folder },
+                if mythic { k_mythic_motd_popup_config_folder } else { k_motd_popup_config_folder },
                 format!("{language_code}.jpg")
             );
 
@@ -718,12 +718,12 @@ impl v12070_08_09_05_2031_halo3_ship {
 
         let network_configuration_source_path = build_path!(
             hoppers_blfs_path,
-            "network_configuration_135.bin"
+            k_network_configuration_file_name
         );
 
         let network_configuration_dest_path = build_path!(
             hoppers_config_path,
-            "network_configuration_135.bin"
+            k_network_configuration_file_name
         );
 
         // We read and rewrite to tidy any padding and the headers.
@@ -815,7 +815,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         for language_code in k_language_suffixes {
             let jpeg_file_path = build_path!(
                 hoppers_config_path,
-                if mythic { "motd_mythic" } else { "motd" },
+                if mythic { k_mythic_motd_config_folder } else { k_motd_config_folder },
                 format!("{}.jpg", language_code)
             );
 
@@ -871,7 +871,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         for language_code in k_language_suffixes {
             let jpeg_file_path = build_path!(
                 hoppers_config_folder,
-                if mythic { "popup_mythic" } else { "popup" },
+                if mythic { k_mythic_motd_popup_config_folder } else { k_motd_popup_config_folder },
                 format!("{}.jpg", language_code)
             );
 

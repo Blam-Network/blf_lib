@@ -1,8 +1,10 @@
 use std::fs::exists;
 use blf_lib::blf::chunks::DynTitleAndBuild;
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::v12070_08_09_05_2031_halo3_ship;
+use crate::title_storage::halo3odst::v13895_09_04_27_2201_atlas_release::v13895_09_04_27_2201_atlas_release;
 
 pub mod halo3;
+pub mod halo3odst;
 
 pub trait TitleConverter: DynTitleAndBuild {
     fn build_blfs(&mut self, config_path: &String, blfs_path: &String);
@@ -19,7 +21,8 @@ macro_rules! title_converter {
 
 fn get_title_converters() -> Vec<Box<dyn TitleConverter>> {
     vec![
-        Box::new(v12070_08_09_05_2031_halo3_ship::default())
+        Box::new(v12070_08_09_05_2031_halo3_ship::default()),
+        Box::new(v13895_09_04_27_2201_atlas_release::default())
     ]
 }
 

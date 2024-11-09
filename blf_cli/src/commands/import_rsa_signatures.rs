@@ -4,11 +4,11 @@ use blf_lib::blam::common::cache::cache_files::s_cache_file_header_v11;
 use blf_lib::blf::chunks::find_chunk_in_file;
 use blf_lib::blf::versions::halo3::k_title_halo3;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_scenario;
+use blf_lib::blf::versions::halo3odst::k_title_halo3odst;
 use blf_lib::TEST_BIT;
 use crate::build_path;
 use crate::console::console_task;
-use crate::io::get_files_in_folder;
-use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::k_build_string_halo3_ship_12070;
+use crate::io::{create_parent_folders, get_files_in_folder};
 
 pub fn import_rsa_signatures(
     hoppers_config_path: String,
@@ -18,7 +18,7 @@ pub fn import_rsa_signatures(
 ) {
     let mut task = console_task::start(String::from("Importing RSA Signatures"));
 
-    if version == k_build_string_halo3_ship_12070 && title == k_title_halo3 {
+    if title == k_title_halo3 || title == k_title_halo3odst {
 
         let map_info_folder = build_path!(
             &halo_maps_folder,
@@ -83,6 +83,7 @@ pub fn import_rsa_signatures(
 
             task.add_message(format!("{map_id}_{map_file_name}"));
 
+            create_parent_folders(&output_file_path).unwrap();
             let mut output_file = File::create(output_file_path).unwrap();
             output_file.write_all(cache_file.rsa_signature.get()).unwrap();
         }

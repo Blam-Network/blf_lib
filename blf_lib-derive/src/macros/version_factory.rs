@@ -28,7 +28,7 @@ pub fn version_factory_macro(input: TokenStream) -> TokenStream {
     let if_statements = version_idents.iter().map(|version_ident| {
         quote! {
             if #version_ident::get_title() == title && #version_ident::get_build_string() == build {
-                return Some(#version_ident {})
+                return Some(Box::from(#version_ident {}))
             }
         }
     });
@@ -38,7 +38,7 @@ pub fn version_factory_macro(input: TokenStream) -> TokenStream {
             quote! {
                 use blf_lib::blf::chunks::TitleAndBuild;
                 impl #name {
-                    pub fn get_version(title: &str, build: &str) -> Option<impl blf_lib::blf::chunks::ChunkFactory> {
+                    pub fn get_version(title: &str, build: &str) -> Option<Box<dyn blf_lib::blf::chunks::ChunkFactory>> {
                         #(#if_statements)*
 
                         None

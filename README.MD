@@ -6,8 +6,9 @@ This repository consists of a code library and command-line interface built for 
 
 ## Supported Titles and Versions
 - Halo 3
-    - 12070.08.09.05.2031.halo3_ship (Title Update 2)
-
+  - 12070.08.09.05.2031.halo3_ship (Title Update 2)
+- Halo 3: ODST
+  - 13895.09.04.27.2201.atlas_release
 
 ## Commands
 ### Build Title Storage

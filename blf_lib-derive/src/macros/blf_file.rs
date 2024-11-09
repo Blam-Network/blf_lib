@@ -46,7 +46,13 @@ pub fn blf_file_macro(input: TokenStream) -> TokenStream {
                         let mut data: Vec<u8> = Vec::new();
                         #(#writes)*
 
-                        let mut file = File::create(path.into())
+                        let path = path.into();
+                        let parent = std::path::Path::new(&path).parent();
+                        if parent.is_some() {
+                            std::fs::create_dir_all(parent.unwrap()).unwrap();
+                        }
+
+                        let mut file = File::create(path)
                             .unwrap();
 
                         <File as std::io::Write>::write_all(&mut file, &data).unwrap();
