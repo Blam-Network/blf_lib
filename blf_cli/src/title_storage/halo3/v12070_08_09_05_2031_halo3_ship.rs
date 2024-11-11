@@ -1376,7 +1376,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         let mut hopper_configuration_table = s_blf_chunk_hopper_configuration_table::default();
 
         // Load the configuration.json files for each hopper
-        let mut hopper_configuration_jsons = HashMap::<u16, hopper_configuration>::new();
+        let mut hopper_configuration_jsons = Vec::<(u16, hopper_configuration)>::new();
         for active_hopper_folder in active_hopper_folders {
             let configuration_path = build_path!(
                 hoppers_config_path,
@@ -1404,10 +1404,10 @@ impl v12070_08_09_05_2031_halo3_ship {
             let hopper_id = hopper_id.get(0).unwrap().as_str();
             let hopper_id = u16::from_str(hopper_id).unwrap();
 
-            hopper_configuration_jsons.insert(
+            hopper_configuration_jsons.push((
                 hopper_id,
                 serde_json::from_reader(&mut configuration_file).unwrap()
-            );
+            ));
         }
 
         for (hopper_identifier, hopper_configuration_json) in &hopper_configuration_jsons {
