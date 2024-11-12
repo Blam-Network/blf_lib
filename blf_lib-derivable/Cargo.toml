@@ -1,7 +1,7 @@
 [package]
 name = "blf_lib-derivable"
 description = "Shared traits used by blf_lib and blf_lib-derive"
-version = "1.3.1"
+version = "1.3.3"
 edition = "2021"
 
 [dependencies]
