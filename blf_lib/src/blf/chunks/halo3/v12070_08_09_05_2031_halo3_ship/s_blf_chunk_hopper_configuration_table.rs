@@ -172,7 +172,7 @@ impl SerializableBlfChunk for s_blf_chunk_hopper_configuration_table {
             let category = &self.hopper_categories[i];
             bitstream.write_integer(category.category_identifier as u32, 16);
             bitstream.write_integer(category.category_image_index as u32, 6);
-            bitstream.write_string_utf8(&category.category_name.get_string(), 32);
+            bitstream.write_string_utf8(&category.category_name.get_string(), 16);
         }
 
         // Encode hopper_configuration_count
@@ -181,7 +181,7 @@ impl SerializableBlfChunk for s_blf_chunk_hopper_configuration_table {
         // Encode each hopper configuration
         for i in 0..self.hopper_configuration_count as usize {
             let configuration = &self.hopper_configurations[i];
-            bitstream.write_string_utf8(&configuration.hopper_name.get_string(), 32);
+            bitstream.write_string_utf8(&configuration.hopper_name.get_string(), 16);
             bitstream.write_raw_data(&configuration.game_set_hash.data, 0xA0);
             bitstream.write_integer(configuration.hopper_identifier as u32, 16);
             bitstream.write_integer(configuration.hopper_category as u32, 16);
@@ -302,7 +302,7 @@ impl SerializableBlfChunk for s_blf_chunk_hopper_configuration_table {
             let category = &mut self.hopper_categories[i];
             category.category_identifier = bitstream.read_u16(16);
             category.category_image_index = bitstream.read_u8(6);
-            category.category_name.set_string(&bitstream.read_string_utf8(32)).unwrap();
+            category.category_name.set_string(&bitstream.read_string_utf8(16)).unwrap();
         }
 
         self.hopper_configuration_count = bitstream.read_u8(6);
@@ -310,7 +310,7 @@ impl SerializableBlfChunk for s_blf_chunk_hopper_configuration_table {
 
         for i in 0..self.hopper_configuration_count as usize {
             let configuration = &mut self.hopper_configurations[i];
-            configuration.hopper_name.set_string(&bitstream.read_string_utf8(32)).unwrap();
+            configuration.hopper_name.set_string(&bitstream.read_string_utf8(16)).unwrap();
             configuration.game_set_hash = s_network_http_request_hash::try_from(bitstream.read_raw_data(0xA0)).unwrap();
             configuration.hopper_identifier = bitstream.read_u16(16);
             configuration.hopper_category = bitstream.read_u16(16);

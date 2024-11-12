@@ -1,4 +1,4 @@
-use std::ffi::{c_char, CStr};
+use std::ffi::c_char;
 use std::fmt::Write;
 use blf_lib::types::array::StaticArray;
 use serde::{Deserializer, Serialize, Serializer};
@@ -141,7 +141,11 @@ impl<const N: usize> StaticString<N> {
     }
 
     pub fn set_string(&mut self, value: &String) -> Result<(), String> {
-        let bytes = value.as_bytes();
+        let mut bytes = value.as_bytes();
+        // if a null termination was provided at the end, chop it off
+        if bytes.len() > 0 && bytes[bytes.len() - 1] == 0 {
+            bytes = &bytes[0..bytes.len() - 1];
+        }
         if bytes.len() > N {
             return Err(format!("String \"{value}\" too long ({} > {}) bytes", N, bytes.len()));
         }
@@ -151,7 +155,8 @@ impl<const N: usize> StaticString<N> {
     }
 
     pub fn get_string(&self) -> String {
-        CStr::from_bytes_until_nul(self.buf.as_slice()).unwrap().to_str().unwrap().to_string()
+        let null_index = self.buf.iter().position(|c|c == &0u8).unwrap_or(N);
+        String::from_utf8(self.buf.as_slice()[0..null_index].to_vec()).unwrap()
     }
 }
 
