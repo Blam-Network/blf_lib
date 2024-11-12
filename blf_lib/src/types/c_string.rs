@@ -143,7 +143,7 @@ impl<const N: usize> StaticString<N> {
     pub fn set_string(&mut self, value: &String) -> Result<(), String> {
         let bytes = value.as_bytes();
         if bytes.len() > N {
-            return Err(format!("String too long ({} > {}) bytes", N, bytes.len()));
+            return Err(format!("String \"{value}\" too long ({} > {}) bytes", N, bytes.len()));
         }
         self.buf.fill(0);
         self.buf[..bytes.len()].copy_from_slice(bytes);

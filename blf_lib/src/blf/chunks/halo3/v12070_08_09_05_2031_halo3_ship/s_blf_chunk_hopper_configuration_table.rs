@@ -13,12 +13,12 @@ use serde_hex::{SerHex,StrictCap};
 pub struct s_game_hopper_custom_category {
     pub category_identifier: u16,
     pub category_image_index: u8,
-    pub category_name: StaticString<32>,
+    pub category_name: StaticString<15>,
 }
 
 #[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
 pub struct c_hopper_configuration {
-    pub hopper_name: StaticString<32>,
+    pub hopper_name: StaticString<15>,
     pub game_set_hash: s_network_http_request_hash,
     pub hopper_identifier: u16,
     pub hopper_category: u16,
