@@ -37,14 +37,11 @@ use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_
 use crate::title_storage::halo3::release::blf_files::game_variant::{game_variant, k_game_variants_config_folder_name};
 use crate::title_storage::halo3::release::blf_files::manifest::{k_manifest_file_name, manifest};
 use crate::title_storage::halo3::release::blf_files::map_variant::{k_map_variants_blf_folder_name, k_map_variants_config_folder_name, map_variant};
-use crate::title_storage::halo3::release::blf_files::matchmaking_hopper::{k_active_hoppers_config_file_name, k_hoppers_config_folder_name, k_matchmaking_hopper_file_name, matchmaking_hopper};
+use crate::title_storage::halo3::release::blf_files::matchmaking_hopper::{k_active_hoppers_config_file_name, k_categories_config_file_name, k_hopper_config_file_name, k_hoppers_config_folder_name, k_matchmaking_hopper_file_name, matchmaking_hopper, matchmaking_hopper_categories_config, matchmaking_hopper_category_configuration_and_descriptions, matchmaking_hopper_config, read_active_hoppers};
 use crate::title_storage::halo3::release::blf_files::matchmaking_hopper_descriptions::{k_matchmaking_hopper_descriptions_file_name, matchmaking_hopper_descriptions};
 use blf_files::network_configuration::network_configuration;
 use crate::title_storage::halo3::release::blf_files::game_set::{k_game_set_blf_file_name, game_set_config, game_set, k_game_set_config_file_name};
 use crate::title_storage::halo3::release::blf_files::{k_hopper_directory_name_max_length};
-use crate::title_storage::halo3::release::config_files::active_hoppers::read_active_hoppers;
-use crate::title_storage::halo3::release::config_files::hopper_configuration::{hopper_configuration as json_hopper_configuration, hopper_configuration};
-use crate::title_storage::halo3::release::config_files::categories_configuration::{categories_configuration as json_categories_configuration, categories_configuration, category_configuration_and_descriptions};
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::blf_files::network_configuration::k_network_configuration_file_name;
 use crate::title_storage::halo3::release::blf_files::motd::{k_motd_config_folder, k_motd_file_name, k_motd_image_file_name, k_mythic_motd_config_folder, k_mythic_motd_file_name, k_mythic_motd_image_file_name, motd};
 use crate::title_storage::halo3::release::blf_files::rsa_manifest::{k_rsa_manifest_file_name, k_rsa_signatures_config_folder_name, rsa_manifest};
@@ -138,7 +135,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
                 Self::build_blf_game_variants(&hopper_config_path, &hopper_blfs_path, &build_temp_dir_path, &game_sets, &mut game_variant_hashes);
                 Self::build_blf_map_variants(&hopper_config_path, &hopper_blfs_path, &build_temp_dir_path, &game_sets, &mut map_variant_hashes, &mut map_variant_map_ids);
                 Self::build_blf_game_sets(&hopper_blfs_path, game_sets, &game_variant_hashes, &map_variant_hashes, &map_variant_map_ids, &build_temp_dir_path)?;
-                Self::build_blf_hoppers(&hopper_config_path, &hopper_blfs_path, &active_hoppers);
+                Self::build_blf_hoppers(&hopper_config_path, &hopper_blfs_path, &active_hoppers)?;
                 Self::build_blf_network_configuration(&hopper_config_path, &hopper_blfs_path)?;
                 Self::build_blf_manifest(&hopper_blfs_path)?;
                 Ok(())
@@ -566,7 +563,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             let hopper_descriptions_path = build_path!(
                 hoppers_blfs_folder,
                 language_code,
-                "matchmaking_hopper_descriptions_003.bin"
+                k_matchmaking_hopper_descriptions_file_name
             );
 
 
@@ -627,7 +624,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
         // Build hopper configuration json
         for hopper_configuration in hopper_configurations {
-            let mut hopper_configuration_json = json_hopper_configuration {
+            let mut hopper_configuration_json = matchmaking_hopper_config {
                 descriptions: HashMap::new(),
                 configuration: hopper_configuration,
             };
@@ -655,17 +652,17 @@ impl v12070_08_09_05_2031_halo3_ship {
 
             let hopper_configuration_json_file = build_path!(
                 &hopper_configuration_json_folder,
-                "configuration.json"
+                k_hopper_config_file_name
             );
             let mut hopper_configuration_json_file = File::create(hopper_configuration_json_file).unwrap();
             serde_json::to_writer_pretty(&mut hopper_configuration_json_file, &hopper_configuration_json).unwrap();
         }
 
         // Build categories json
-        let mut categories_config = json_categories_configuration::default();
+        let mut categories_config = matchmaking_hopper_categories_config::default();
 
         for category_configuration in category_configurations {
-            let mut category_configuration_and_description = category_configuration_and_descriptions {
+            let mut category_configuration_and_description = matchmaking_hopper_category_configuration_and_descriptions {
                 descriptions: HashMap::new(),
                 configuration: category_configuration,
             };
@@ -690,7 +687,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
         let categories_json_file = build_path!(
             hoppers_config_path,
-            "categories.json"
+            k_categories_config_file_name
         );
 
         let mut categories_json_file = File::create(categories_json_file).unwrap();
@@ -1347,20 +1344,20 @@ impl v12070_08_09_05_2031_halo3_ship {
         hoppers_config_path: &String,
         hoppers_blfs_path: &String,
         active_hopper_folders: &Vec<String>,
-    )
+    ) -> Result<(), Box<dyn Error>>
     {
         let mut task = console_task::start("Building Hopper Configuration");
 
         let mut hopper_configuration_table = s_blf_chunk_hopper_configuration_table::default();
 
         // Load the configuration.json files for each hopper
-        let mut hopper_configuration_jsons = Vec::<(u16, hopper_configuration)>::new();
+        let mut hopper_configuration_jsons = Vec::<(u16, matchmaking_hopper_config)>::new();
         for active_hopper_folder in active_hopper_folders {
             let configuration_path = build_path!(
                 hoppers_config_path,
                 k_hoppers_config_folder_name,
                 active_hopper_folder,
-                "configuration.json"
+                k_hopper_config_file_name
             );
 
             if !exists(&configuration_path).unwrap() {
@@ -1400,12 +1397,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         }
 
         // Load category configuration
-        // TODO: Refactor out read.
-        let categories_configuration_path = build_path!(
-            hoppers_config_path,
-            "categories.json"
-        );
-        let categories_configuration: categories_configuration = serde_json::from_reader(&mut File::open(&categories_configuration_path).unwrap()).unwrap();
+        let categories_configuration = matchmaking_hopper_categories_config::read(hoppers_config_path)?;
 
         let active_hopper_categories = hopper_configuration_table
             .get_hopper_configurations()
@@ -1414,10 +1406,10 @@ impl v12070_08_09_05_2031_halo3_ship {
         let active_hopper_category_configurations = categories_configuration.categories
             .iter().filter(|category_configuration|active_hopper_categories.contains(&category_configuration.configuration.category_identifier))
             .cloned()
-            .collect::<Vec<category_configuration_and_descriptions>>();
+            .collect::<Vec<matchmaking_hopper_category_configuration_and_descriptions>>();
 
         for active_hopper_category in &active_hopper_category_configurations {
-            hopper_configuration_table.add_category_configuration(active_hopper_category.configuration.clone()).unwrap();
+            hopper_configuration_table.add_category_configuration(active_hopper_category.configuration.clone())?;
         }
 
         // Initialize language_hopper_descriptions
@@ -1447,7 +1439,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 language_descriptions.add_description((
                     hopper_identifier.clone(),
                     &description.to_string()
-                )).unwrap();
+                ))?;
             }
 
             for active_hopper_category in &active_hopper_category_configurations {
@@ -1475,7 +1467,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 language_descriptions.add_description((
                     active_hopper_category.configuration.category_identifier.clone(),
                     &description
-                )).unwrap();
+                ))?;
             }
 
             // Write description file
@@ -1496,7 +1488,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             k_matchmaking_hopper_file_name
         ));
 
-        task.complete();
+        やった!(task)
     }
 
     fn build_blf_network_configuration(

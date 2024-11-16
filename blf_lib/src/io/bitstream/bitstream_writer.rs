@@ -129,7 +129,6 @@ impl c_bitstream_writer {
             // of the remaining bits at this byte, how many are we writing?
             let bits_to_write_at_position = min(remaining_bits_to_write, remaining_bits_at_output_position);
             let writing_byte = data[0];
-            // TODO: Check this part.
             self.m_data[self.m_bitstream_data.current_stream_byte_position]
                 |= writing_byte >> 8 - remaining_bits_at_output_position;
 
