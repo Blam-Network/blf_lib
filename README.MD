@@ -10,8 +10,8 @@ This repository consists of a code library and command-line interface built for 
 - Halo 3: ODST
   - 13895.09.04.27.2201.atlas_release
 
-## Commands
-### Build Title Storage
+## Title Storage Commands
+### Build
 This command builds Title Storage files which are used by Halo for online features such as Matchmaking Playlists and Message of the Day messages.
 Title Storage files are built from a provided folder of configuration files, [Blam Network's title storage configuration](https://github.com/Blam-Network/Blam-Title-Storage) can be used as an example, or if you have pre-built title storage files available, you can generate config from these files using the [Build Title Storage Config](#build-title-storage-config) command.
 #### Arguments
@@ -22,7 +22,8 @@ Title Storage files are built from a provided folder of configuration files, [Bl
 #### Example Invocation
 ```console
 $ blf_cli
-  build-title-storage
+  title-storage
+  build
   "~/Blam-Title-Storage/Halo 3/Release"
   ~/storage/title/tracked/12070
   "Halo 3"
@@ -39,7 +40,8 @@ This command creates configuration files which can be used to manage Halo's Titl
 #### Example Invocation
 ```console
 $ blf_cli
-  build-title-storage-config
+  title-storage
+  build-config
   ~/storage/title/tracked/12070
   "~/Blam-Title-Storage/Halo 3/Release"
   "Halo 3"
@@ -57,6 +59,7 @@ This command is rarely used, the RSA signatures never change for a given Title a
 #### Example Invocation
 ```console
 $ blf_cli
+  title-storage
   import-rsa-signatures
   "~/Blam-Title-Storage/Halo 3/Release/default_hoppers"
   "~/Halo 3/maps"
@@ -80,6 +83,7 @@ This command imports a Game or Map variant into the provided Title Storage Confi
 #### Example Invocation
 ```console
 $ blf_cli
+  title-storage
   import-variant
   "~/Blam-Title-Storage/Halo 3/Release/default_hoppers"
   ~/variants/cavern
@@ -100,6 +104,7 @@ This command exports a Game or Map variant from a Title Storage Configuration fo
 #### Example Invocation
 ```console
 $ blf_cli
+  title-storage
   export-variant
   "~/Blam-Title-Storage/Halo 3/Release/default_hoppers/map_variants/atlas_eightygrit.json"
   ~/variants/atlas_eightygrit.bin

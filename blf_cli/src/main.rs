@@ -7,9 +7,11 @@
 
 use clap::{command, Parser};
 use crate::commands::Commands;
+use crate::commands::Commands::TitleStorage;
 use crate::commands::import_rsa_signatures::import_rsa_signatures;
 use crate::commands::import_variant::import_variant;
 use crate::commands::export_variant::export_variant;
+use crate::commands::title_storage::TitleStorageSubcommands;
 
 mod title_storage;
 mod io;
@@ -29,34 +31,36 @@ fn main() {
     let args = Cli::parse();
 
     match args.command {
-        Commands::BuildTitleStorage { config_input_path, blf_output_path, title, version } => {
-            let mut title_converter =
-                title_storage::get_title_converter(title, version)
-                    .expect("No title converter was found for the provided title and version.");
+        TitleStorage(title_storage_command) => match title_storage_command.command {
+            TitleStorageSubcommands::Build { config_input_path, blf_output_path, title, version } => {
+                let mut title_converter =
+                    title_storage::get_title_converter(title, version)
+                        .expect("No title converter was found for the provided title and version.");
 
-            title_converter.build_blfs(
-                &config_input_path,
-                &blf_output_path
-            );
-        },
-        Commands::BuildTitleStorageConfig { blf_input_path, config_output_path, title, version } => {
-            let mut title_converter =
-                title_storage::get_title_converter(title, version)
-                    .expect("No title converter was found for the provided title and version.");
+                title_converter.build_blfs(
+                    &config_input_path,
+                    &blf_output_path
+                );
+            },
+            TitleStorageSubcommands::BuildConfig { blf_input_path, config_output_path, title, version } => {
+                let mut title_converter =
+                    title_storage::get_title_converter(title, version)
+                        .expect("No title converter was found for the provided title and version.");
 
-            title_converter.build_config(
-                &blf_input_path,
-                &config_output_path
-            );
-        },
-        Commands::ImportRsaSignatures { hoppers_config_path, halo_maps_folder, title, version } => {
-            import_rsa_signatures(hoppers_config_path, halo_maps_folder, title, version);
-        },
-        Commands::ImportVariant { hoppers_config_path, variant_path, title, version } => {
-            import_variant(hoppers_config_path, variant_path, title, version);
-        },
-        Commands::ExportVariant { variant_json_path, destination_path, title, version } => {
-            export_variant(variant_json_path, destination_path, title, version);
+                title_converter.build_config(
+                    &blf_input_path,
+                    &config_output_path
+                );
+            },
+            TitleStorageSubcommands::ImportRsaSignatures { hoppers_config_path, halo_maps_folder, title, version } => {
+                import_rsa_signatures(hoppers_config_path, halo_maps_folder, title, version);
+            },
+            TitleStorageSubcommands::ImportVariant { hoppers_config_path, variant_path, title, version } => {
+                import_variant(hoppers_config_path, variant_path, title, version);
+            },
+            TitleStorageSubcommands::ExportVariant { variant_json_path, destination_path, title, version } => {
+                export_variant(variant_json_path, destination_path, title, version);
+            }
         }
     }
 }
