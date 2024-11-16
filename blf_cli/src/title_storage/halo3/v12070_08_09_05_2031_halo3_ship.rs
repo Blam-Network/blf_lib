@@ -35,7 +35,7 @@ use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
 use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_hopper_configuration_table;
 use blf_lib::types::c_string::StaticString;
-use crate::title_storage::halo3::release::blf_files::game_variant::game_variant;
+use crate::title_storage::halo3::release::blf_files::game_variant::{game_variant, k_game_variants_config_folder_name};
 use crate::title_storage::halo3::release::blf_files::manifest::{k_manifest_file_name, manifest};
 use crate::title_storage::halo3::release::blf_files::map_variant::{k_map_variants_blf_folder_name, k_map_variants_config_folder_name, map_variant};
 use crate::title_storage::halo3::release::blf_files::matchmaking_hopper::{k_matchmaking_hopper_file_name, matchmaking_hopper};
@@ -186,7 +186,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
                 Self::build_config_motd_popups(&hoppers_blf_path, &hoppers_config_path, false)?;
                 Self::build_config_motd_popups(&hoppers_blf_path, &hoppers_config_path, true)?;
                 Self::build_config_map_variants(&hoppers_blf_path, &hoppers_config_path)?;
-                Self::build_config_game_variants(&hoppers_blf_path, &hoppers_config_path);
+                Self::build_config_game_variants(&hoppers_blf_path, &hoppers_config_path)?;
                 Self::build_config_game_sets(&hoppers_blf_path, &hoppers_config_path);
                 Self::build_config_hoppers(&hoppers_blf_path, &hoppers_config_path);
                 Self::build_config_network_configuration(&hoppers_blf_path, &hoppers_config_path);
@@ -370,13 +370,6 @@ impl v12070_08_09_05_2031_halo3_ship {
     fn build_config_map_variants(hoppers_blf_path: &String, hoppers_config_path: &String) -> Result<(), Box<dyn Error>> {
         let mut task = console_task::start("Converting Map Variants");
 
-        let map_variants_config_folder = build_path!(
-            hoppers_config_path,
-            k_map_variants_config_folder_name
-        );
-
-        create_dir_all(&map_variants_config_folder)?;
-
         // Iterate through hopper folders. eg default_hoppers/00101
         let hopper_directory_subfolders = get_directories_in_folder(&hoppers_blf_path)?;
 
@@ -419,7 +412,8 @@ impl v12070_08_09_05_2031_halo3_ship {
                 );
 
                 let map_variant_json_file_path = build_path!(
-                    &map_variants_config_folder,
+                    hoppers_config_path,
+                    k_map_variants_config_folder_name,
                     map_variant_config_file_name
                 );
 
@@ -436,7 +430,8 @@ impl v12070_08_09_05_2031_halo3_ship {
                     remove_file(&map_variant_json_file_path)?
                 }
 
-                map_variant::read(&map_variant_blf_file_path)?.write_to_config(&hoppers_config_path, &map_variant_file_name)?;
+                map_variant::read(&map_variant_blf_file_path)?
+                    .write_to_config(&hoppers_config_path, &map_variant_file_name)?;
             }
         }
 
@@ -445,23 +440,14 @@ impl v12070_08_09_05_2031_halo3_ship {
         やった!(task)
     }
 
-    fn build_config_game_variants(hoppers_blf_path: &String, hoppers_config_path: &String) {
+    fn build_config_game_variants(hoppers_blf_path: &String, hoppers_config_path: &String) -> Result<(), Box<dyn Error>> {
         let mut task = console_task::start("Converting Game Variants");
 
-        let game_variants_folder = build_path!(
-            hoppers_config_path,
-            "game_variants"
-        );
-
-        create_dir_all(&game_variants_folder).unwrap();
-
         // Iterate through hopper folders. eg default_hoppers/00101
-        let hopper_directory_subfolders = get_directories_in_folder(&hoppers_blf_path).unwrap_or_else(|err|{
-            println!("{}", err);
-            panic!();
-        });
+        let hopper_directory_subfolders = get_directories_in_folder(&hoppers_blf_path)?;
 
-        let mut games_count = 0;
+        // Keep track of games we've converted to avoid duplication between different hoppers.
+        let mut converted_games = Vec::<String>::new();
 
         for subfolder in hopper_directory_subfolders {
             if !hopper_folder_regex.is_match(&subfolder) {
@@ -473,45 +459,56 @@ impl v12070_08_09_05_2031_halo3_ship {
                 &subfolder
             );
 
-            if !exists(&game_variant_blfs_folder).unwrap() {
+            if !exists(&game_variant_blfs_folder)? {
                 continue;
             }
 
-            let game_variant_files = get_files_in_folder(&game_variant_blfs_folder).unwrap_or_else(|err|{
-                println!("{}", err);
-                panic!();
-            });
+            let game_variant_files = get_files_in_folder(&game_variant_blfs_folder)?;
 
-            for game_variant_file_name in game_variant_files {
-                if !game_variant_file_regex.is_match(&game_variant_file_name) {
+            for game_variant_blf_file_name in game_variant_files {
+                if !game_variant_file_regex.is_match(&game_variant_blf_file_name) {
                     continue;
                 }
 
+                let game_variant_file_name = game_variant_blf_file_name.replace(
+                    &format!("_{:0>3}.bin", s_blf_chunk_packed_game_variant::get_version().major),
+                    ""
+                );
+
+                let game_variant_config_file_name = format!("{game_variant_file_name}.json");
+
                 let game_variant_blf_file_path = build_path!(
                     &game_variant_blfs_folder,
-                    &game_variant_file_name
+                    &game_variant_blf_file_name
                 );
 
                 let game_variant_json_file_path = build_path!(
-                    &game_variants_folder,
-                    &game_variant_file_name.replace("_010.bin", ".json")
+                    hoppers_config_path,
+                    k_game_variants_config_folder_name,
+                    &game_variant_config_file_name
                 );
 
-                if exists(&game_variant_json_file_path).unwrap() {
-                    remove_file(&game_variant_json_file_path).unwrap()
+                // If we've already converted this game from a different hopper folder, we skip it.
+                if converted_games.contains(&game_variant_blf_file_name) {
+                    continue;
+                }
+                else {
+                    converted_games.push(game_variant_blf_file_name.clone());
                 }
 
-                let packed_game_variant = find_chunk_in_file::<s_blf_chunk_packed_game_variant>(&game_variant_blf_file_path).unwrap();
-                let game_variant_json = serde_json::to_string_pretty(&packed_game_variant.game_variant).unwrap();
-                let mut game_variant_json_file = File::create_new(game_variant_json_file_path).unwrap();
-                game_variant_json_file.write_all(game_variant_json.as_bytes()).unwrap();
-                games_count += 1;
+                // If this game already exists in the config folder from an older convert, we delete it to rewrite.
+                if exists(&game_variant_json_file_path)? {
+                    remove_file(&game_variant_json_file_path)?;
+                }
+
+                game_variant::read(&game_variant_blf_file_path)?
+                    .write_to_config(&hoppers_config_path, &game_variant_file_name)?;
             }
         }
 
-        task.add_message(format!("Converted {games_count} game variants."));
+        task.add_message(format!("Converted {} game variants.", converted_games.len()));
 
-        task.complete();
+        やった!(task)
     }
 
     fn build_config_game_sets(hoppers_blf_path: &String, hoppers_config_path: &String) {
