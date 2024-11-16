@@ -7,6 +7,7 @@ use crate::build_path;
 use crate::io::get_files_in_folder;
 
 pub const k_rsa_manifest_file_name: &str = "rsa_manifest.bin";
+pub const k_rsa_signatures_config_folder_name: &str = "rsa_signatures";
 
 
 blf_file! {
@@ -29,7 +30,7 @@ impl rsa_manifest {
     }
 
     pub fn build_for_hoppers(hoppers_config_path: &String) -> Result<rsa_manifest, Box<dyn Error>> {
-        let rsa_folder = build_path!(hoppers_config_path, "rsa_signatures");
+        let rsa_folder = build_path!(hoppers_config_path, k_rsa_signatures_config_folder_name);
         let rsa_files = get_files_in_folder(&rsa_folder)?;
 
         if rsa_files.len() < 1 {

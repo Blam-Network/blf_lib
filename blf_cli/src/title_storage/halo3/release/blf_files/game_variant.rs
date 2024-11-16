@@ -38,7 +38,7 @@ impl game_variant {
 
         create_parent_folders(&config_file_path)?;
         let game_variant_json = serde_json::to_string_pretty(&self.gvar.game_variant)?;
-        let mut game_variant_json_file = File::create_new(config_file_path)?;
+        let mut game_variant_json_file = File::create(config_file_path)?;
         game_variant_json_file.write_all(game_variant_json.as_bytes())?;
 
         Ok(())

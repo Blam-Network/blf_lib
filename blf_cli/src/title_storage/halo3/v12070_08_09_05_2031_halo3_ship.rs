@@ -19,7 +19,7 @@ use lazy_static::lazy_static;
 use blf_lib::blam::common::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::{get_blf_file_hash, BlfFile};
 use blf_lib::blf::chunks::{find_chunk_in_file, BlfChunk};
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_game_set, s_blf_chunk_game_set_entry, s_blf_chunk_hopper_description_table, s_blf_chunk_network_configuration, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_hopper_description_table, s_blf_chunk_network_configuration, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
 use crate::console::console_task;
 use crate::title_storage::halo3::release::blf_files::motd_popup::{k_motd_popup_config_folder, k_motd_popup_file_name, k_motd_popup_image_file_name, k_mythic_motd_popup_config_folder, k_mythic_motd_popup_file_name, k_mythic_motd_popup_image_file_name, motd_popup};
 use crate::title_storage::halo3::release::blf_files::matchmaking_banhammer_messages::{k_matchmaking_banhammer_messages_file_name, matchmaking_banhammer_messages};
@@ -34,23 +34,20 @@ use blf_lib::blam::common::memory::secure_signature::s_network_http_request_hash
 use blf_lib::blam::halo_3::release::game::game_engine_variant::c_game_variant;
 use blf_lib::blam::halo_3::release::saved_games::scenario_map_variant::c_map_variant;
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_hopper_configuration_table;
-use blf_lib::types::c_string::StaticString;
 use crate::title_storage::halo3::release::blf_files::game_variant::{game_variant, k_game_variants_config_folder_name};
 use crate::title_storage::halo3::release::blf_files::manifest::{k_manifest_file_name, manifest};
 use crate::title_storage::halo3::release::blf_files::map_variant::{k_map_variants_blf_folder_name, k_map_variants_config_folder_name, map_variant};
-use crate::title_storage::halo3::release::blf_files::matchmaking_hopper::{k_matchmaking_hopper_file_name, matchmaking_hopper};
+use crate::title_storage::halo3::release::blf_files::matchmaking_hopper::{k_active_hoppers_config_file_name, k_hoppers_config_folder_name, k_matchmaking_hopper_file_name, matchmaking_hopper};
 use crate::title_storage::halo3::release::blf_files::matchmaking_hopper_descriptions::{k_matchmaking_hopper_descriptions_file_name, matchmaking_hopper_descriptions};
 use blf_files::network_configuration::network_configuration;
-use crate::title_storage::halo3::release;
-use crate::title_storage::halo3::release::blf_files::game_set::k_game_set_file_name;
-use crate::title_storage::halo3::release::blf_files::k_hopper_directory_name_max_length;
+use crate::title_storage::halo3::release::blf_files::game_set::{k_game_set_blf_file_name, game_set_config, game_set, k_game_set_config_file_name};
+use crate::title_storage::halo3::release::blf_files::{k_hopper_directory_name_max_length};
 use crate::title_storage::halo3::release::config_files::active_hoppers::read_active_hoppers;
-use crate::title_storage::halo3::release::config_files::game_set::{build_game_set_csv, game_set};
 use crate::title_storage::halo3::release::config_files::hopper_configuration::{hopper_configuration as json_hopper_configuration, hopper_configuration};
 use crate::title_storage::halo3::release::config_files::categories_configuration::{categories_configuration as json_categories_configuration, categories_configuration, category_configuration_and_descriptions};
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::blf_files::network_configuration::k_network_configuration_file_name;
 use crate::title_storage::halo3::release::blf_files::motd::{k_motd_config_folder, k_motd_file_name, k_motd_image_file_name, k_mythic_motd_config_folder, k_mythic_motd_file_name, k_mythic_motd_image_file_name, motd};
-use crate::title_storage::halo3::release::blf_files::rsa_manifest::{k_rsa_manifest_file_name, rsa_manifest};
+use crate::title_storage::halo3::release::blf_files::rsa_manifest::{k_rsa_manifest_file_name, k_rsa_signatures_config_folder_name, rsa_manifest};
 
 pub const k_build_string_halo3_ship_12070: &str = "12070.08.09.05.2031.halo3_ship";
 
@@ -83,6 +80,9 @@ lazy_static! {
     static ref game_variant_file_regex: Regex = Regex::new(&format!("_{:0>3}.bin$", s_blf_chunk_packed_game_variant::get_version().major)).unwrap();
     static ref config_rsa_signature_file_map_id_regex: Regex = Regex::new(r"^[0-9]{1,}").unwrap();
 }
+
+const k_build_temp_maps_folder_name: &str = "map_variants";
+const k_build_temp_games_folder_name: &str = "game_variants";
 
 impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
     fn build_blfs(&mut self, config_path: &String, blfs_path: &String) {
@@ -130,14 +130,14 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
                 Self::build_blf_map_manifest(&hopper_config_path, &hopper_blfs_path)?;
 
                 let active_hoppers = Self::read_active_hopper_configuration(&hopper_config_path);
-                let game_sets = Self::read_game_set_configuration(&hopper_config_path, &active_hoppers);
+                let game_sets = Self::read_game_set_configuration(&hopper_config_path, &active_hoppers)?;
                 let mut game_variant_hashes = HashMap::<String, s_network_http_request_hash>::new();
                 let mut map_variant_hashes = HashMap::<String, s_network_http_request_hash>::new();
                 let mut map_variant_map_ids = HashMap::<String, u32>::new();
 
                 Self::build_blf_game_variants(&hopper_config_path, &hopper_blfs_path, &build_temp_dir_path, &game_sets, &mut game_variant_hashes);
                 Self::build_blf_map_variants(&hopper_config_path, &hopper_blfs_path, &build_temp_dir_path, &game_sets, &mut map_variant_hashes, &mut map_variant_map_ids);
-                Self::build_blf_game_sets(&hopper_blfs_path, game_sets, &game_variant_hashes, &map_variant_hashes, &map_variant_map_ids, &build_temp_dir_path);
+                Self::build_blf_game_sets(&hopper_blfs_path, game_sets, &game_variant_hashes, &map_variant_hashes, &map_variant_map_ids, &build_temp_dir_path)?;
                 Self::build_blf_hoppers(&hopper_config_path, &hopper_blfs_path, &active_hoppers);
                 Self::build_blf_network_configuration(&hopper_config_path, &hopper_blfs_path)?;
                 Self::build_blf_manifest(&hopper_blfs_path)?;
@@ -187,7 +187,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
                 Self::build_config_motd_popups(&hoppers_blf_path, &hoppers_config_path, true)?;
                 Self::build_config_map_variants(&hoppers_blf_path, &hoppers_config_path)?;
                 Self::build_config_game_variants(&hoppers_blf_path, &hoppers_config_path)?;
-                Self::build_config_game_sets(&hoppers_blf_path, &hoppers_config_path);
+                Self::build_config_game_sets(&hoppers_blf_path, &hoppers_config_path)?;
                 Self::build_config_hoppers(&hoppers_blf_path, &hoppers_config_path);
                 Self::build_config_network_configuration(&hoppers_blf_path, &hoppers_config_path);
                 Ok(())
@@ -511,60 +511,50 @@ impl v12070_08_09_05_2031_halo3_ship {
         やった!(task)
     }
 
-    fn build_config_game_sets(hoppers_blf_path: &String, hoppers_config_path: &String) {
-        let mut task = console_task::start("Building Game Sets");
-
-        create_dir_all(&hoppers_config_path).unwrap();
+    fn build_config_game_sets(hoppers_blf_path: &String, hoppers_config_path: &String) -> Result<(), Box<dyn Error>> {
+        let mut task = console_task::start("Converting Game Sets");
 
         // Iterate through hopper folders. eg default_hoppers/00101
-        let hopper_directory_subfolders = get_directories_in_folder(&hoppers_blf_path).unwrap_or_else(|err|{
-            println!("{}", err);
-            panic!();
-        });
+        let hopper_directory_subfolders = get_directories_in_folder(&hoppers_blf_path)?;
 
         let mut game_sets_count = 0;
 
-        for subfolder in hopper_directory_subfolders {
-            if !hopper_folder_regex.is_match(&subfolder) {
+        for hopper_folder in hopper_directory_subfolders {
+            if !hopper_folder_regex.is_match(&hopper_folder) {
                 continue;
             }
 
             let game_set_blf_path = build_path!(
                 hoppers_blf_path,
-                &subfolder,
-                k_game_set_file_name
+                &hopper_folder,
+                k_game_set_blf_file_name
             );
 
             if !exists(&game_set_blf_path).unwrap() {
-                task.add_warning(format!("No game set was found for hopper \"{subfolder}\""));
+                task.add_warning(format!("No game set was found for hopper \"{hopper_folder}\""));
                 continue;
             }
 
-            let game_set = find_chunk_in_file::<s_blf_chunk_game_set>(&game_set_blf_path).unwrap();
+            let game_set = game_set::read(&game_set_blf_path)?;
 
-            let output_path = build_path!(
+            let output_folder_path = build_path!(
                 hoppers_config_path,
-                "hoppers",
-                &subfolder,
-                "game_set.csv"
+                k_hoppers_config_folder_name,
+                &hopper_folder
             );
 
-            // gross
-            create_dir_all(Path::new(&output_path).parent().unwrap().to_str().unwrap()).unwrap();
-
-            let mut output_file = File::create(&output_path).unwrap();
-            output_file.write_all(build_game_set_csv(&game_set).as_bytes()).unwrap();
+            game_set.write_to_config(&output_folder_path)?;
 
             game_sets_count += 1;
         }
 
         task.add_message(format!("Converted {game_sets_count} game sets."));
 
-        task.complete();
+        やった!(task)
     }
 
     // Ideally, we'd separate hopper and category descriptions separately to avoid ID conflicts...
-    // But foreunner doesn't seem to make this distinction, so why should I?
+    // But Foreunner doesn't seem to make this distinction, so why should I?
     fn read_hopper_description_blfs(
         hoppers_blfs_folder: &String,
         task: &mut console_task
@@ -617,7 +607,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
         let hopper_configuration_blf_path = build_path!(
             hoppers_blfs_path,
-            "matchmaking_hopper_011.bin"
+            k_matchmaking_hopper_file_name
         );
 
         let hopper_configuration_table = find_chunk_in_file::<s_blf_chunk_hopper_configuration_table>(&hopper_configuration_blf_path).unwrap();
@@ -628,7 +618,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         let active_hopper_ids = hopper_configurations.iter().map(|config|config.hopper_identifier);
         let active_hoppers_txt_path = build_path!(
             hoppers_config_path,
-            "active_hoppers.txt"
+            k_active_hoppers_config_file_name
         );
         let mut active_hoppers_txt_file = File::create(active_hoppers_txt_path).unwrap();
         active_hoppers_txt_file.write_all(
@@ -658,7 +648,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
             let hopper_configuration_json_folder = build_path!(
                 hoppers_config_path,
-                "hoppers",
+                k_hoppers_config_folder_name,
                 format!("{:0>5}", hopper_configuration_json.configuration.hopper_identifier)
             );
             create_dir_all(&hopper_configuration_json_folder).unwrap();
@@ -924,15 +914,15 @@ impl v12070_08_09_05_2031_halo3_ship {
         active_hoppers_folders
     }
 
-    fn read_game_set_configuration(hoppers_config_path: &String, active_hopper_folders: &Vec<String>) -> HashMap<u16, game_set>
+    fn read_game_set_configuration(hoppers_config_path: &String, active_hopper_folders: &Vec<String>) -> Result<HashMap<u16, game_set_config>, Box<dyn Error>>
     {
         let mut task = console_task::start("Reading Game Set Config");
 
-        let mut game_sets = HashMap::<u16, game_set>::new();
+        let mut game_sets = HashMap::<u16, game_set_config>::new();
 
         let hopper_tables_config_path = build_path!(
             hoppers_config_path,
-            "hoppers"
+            k_hoppers_config_folder_name
         );
 
         for subfolder in active_hopper_folders {
@@ -945,12 +935,12 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
             let hopper_id = hopper_id.get(0).unwrap().as_str();
-            let hopper_id = u16::from_str(hopper_id).unwrap();
+            let hopper_id = u16::from_str(hopper_id)?;
 
             let game_set_csv_path = build_path!(
                 &hopper_tables_config_path,
                 subfolder,
-                "game_set.csv"
+                k_game_set_config_file_name
             );
 
             if !exists(&game_set_csv_path).unwrap() {
@@ -958,24 +948,21 @@ impl v12070_08_09_05_2031_halo3_ship {
                 panic!();
             }
 
-            let game_set = game_set::read(game_set_csv_path).unwrap_or_else(|err| {
-                task.fail_with_error(err);
-                panic!();
-            });
+            let game_set = game_set_config::read(game_set_csv_path)?;
 
             game_sets.insert(hopper_id, game_set);
         }
 
         task.complete();
 
-        game_sets
+        Ok(game_sets)
     }
 
     fn build_blf_game_variants(
         hoppers_config_path: &String,
         hoppers_blfs_path: &String,
         build_temp_dir: &String,
-        game_sets: &HashMap<u16, game_set>,
+        game_sets: &HashMap<u16, game_set_config>,
         variant_hashes: &mut HashMap<String, s_network_http_request_hash>
     )
     {
@@ -983,12 +970,12 @@ impl v12070_08_09_05_2031_halo3_ship {
 
         let game_variants_config_path = build_path!(
             hoppers_config_path,
-            "game_variants"
+            k_game_variants_config_folder_name
         );
 
         let game_variants_temp_build_path = build_path!(
             build_temp_dir,
-            "game_variants"
+            k_build_temp_games_folder_name
         );
 
         create_dir_all(&game_variants_temp_build_path).unwrap();
@@ -1051,7 +1038,9 @@ impl v12070_08_09_05_2031_halo3_ship {
 
                             let game_variant_blf_path = build_path!(
                                 &game_variants_temp_build_path,
-                                format!("{game_variant_file_name}_010.bin")
+                                format!("{game_variant_file_name}_{:0>3}.bin",
+                                    s_blf_chunk_packed_game_variant::get_version().major
+                                )
                             );
 
                             let game_variant_json: c_game_variant = serde_json::from_str(&json).unwrap();
@@ -1087,7 +1076,7 @@ impl v12070_08_09_05_2031_halo3_ship {
 
         let rsa_folder = build_path!(
             hoppers_config_path,
-            "rsa_signatures"
+            k_rsa_signatures_config_folder_name
         );
 
         if !exists(&rsa_folder).unwrap() {
@@ -1126,7 +1115,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         hoppers_config_path: &String,
         hoppers_blfs_path: &String,
         build_temp_dir: &String,
-        game_sets: &HashMap<u16, game_set>,
+        game_sets: &HashMap<u16, game_set_config>,
         variant_hashes: &mut HashMap<String, s_network_http_request_hash>,
         variant_map_ids: &mut HashMap<String, u32>
     )
@@ -1137,12 +1126,12 @@ impl v12070_08_09_05_2031_halo3_ship {
 
         let map_variants_config_path = build_path!(
             hoppers_config_path,
-            "map_variants"
+            k_map_variants_config_folder_name
         );
 
         let map_variants_temp_build_path = build_path!(
             build_temp_dir,
-            "map_variants"
+            k_build_temp_maps_folder_name
         );
 
         create_dir_all(&map_variants_temp_build_path).unwrap();
@@ -1206,7 +1195,9 @@ impl v12070_08_09_05_2031_halo3_ship {
 
                             let map_variant_blf_path = build_path!(
                                 &map_variants_temp_build_path,
-                                format!("{map_variant_file_name}_012.bin")
+                                format!("{map_variant_file_name}_{:0>3}.bin",
+                                    s_blf_chunk_packed_map_variant::get_version().major
+                                )
                             );
 
                             let mut map_variant_json: c_map_variant = serde_json::from_str(&json).unwrap();
@@ -1260,16 +1251,16 @@ impl v12070_08_09_05_2031_halo3_ship {
 
     fn build_blf_game_sets(
         hoppers_blf_path: &String,
-        active_game_sets: HashMap<u16, game_set>,
+        active_game_sets: HashMap<u16, game_set_config>,
         game_variant_hashes: &HashMap<String, s_network_http_request_hash>,
         map_variant_hashes: &HashMap<String, s_network_http_request_hash>,
         map_variant_map_ids: &HashMap<String, u32>,
         build_temp_dir_path: &String,
-    )
+    ) -> Result<(), Box<dyn Error>>
     {
         let mut task = console_task::start("Building Game Sets");
 
-        for (hopper_id, game_set) in active_game_sets {
+        for (hopper_id, game_set_config) in active_game_sets {
             let hopper_folder_path = build_path!(
                 hoppers_blf_path,
                 format!("{hopper_id:0>5}")
@@ -1277,55 +1268,32 @@ impl v12070_08_09_05_2031_halo3_ship {
 
             let hopper_folder_map_variants_path = build_path!(
                 &hopper_folder_path,
-                "map_variants"
+                k_map_variants_blf_folder_name
             );
 
             let game_variants_temp_build_path = build_path!(
                 build_temp_dir_path,
-                "game_variants"
+                k_build_temp_games_folder_name
             );
 
             let map_variants_temp_build_path = build_path!(
                 build_temp_dir_path,
-                "map_variants"
+                k_build_temp_maps_folder_name
             );
 
             create_dir_all(&hopper_folder_map_variants_path).unwrap();
 
-            let mut game_sets_blf_chunk = s_blf_chunk_game_set::default();
-
             let copied_maps = HashSet::<String>::new();
             let copied_games = HashSet::<String>::new();
 
-            for game_set_row in game_set.entries {
-                let map_id = map_variant_map_ids.get(&game_set_row.map_variant_file_name)
-                    .expect("No map ID found for map in game set!")
-                    .clone();
-
-                let map_hash = map_variant_hashes.get(&game_set_row.map_variant_file_name)
-                    .expect("No map hash found for map in game set!")
-                    .clone();
-
-                let game_hash = game_variant_hashes.get(&game_set_row.game_variant_file_name)
-                    .expect("No game hash found for map in game set!")
-                    .clone();
-
-                // Create the game set entry...
-                game_sets_blf_chunk.add_entry(s_blf_chunk_game_set_entry {
-                    map_id,
-                    map_variant_file_name: StaticString::from_string(&game_set_row.map_variant_file_name).unwrap(),
-                    game_variant_file_name: StaticString::from_string(&game_set_row.game_variant_file_name).unwrap(),
-                    map_variant_file_hash: map_hash,
-                    game_variant_file_hash: game_hash,
-                    weight: game_set_row.weight,
-                    optional: game_set_row.optional,
-                    skip_after_veto: game_set_row.skip_after_veto,
-                    minimum_player_count: game_set_row.minimum_player_count,
-                }).unwrap();
-
+            for game_set_row in &game_set_config.entries {
                 // Copy the game and map variants over...
                 if !copied_games.contains(&game_set_row.game_variant_file_name) {
-                    let game_variant_file_name = format!("{}_010.bin", game_set_row.game_variant_file_name);
+                    let game_variant_file_name = format!(
+                        "{}_{:0>3}.bin",
+                        game_set_row.game_variant_file_name,
+                        s_blf_chunk_packed_game_variant::get_version().major,
+                    );
                     fs::copy(
                         build_path!(
                             &game_variants_temp_build_path,
@@ -1335,11 +1303,15 @@ impl v12070_08_09_05_2031_halo3_ship {
                             &hopper_folder_path,
                             &game_variant_file_name
                         )
-                    ).unwrap();
+                    )?;
                 }
 
                 if !copied_maps.contains(&game_set_row.map_variant_file_name) {
-                    let map_variant_file_name = format!("{}_012.bin", game_set_row.map_variant_file_name);
+                    let map_variant_file_name = format!(
+                        "{}_{:0>3}.bin",
+                        game_set_row.map_variant_file_name,
+                        s_blf_chunk_packed_map_variant::get_version().major,
+                    );
                     fs::copy(
                         build_path!(
                             &map_variants_temp_build_path,
@@ -1349,19 +1321,26 @@ impl v12070_08_09_05_2031_halo3_ship {
                             &hopper_folder_map_variants_path,
                             &map_variant_file_name
                         )
-                    ).unwrap();
+                    )?;
                 }
             }
 
+
+            let mut game_set = game_set::create_from_config(
+                &game_set_config,
+                game_variant_hashes,
+                map_variant_hashes,
+                map_variant_map_ids
+            )?;
+
             // Write the game set file
-            let mut game_set_blf_file = release::blf_files::game_set::game_set::create(game_sets_blf_chunk);
-            game_set_blf_file.write(build_path!(
+            game_set.write(build_path!(
                 &hopper_folder_path,
-                k_game_set_file_name
+                k_game_set_blf_file_name
             ))
         }
 
-        task.complete();
+        やった!(task)
     }
 
     fn build_blf_hoppers(
@@ -1379,7 +1358,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         for active_hopper_folder in active_hopper_folders {
             let configuration_path = build_path!(
                 hoppers_config_path,
-                "hoppers",
+                k_hoppers_config_folder_name,
                 active_hopper_folder,
                 "configuration.json"
             );
@@ -1414,7 +1393,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             let game_set_blf_file_path = build_path!(
                 hoppers_blfs_path,
                 format!("{hopper_identifier:0>5}"),
-                k_game_set_file_name
+                k_game_set_blf_file_name
             );
             hopper_config.game_set_hash = get_blf_file_hash(game_set_blf_file_path).unwrap();
             hopper_configuration_table.add_hopper_configuration(hopper_config).unwrap()

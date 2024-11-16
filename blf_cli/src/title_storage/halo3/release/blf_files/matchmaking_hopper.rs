@@ -4,6 +4,8 @@ use blf_lib::blf_file;
 use blf_lib::types::byte_order_mark::byte_order_mark;
 
 pub const k_matchmaking_hopper_file_name: &str = "matchmaking_hopper_011.bin";
+pub const k_hoppers_config_folder_name: &str = "hoppers";
+pub const k_active_hoppers_config_file_name: &str = "active_hoppers.txt";
 
 blf_file! {
     pub struct matchmaking_hopper {

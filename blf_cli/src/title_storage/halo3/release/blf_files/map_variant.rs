@@ -40,7 +40,7 @@ impl map_variant {
 
         create_parent_folders(&config_file_path)?;
         let map_variant_json = serde_json::to_string_pretty(&self.mpvr.map_variant)?;
-        let mut map_variant_json_file = File::create_new(config_file_path)?;
+        let mut map_variant_json_file = File::create(config_file_path)?;
         map_variant_json_file.write_all(map_variant_json.as_bytes())?;
 
         Ok(())
