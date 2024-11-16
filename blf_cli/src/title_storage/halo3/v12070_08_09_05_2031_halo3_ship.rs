@@ -18,7 +18,7 @@ use inline_colorization::*;
 use lazy_static::lazy_static;
 use blf_lib::blam::common::cseries::language::{get_language_string, k_language_suffix_chinese_traditional, k_language_suffix_english, k_language_suffix_french, k_language_suffix_german, k_language_suffix_italian, k_language_suffix_japanese, k_language_suffix_korean, k_language_suffix_mexican, k_language_suffix_portuguese, k_language_suffix_spanish};
 use blf_lib::blf::{get_blf_file_hash, BlfFile};
-use blf_lib::blf::chunks::find_chunk_in_file;
+use blf_lib::blf::chunks::{find_chunk_in_file, BlfChunk};
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_game_set, s_blf_chunk_game_set_entry, s_blf_chunk_hopper_description_table, s_blf_chunk_network_configuration, s_blf_chunk_packed_game_variant, s_blf_chunk_packed_map_variant};
 use crate::console::console_task;
 use crate::title_storage::halo3::release::blf_files::motd_popup::{k_motd_popup_config_folder, k_motd_popup_file_name, k_motd_popup_image_file_name, k_mythic_motd_popup_config_folder, k_mythic_motd_popup_file_name, k_mythic_motd_popup_image_file_name, motd_popup};
@@ -37,7 +37,7 @@ use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_
 use blf_lib::types::c_string::StaticString;
 use crate::title_storage::halo3::release::blf_files::game_variant::game_variant;
 use crate::title_storage::halo3::release::blf_files::manifest::{k_manifest_file_name, manifest};
-use crate::title_storage::halo3::release::blf_files::map_variant::map_variant;
+use crate::title_storage::halo3::release::blf_files::map_variant::{k_map_variants_blf_folder_name, k_map_variants_config_folder_name, map_variant};
 use crate::title_storage::halo3::release::blf_files::matchmaking_hopper::{k_matchmaking_hopper_file_name, matchmaking_hopper};
 use crate::title_storage::halo3::release::blf_files::matchmaking_hopper_descriptions::{k_matchmaking_hopper_descriptions_file_name, matchmaking_hopper_descriptions};
 use blf_files::network_configuration::network_configuration;
@@ -79,8 +79,8 @@ pub const k_language_suffixes: [&str; 10] = [
 lazy_static! {
     static ref hopper_folder_regex: Regex = Regex::new(r"^[0-9]{5}.*").unwrap();
     static ref config_hopper_folder_identifier_regex: Regex = Regex::new(r"^[0-9]{1,5}").unwrap();
-    static ref map_variant_regex: Regex = Regex::new(r"_012.bin$").unwrap();
-    static ref game_variant_regex: Regex = Regex::new(r"_010.bin$").unwrap();
+    static ref map_variant_file_regex: Regex = Regex::new(&format!("_{:0>3}.bin$", s_blf_chunk_packed_map_variant::get_version().major)).unwrap();
+    static ref game_variant_file_regex: Regex = Regex::new(&format!("_{:0>3}.bin$", s_blf_chunk_packed_game_variant::get_version().major)).unwrap();
     static ref config_rsa_signature_file_map_id_regex: Regex = Regex::new(r"^[0-9]{1,}").unwrap();
 }
 
@@ -185,7 +185,7 @@ impl TitleConverter for v12070_08_09_05_2031_halo3_ship {
                 Self::build_config_motds(&hoppers_blf_path, &hoppers_config_path, true)?;
                 Self::build_config_motd_popups(&hoppers_blf_path, &hoppers_config_path, false)?;
                 Self::build_config_motd_popups(&hoppers_blf_path, &hoppers_config_path, true)?;
-                Self::build_config_map_variants(&hoppers_blf_path, &hoppers_config_path);
+                Self::build_config_map_variants(&hoppers_blf_path, &hoppers_config_path)?;
                 Self::build_config_game_variants(&hoppers_blf_path, &hoppers_config_path);
                 Self::build_config_game_sets(&hoppers_blf_path, &hoppers_config_path);
                 Self::build_config_hoppers(&hoppers_blf_path, &hoppers_config_path);
@@ -367,22 +367,20 @@ impl v12070_08_09_05_2031_halo3_ship {
         やった!(task)
     }
 
-    fn build_config_map_variants(hoppers_blf_path: &String, hoppers_config_path: &String) {
+    fn build_config_map_variants(hoppers_blf_path: &String, hoppers_config_path: &String) -> Result<(), Box<dyn Error>> {
         let mut task = console_task::start("Converting Map Variants");
 
-        let map_variants_folder = build_path!(
+        let map_variants_config_folder = build_path!(
             hoppers_config_path,
-            "map_variants"
+            k_map_variants_config_folder_name
         );
 
-        create_dir_all(&map_variants_folder).unwrap();
+        create_dir_all(&map_variants_config_folder)?;
 
         // Iterate through hopper folders. eg default_hoppers/00101
-        let hopper_directory_subfolders = get_directories_in_folder(&hoppers_blf_path).unwrap_or_else(|err|{
-            println!("{}", err);
-            panic!();
-        });
+        let hopper_directory_subfolders = get_directories_in_folder(&hoppers_blf_path)?;
 
+        // Keep track of maps we've converted to avoid duplication between different hoppers.
         let mut converted_maps = Vec::<String>::new();
 
         for subfolder in hopper_directory_subfolders {
@@ -393,54 +391,58 @@ impl v12070_08_09_05_2031_halo3_ship {
             let map_variant_blfs_folder = build_path!(
                 hoppers_blf_path,
                 &subfolder,
-                "map_variants"
+                k_map_variants_blf_folder_name
             );
 
-            if !exists(&map_variant_blfs_folder).unwrap() {
+            // if this hoppers folder has no maps (perhaps incomplete), skip it.
+            if !exists(&map_variant_blfs_folder)? {
                 continue;
             }
 
-            let map_variant_files = get_files_in_folder(&map_variant_blfs_folder).unwrap_or_else(|err|{
-                println!("{}", err);
-                panic!();
-            });
+            let map_variant_files = get_files_in_folder(&map_variant_blfs_folder)?;
 
-            for map_variant_file_name in map_variant_files {
-                if !map_variant_regex.is_match(&map_variant_file_name) {
+            for map_variant_blf_file_name in map_variant_files {
+                if !map_variant_file_regex.is_match(&map_variant_blf_file_name) {
                     continue;
                 }
+
+                let map_variant_file_name = map_variant_blf_file_name.replace(
+                    &format!("_{:0>3}.bin", s_blf_chunk_packed_map_variant::get_version().major),
+                    ""
+                );
+
+                let map_variant_config_file_name = format!("{map_variant_file_name}.json");
 
                 let map_variant_blf_file_path = build_path!(
                     &map_variant_blfs_folder,
-                    &map_variant_file_name
+                    &map_variant_blf_file_name
                 );
 
                 let map_variant_json_file_path = build_path!(
-                    &map_variants_folder,
-                    &map_variant_file_name.replace("_012.bin", ".json")
+                    &map_variants_config_folder,
+                    map_variant_config_file_name
                 );
 
-                if converted_maps.contains(&map_variant_file_name) {
+                // If we've already converted this map from a different hopper folder, we skip it.
+                if converted_maps.contains(&map_variant_blf_file_name) {
                     continue;
                 }
                 else {
-                    converted_maps.push(map_variant_file_name);
+                    converted_maps.push(map_variant_blf_file_name.clone());
                 }
 
-                if exists(&map_variant_json_file_path).unwrap() {
-                    remove_file(&map_variant_json_file_path).unwrap()
+                // If this map already exists in the config folder from an older convert, we delete it to rewrite.
+                if exists(&map_variant_json_file_path)? {
+                    remove_file(&map_variant_json_file_path)?
                 }
 
-                let packed_map_variant = find_chunk_in_file::<s_blf_chunk_packed_map_variant>(&map_variant_blf_file_path).unwrap();
-                let map_variant_json = serde_json::to_string_pretty(&packed_map_variant.map_variant).unwrap();
-                let mut map_variant_json_file = File::create_new(map_variant_json_file_path).unwrap();
-                map_variant_json_file.write_all(map_variant_json.as_bytes()).unwrap();
+                map_variant::read(&map_variant_blf_file_path)?.write_to_config(&hoppers_config_path, &map_variant_file_name)?;
             }
         }
 
         task.add_message(format!("Converted {} map variants.", converted_maps.len()));
 
-        task.complete();
+        やった!(task)
     }
 
     fn build_config_game_variants(hoppers_blf_path: &String, hoppers_config_path: &String) {
@@ -481,7 +483,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             });
 
             for game_variant_file_name in game_variant_files {
-                if !game_variant_regex.is_match(&game_variant_file_name) {
+                if !game_variant_file_regex.is_match(&game_variant_file_name) {
                     continue;
                 }
 
