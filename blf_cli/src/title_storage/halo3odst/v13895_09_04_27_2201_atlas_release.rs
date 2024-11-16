@@ -138,7 +138,7 @@ impl TitleConverter for v13895_09_04_27_2201_atlas_release {
                 Self::build_config_motds(&hoppers_blf_path, &hoppers_config_path)?;
                 Self::build_config_popups(&hoppers_blf_path, &hoppers_config_path, false)?;
                 Self::build_config_popups(&hoppers_blf_path, &hoppers_config_path, true)?;
-                Self::build_config_network_configuration(&hoppers_blf_path, &hoppers_config_path);
+                Self::build_config_network_configuration(&hoppers_blf_path, &hoppers_config_path)?;
                 Ok(())
             }();
 
@@ -290,7 +290,7 @@ impl v13895_09_04_27_2201_atlas_release {
         やった!(task)
     }
 
-    fn build_config_network_configuration(hoppers_blfs_path: &String, hoppers_config_path: &String) {
+    fn build_config_network_configuration(hoppers_blfs_path: &String, hoppers_config_path: &String) -> Result<(), Box<dyn Error>> {
         // For now we just copy it as is. But we do check that it contains a netc.
         let mut task = console_task::start("Converting Network Configuration");
 
@@ -305,12 +305,12 @@ impl v13895_09_04_27_2201_atlas_release {
         );
 
         // We read and rewrite to tidy any padding and the headers.
-        let mut network_config = network_configuration::read(&network_configuration_source_path).unwrap();
+        let mut network_config = network_configuration::read(&network_configuration_source_path)?;
         network_config.write(&network_configuration_dest_path);
 
-        fs::copy(network_configuration_source_path, network_configuration_dest_path).unwrap();
+        fs::copy(network_configuration_source_path, network_configuration_dest_path)?;
 
-        task.complete();
+        やった!(task)
     }
 
     fn build_blf_banhammer_messages(hoppers_config_folder: &String, hoppers_blf_folder: &String) -> Result<(), Box<dyn Error>> {
