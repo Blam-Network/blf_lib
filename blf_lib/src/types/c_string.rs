@@ -78,7 +78,7 @@ impl<const N: usize> StaticWcharString<N> {
     pub fn get_string(&self) -> String {
          decode_utf16(self.buf.get().iter().cloned())
             .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
-            .filter(|&c| c as u8 != 0x00)
+            .filter(|&c| c != '\u{0000}')
             .collect::<String>()
     }
 }

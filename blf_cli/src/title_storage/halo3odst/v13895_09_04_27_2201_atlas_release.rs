@@ -444,7 +444,7 @@ impl v13895_09_04_27_2201_atlas_release {
                 task.add_warning(format!(
                     "Failed to convert {} {} Popup Image: {}",
                     get_language_string(language_code),
-                    if vidmaster { "Vidmaster" } else { "MOTD" }
+                    if vidmaster { "Vidmaster" } else { "MOTD" },
                     validated.unwrap_err()
                 ));
 
