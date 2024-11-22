@@ -7,7 +7,8 @@
 
 use clap::{command, Parser};
 use crate::commands::Commands;
-use crate::commands::Commands::TitleStorage;
+use crate::commands::Commands::{ConvertH3MCCMapVariants, TitleStorage};
+use crate::commands::convert_halo3mcc_map_variants::convert_halo3mcc_map_variants;
 use crate::commands::import_rsa_signatures::import_rsa_signatures;
 use crate::commands::import_variant::import_variant;
 use crate::commands::export_variant::export_variant;
@@ -61,6 +62,9 @@ fn main() {
             TitleStorageSubcommands::ExportVariant { variant_json_path, destination_path, title, version } => {
                 export_variant(variant_json_path, destination_path, title, version);
             }
+        },
+        ConvertH3MCCMapVariants { mcc_maps_folder, converted_maps_folder} => {
+            convert_halo3mcc_map_variants(mcc_maps_folder, converted_maps_folder);
         }
     }
 }

@@ -8,7 +8,7 @@ use crate::io::bitstream::close_bitstream_writer;
 #[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
 pub struct s_game_hopper_description {
     pub identifier: u16,
-    hopper_type: bool,
+    hopper_type: bool, // restricted?
     pub description: StaticString<256>,
 }
 

@@ -10,6 +10,22 @@ This repository consists of a code library and command-line interface built for 
 - Halo 3: ODST
   - 13895.09.04.27.2201.atlas_release
 
+## General Commands
+### Convert Halo 3 MCC Map Variants
+This command converts Halo 3 MCC map variants to Xbox 360.
+The output files must be injected into an Xbox 360 console package in order to be loaded by the console, this can be done using [Horizon](https://www.wemod.com/horizon).
+#### Arguments
+1. MCC Maps Folder
+   - This is usually at: `C:\Users\<user>\AppData\LocalLow\MCC\LocalFiles\<xuid>\Halo3\Map`
+2. Converted Output Folder
+#### Example Invocation
+```console
+$ blf_cli
+  convert-h3mcc-map-variants
+  C:\Users\john\AppData\LocalLow\MCC\LocalFiles\000901fc3fd9fe71\Halo3\Map
+  "C:\Users\john\Desktop\Halo 3 Maps"
+```
+
 ## Title Storage Commands
 ### Build
 This command builds Title Storage files which are used by Halo for online features such as Matchmaking Playlists and Message of the Day messages.

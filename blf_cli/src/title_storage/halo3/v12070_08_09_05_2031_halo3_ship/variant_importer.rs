@@ -1,4 +1,4 @@
-mod mcc;
+pub(crate) mod mcc;
 
 use std::fs::{exists, File};
 use std::io::Read;
@@ -13,6 +13,7 @@ use crate::console::console_task;
 use crate::io::get_files_in_folder;
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::config_rsa_signature_file_map_id_regex;
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::variant_importer::mcc::object_indexes::get_h3_index_for_mcc_object;
+use crate::title_storage::halo3::release::blf_files::map_variant::get_map_budget;
 
 pub fn import_variant(hoppers_config_path: &String, variant_path: &String) {
     let mut task = console_task::start("Importing Variant");
@@ -79,7 +80,7 @@ pub fn import_variant(hoppers_config_path: &String, variant_path: &String) {
     task.fail_with_error("Unable to parse variant file.");
 }
 
-fn convert_mcc_map(task: &mut console_task, hoppers_config_folder: &String, map: &mut c_map_variant, ) {
+fn convert_mcc_map(task: &mut console_task, hoppers_config_folder: &String, map: &mut c_map_variant) {
     task.add_warning(format!("Version {} MCC map detected, conversion may be lossy.", map.m_map_variant_version));
 
     let mut bad_budget_indices = Vec::<i32>::new();
@@ -175,34 +176,3 @@ fn convert_mcc_map(task: &mut console_task, hoppers_config_folder: &String, map:
     task.add_warning(format!("Couldn't find an RSA signature for map {}, the map checksum will be incorrect.", map.m_map_id));
 }
 
-pub fn get_map_budget(map_id: u32) -> f32 {
-    match map_id {
-        30 => 700.0,
-        300 => 500.0,
-        310 => 800.0,
-        320 => 500.0,
-        330 => 500.0,
-        340 => 600.0,
-        350 => 500.0,
-        360 => 500.0,
-        380 => 600.0,
-        390 => 700.0,
-        400 => 700.0,
-        410 => 800.0,
-        440 => 750.0,
-        470 => 800.0,
-        480 => 700.0,
-        490 => 550.0,
-        500 => 700.0,
-        520 => 600.0,
-        580 => 800.0,
-        590 => 550.0,
-        600 => 500.0,
-        720 => 750.0,
-        730 => 1500.0,
-        740 => 600.0,
-        _ => {
-            panic!("No MCC object mapping for Map {}", map_id);
-        }
-    }
-}

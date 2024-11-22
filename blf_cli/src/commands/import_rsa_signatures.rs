@@ -19,7 +19,6 @@ pub fn import_rsa_signatures(
     let mut task = console_task::start(String::from("Importing RSA Signatures"));
 
     if title == k_title_halo3 || title == k_title_halo3odst {
-
         let map_info_folder = build_path!(
             &halo_maps_folder,
             "info"
