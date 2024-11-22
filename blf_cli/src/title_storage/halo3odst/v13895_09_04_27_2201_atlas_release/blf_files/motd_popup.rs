@@ -1,5 +1,8 @@
 use std::error::Error;
+use std::fs;
 use std::io::Write;
+use std::path::Path;
+use filesize::PathExt;
 use serde::{Deserialize, Serialize};
 use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_author, s_blf_chunk_end_of_file, s_blf_chunk_message_of_the_day_popup, s_blf_chunk_start_of_file};
 use blf_lib::blf::versions::v13895_09_04_27_2201_atlas_release;
@@ -7,6 +10,7 @@ use blf_lib::blf_file;
 use blf_lib::io::read_json_file;
 use crate::build_path;
 use crate::io::create_parent_folders;
+use crate::title_storage::check_file_exists;
 
 pub const k_motd_popup_file_name: &str = "black_motd_popup.bin";
 pub const k_vidmaster_popup_file_name: &str = "black_vidmaster_popup.bin";
@@ -14,6 +18,10 @@ pub const k_motd_popup_image_file_name: &str = "black_motd_popup_image.jpg";
 pub const k_vidmaster_popup_image_file_name: &str = "black_vidmaster_popup_image.jpg";
 pub const k_motd_popup_config_folder: &str = "popup";
 pub const k_vidmaster_popup_config_folder: &str = "popup_vidmaster";
+
+const k_max_popup_image_size: u32 = 61440;
+const k_popup_image_width: u16 = 308;
+const k_popup_image_height: u16 = 466;
 
 blf_file! {
     pub struct motd_popup {
@@ -92,4 +100,30 @@ impl motd_popup {
         text_file.write_all(motd_json.as_bytes())?;
 
         Ok(())
-    }}
+    }
+
+    pub fn validate_image(path: &String) -> Result<(), Box<dyn Error>> {
+        if !check_file_exists(&path) {
+            return Err(Box::from("No image file was found"));
+        }
+
+        let path = Path::new(&path);
+        let image_filesize = path.size_on_disk()?;
+        if image_filesize > k_max_popup_image_size as u64 {
+            return Err(Box::from(format!("Image file size is too large ({}B > {}B)", image_filesize, k_max_popup_image_size)));
+        }
+
+        let jpeg_data = fs::read(path)?;
+        let mut decoder = jpeg_decoder::Decoder::new(jpeg_data.as_slice());
+        decoder.read_info()?;
+        let header = decoder.info().unwrap();
+        if header.width != k_popup_image_width {
+            return Err(Box::from(format!("Invalid image width ({}px != {}px)", header.width, k_popup_image_width)));
+        }
+        if header.height != k_popup_image_height {
+            return Err(Box::from(format!("Invalid image width ({}px != {}px)", header.height, k_popup_image_height)));
+        }
+
+        Ok(())
+    }
+}

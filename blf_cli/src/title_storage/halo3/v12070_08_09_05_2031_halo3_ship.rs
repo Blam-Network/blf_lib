@@ -811,11 +811,14 @@ impl v12070_08_09_05_2031_halo3_ship {
                 if mythic { k_mythic_motd_image_file_name } else { k_motd_image_file_name }
             );
 
-            if !check_file_exists(&jpeg_file_path) {
+            let validated = motd::validate_image(&jpeg_file_path);
+
+            if validated.is_err() {
                 task.add_warning(format!(
-                    "No {} {}MOTD Image is present.",
+                    "Failed to convert {} {} MOTD Image: {}",
                     get_language_string(language_code),
-                    if mythic { "Mythic " } else { "" }
+                    if mythic { "Mythic " } else { "" },
+                    validated.unwrap_err()
                 ));
 
                 continue;
@@ -867,11 +870,14 @@ impl v12070_08_09_05_2031_halo3_ship {
                 if mythic { k_mythic_motd_popup_image_file_name } else { k_motd_popup_image_file_name }
             );
 
-            if !check_file_exists(&jpeg_file_path) {
+            let validated = motd_popup::validate_image(&jpeg_file_path);
+
+            if validated.is_err() {
                 task.add_warning(format!(
-                    "No {} {}MOTD Popup Image is present.",
+                    "Failed to convert {} {} MOTD Popup Image: {}",
                     get_language_string(language_code),
-                    if mythic { "Mythic " } else { "" }
+                    if mythic { "Mythic " } else { "" },
+                    validated.unwrap_err()
                 ));
 
                 continue;

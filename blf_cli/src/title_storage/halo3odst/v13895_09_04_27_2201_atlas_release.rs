@@ -380,10 +380,13 @@ impl v13895_09_04_27_2201_atlas_release {
                 k_motd_image_file_name
             );
 
-            if !check_file_exists(&jpeg_file_path) {
+            let validated = crate::title_storage::halo3::release::blf_files::motd_popup::motd_popup::validate_image(&jpeg_file_path);
+
+            if validated.is_err() {
                 task.add_warning(format!(
-                    "No {} MOTD Image is present.",
+                    "Failed to convert {} MOTD Image: {}",
                     get_language_string(language_code),
+                    validated.unwrap_err()
                 ));
 
                 continue;
@@ -434,12 +437,15 @@ impl v13895_09_04_27_2201_atlas_release {
                 language_code,
                 if vidmaster { k_vidmaster_popup_image_file_name } else { k_motd_popup_image_file_name }
             );
+            
+            let validated = crate::title_storage::halo3::release::blf_files::motd_popup::motd_popup::validate_image(&jpeg_file_path);
 
-            if !check_file_exists(&jpeg_file_path) {
+            if validated.is_err() {
                 task.add_warning(format!(
-                    "No {} {} Popup Image is present.",
+                    "Failed to convert {} {} Popup Image: {}",
                     get_language_string(language_code),
                     if vidmaster { "Vidmaster" } else { "MOTD" }
+                    validated.unwrap_err()
                 ));
 
                 continue;

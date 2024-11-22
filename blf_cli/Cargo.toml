@@ -16,3 +16,5 @@ tempdir = "0.3.7"
 tokio = { version = "1.41.0", features = ["rt-multi-thread", 'rt', 'full'] }
 num_cpus = "1.16.0"
 bimap = "0.6.3"
+filesize = "0.2.0"
+jpeg-decoder = "0.3.1"
