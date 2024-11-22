@@ -380,7 +380,7 @@ impl v13895_09_04_27_2201_atlas_release {
                 k_motd_image_file_name
             );
 
-            let validated = crate::title_storage::halo3::release::blf_files::motd_popup::motd_popup::validate_image(&jpeg_file_path);
+            let validated = motd::validate_image(&jpeg_file_path);
 
             if validated.is_err() {
                 task.add_warning(format!(
@@ -438,7 +438,7 @@ impl v13895_09_04_27_2201_atlas_release {
                 if vidmaster { k_vidmaster_popup_image_file_name } else { k_motd_popup_image_file_name }
             );
             
-            let validated = crate::title_storage::halo3::release::blf_files::motd_popup::motd_popup::validate_image(&jpeg_file_path);
+            let validated = motd_popup::validate_image(&jpeg_file_path);
 
             if validated.is_err() {
                 task.add_warning(format!(
