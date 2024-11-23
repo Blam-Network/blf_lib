@@ -5,8 +5,7 @@ use blf_lib_derivable::blf::chunks::BlfChunkHooks;
 use blf_lib_derive::BlfChunk;
 
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("motd")]
-#[Version(1.1)]
+#[Header("motd", 1.1)]
 pub struct s_blf_chunk_message_of_the_day
 {
     motd_length: u32,

@@ -11,8 +11,7 @@ use crate::types::bool::s_bool;
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("levl")]
-#[Version(3.1)]
+#[Header("levl", 3.1)]
 #[brw(big)]
 pub struct s_blf_chunk_scenario
 {

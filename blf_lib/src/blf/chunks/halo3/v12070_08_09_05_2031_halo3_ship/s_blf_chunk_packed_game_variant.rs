@@ -7,8 +7,7 @@ use blf_lib_derivable::blf::chunks::BlfChunkHooks;
 use blf_lib_derive::BlfChunk;
 
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("gvar")]
-#[Version(10.1)]
+#[Header("gvar", 10.1)]
 pub struct s_blf_chunk_packed_game_variant
 {
     pub game_variant: c_game_variant,

@@ -10,8 +10,7 @@ const k_banhammer_message_max_length: usize = 0x100;
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("bhms")]
-#[Version(1.1)]
+#[Header("bhms", 1.1)]
 #[brw(big)]
 pub struct s_blf_chunk_banhammer_messages
 {

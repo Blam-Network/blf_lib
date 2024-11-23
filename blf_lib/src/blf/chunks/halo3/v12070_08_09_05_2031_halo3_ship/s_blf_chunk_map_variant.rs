@@ -6,8 +6,7 @@ use blf_lib_derive::BlfChunk;
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("mapv")]
-#[Version(12.1)]
+#[Header("mapv", 12.1)]
 #[brw(big)]
 pub struct s_blf_chunk_map_variant
 {

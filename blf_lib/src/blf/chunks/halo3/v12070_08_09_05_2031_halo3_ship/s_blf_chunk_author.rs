@@ -8,8 +8,7 @@ use crate::types::c_string::from_string_with_length;
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("athr")]
-#[Version(3.1)]
+#[Header("athr", 3.1)]
 #[Size(0x44)]
 #[brw(big)]
 pub struct s_blf_chunk_author {

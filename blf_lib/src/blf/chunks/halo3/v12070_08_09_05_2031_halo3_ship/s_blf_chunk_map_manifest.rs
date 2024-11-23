@@ -8,8 +8,7 @@ pub const k_map_manifest_max_signatures: usize = 128; // we're never hitting thi
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("mapm")]
-#[Version(1.1)]
+#[Header("mapm", 1.1)]
 #[brw(big)]
 pub struct s_blf_chunk_map_manifest
 {

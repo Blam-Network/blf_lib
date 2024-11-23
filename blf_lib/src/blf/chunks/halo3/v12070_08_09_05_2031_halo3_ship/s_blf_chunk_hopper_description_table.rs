@@ -8,8 +8,7 @@ use crate::types::c_string::StaticString;
 use crate::io::bitstream::close_bitstream_writer;
 
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("mhdf")]
-#[Version(3.1)]
+#[Header("mhdf", 3.1)]
 pub struct s_blf_chunk_hopper_description_table {
     description_count: usize,
     descriptions: Vec<s_game_hopper_description>,

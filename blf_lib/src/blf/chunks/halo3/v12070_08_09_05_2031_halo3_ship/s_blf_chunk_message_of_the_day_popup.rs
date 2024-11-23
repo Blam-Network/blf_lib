@@ -4,18 +4,10 @@ use serde::{Deserialize, Serialize};
 use blf_lib_derivable::blf::chunks::BlfChunkHooks;
 use blf_lib_derive::BlfChunk;
 use crate::types::c_string::StaticWcharString;
-const k_motd_popup_title_max_length: usize = 48;
-const k_motd_popup_header_max_length: usize = 48;
-const k_motd_popup_button_key_max_length: usize = 48;
-const k_motd_popup_button_key_wait_max_length: usize = 48;
-const k_motd_popup_message_max_length: usize = 1024;
-
-
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("mtdp")]
-#[Version(4.1)]
+#[Header("mtdp", 4.1)]
 #[brw(big)]
 pub struct s_blf_chunk_message_of_the_day_popup
 {
@@ -34,6 +26,13 @@ pub struct s_blf_chunk_message_of_the_day_popup
 }
 
 impl BlfChunkHooks for s_blf_chunk_message_of_the_day_popup {}
+
+const k_motd_popup_title_max_length: usize = 48;
+const k_motd_popup_header_max_length: usize = 48;
+const k_motd_popup_button_key_max_length: usize = 48;
+const k_motd_popup_button_key_wait_max_length: usize = 48;
+const k_motd_popup_message_max_length: usize = 1024;
+
 
 impl s_blf_chunk_message_of_the_day_popup {
     pub fn create(

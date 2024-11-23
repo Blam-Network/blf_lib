@@ -15,8 +15,7 @@ struct s_online_file {
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("onfm")]
-#[Version(1.1)]
+#[Header("onfm", 1.1)]
 #[brw(big)]
 pub struct s_blf_chunk_online_file_manifest
 {

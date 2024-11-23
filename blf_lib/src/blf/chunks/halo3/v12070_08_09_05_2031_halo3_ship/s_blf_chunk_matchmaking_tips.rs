@@ -10,8 +10,7 @@ const TIP_LENGTH: usize = 0x100;
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("mmtp")]
-#[Version(1.1)]
+#[Header("mmtp", 1.1)]
 #[brw(big)]
 pub struct s_blf_chunk_matchmaking_tips
 {

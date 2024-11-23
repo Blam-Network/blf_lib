@@ -5,8 +5,7 @@ use blf_lib_derive::BlfChunk;
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("_eof")]
-#[Version(1.1)]
+#[Header("_eof", 1.1)]
 #[Size(0x5)]
 #[brw(big)]
 pub struct s_blf_chunk_end_of_file

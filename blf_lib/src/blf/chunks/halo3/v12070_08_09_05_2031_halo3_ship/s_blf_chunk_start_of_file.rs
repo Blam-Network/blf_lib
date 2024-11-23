@@ -10,8 +10,7 @@ const k_tag_string_length: usize = 32;
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("_blf")]
-#[Version(1.2)]
+#[Header("_blf", 1.2)]
 #[Size(0x24)]
 #[brw(big)]
 pub struct s_blf_chunk_start_of_file

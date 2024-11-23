@@ -8,8 +8,7 @@ use blf_lib_derive::BlfChunk;
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("chdr")]
-#[Version(9.2)]
+#[Header("chdr", 9.2)]
 #[brw(big)]
 pub struct s_blf_chunk_content_header
 {

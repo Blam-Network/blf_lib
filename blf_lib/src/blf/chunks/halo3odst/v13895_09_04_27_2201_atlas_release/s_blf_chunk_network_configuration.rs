@@ -6,8 +6,7 @@ use blf_lib_derive::BlfChunk;
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("netc")]
-#[Version(128.1)]
+#[Header("netc", 128.1)]
 #[brw(big)]
 pub struct s_blf_chunk_network_configuration
 {

@@ -8,8 +8,7 @@ use blf_lib_derivable::blf::chunks::BlfChunkHooks;
 use blf_lib_derive::BlfChunk;
 
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("mvar")]
-#[Version(12.1)]
+#[Header("mvar", 12.1)]
 pub struct s_blf_chunk_packed_map_variant
 {
     // Pads here might be aligning the map to 8

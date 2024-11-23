@@ -12,8 +12,7 @@ use blf_lib_derivable::blf::chunks::BlfChunkHooks;
 use blf_lib_derive::BlfChunk;
 
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("mhcf")]
-#[Version(11.1)]
+#[Header("mhcf", 11.1)]
 pub struct s_blf_chunk_hopper_configuration_table
 {
     hopper_category_count: u8,

@@ -9,8 +9,7 @@ use crate::types::c_string::StaticString;
 use crate::io::bitstream::close_bitstream_writer;
 
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
-#[Signature("gset")]
-#[Version(6.1)]
+#[Header("gset", 6.1)]
 pub struct s_blf_chunk_game_set
 {
     game_entry_count: usize,

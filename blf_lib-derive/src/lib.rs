@@ -10,7 +10,7 @@ use proc_macro::TokenStream;
 mod helpers;
 mod macros;
 
-#[proc_macro_derive(BlfChunk, attributes(Signature, Version, Size))]
+#[proc_macro_derive(BlfChunk, attributes(Header, Size))]
 pub fn blf_chunk(input: TokenStream) -> TokenStream {
     macros::blf_chunk::blf_chunk_macro(input)
 }
