@@ -4,7 +4,6 @@ use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use crate::helpers::DeriveInputHelpers;
 use proc_macro2::TokenStream as TokenStream2;
-use blf_lib_derive::macros::packed_serialize::packed_serialize_macro;
 use crate::macros::test_size::test_size_macro;
 
 pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
@@ -14,12 +13,9 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
 
     let signature_string: String;
     let version_float: f32;
-    let mut big_endian = false;
-    let mut packing: usize = 1;
 
     let signature_attribute = input.get_required_attribute("Signature");
     let version_attribute = input.get_required_attribute("Version");
-    let pack_attribute = input.get_attribute("PackedSerialize");
     let size_attribute = input.get_attribute("Size");
 
     match &signature_attribute.meta {
@@ -33,7 +29,7 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
             signature_string = signature_string_literal.value();
         }
         _ => {
-            panic!("Unsupported attribute type for Signnature. Please use the #[Signature(\"athr\")] syntax.");
+            panic!("Unsupported attribute type for Signature. Please use the #[Signature(\"athr\")] syntax.");
         }
     }
 
@@ -52,36 +48,18 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
         }
     }
 
-    if pack_attribute.is_some() {
-        match &pack_attribute.unwrap().meta {
-            Meta::List(list) => {
-                let mut iterator = list.clone().tokens.into_iter();
-                packing = iterator.next().unwrap().to_string().parse::<usize>().expect("Invalid pack value provided.");
-                iterator.next(); // comma
-                let endian_ident = iterator.next().expect("Please provide an endian argument as BigEndian or LittleEndian").to_string();
-                if endian_ident == "BigEndian" { big_endian = true; } else if endian_ident == "LittleEndian" { big_endian = false; } else { panic!("Invalid Endian, Please provide an Endian argument as BigEndian or LittleEndian"); }
-            }
-            _ => {
-                panic!("Unsupported attribute type for PackedSerialize. Please use the #[PackedSerialize(4)] syntax.");
-            }
-        }
-    }
-
     assert_eq!(signature_string.len(), 4, "Signature provided with invalid character length! {signature_string}");
     let bytes = signature_string.as_bytes();
     assert_eq!(bytes.len(), 4, "Signature provided with invalid byte length! {signature_string}");
 
     let test_size_tokens: TokenStream2 = if size_attribute.is_some() { test_size_macro(tokens.clone()).into() } else { quote! {} };
-    let serialize_tokens: TokenStream2 = if pack_attribute.is_some() { packed_serialize_macro(tokens.clone()).into() } else { quote! {} };
-    let serializable_chunk_tokens: TokenStream2 = if pack_attribute.is_some() { generate_serializable_chunk(tokens.clone(), big_endian, packing, &signature_string).into() } else { quote! {} };
+    // let serializable_chunk_tokens: TokenStream2 = generate_serializable_chunk(tokens.clone(), &signature_string).into();
 
     match input.data {
         Data::Struct(_s) => {
             quote! {
-                // #serializable_tokens
-                #serializable_chunk_tokens
-                #serialize_tokens
-                #test_size_tokens
+                // #serializable_chunk_tokens
+                // #test_size_tokens
 
                 impl blf_lib_derivable::blf::chunks::DynamicBlfChunk for #name {
                     fn signature(&self) -> blf_lib_derivable::types::chunk_signature::chunk_signature {
@@ -107,38 +85,33 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
     }.into()
 }
 
-pub fn generate_serializable_chunk(input: TokenStream, big_endian: bool, packing: usize, signature_string: &String) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let name = input.ident.clone();
-
-    let update_eof_tokens = if signature_string == "_eof" { quote! {
-        self.update_eof(previously_written);
-    }} else { quote! {} };
-
-    match input.data {
-        Data::Struct(..) => {
-            (quote! {
-                impl blf_lib::blf::chunks::SerializableBlfChunk for #name {
-                    fn encode_body(&mut self, previously_written: &Vec<u8>) -> Vec<u8> {
-                        #update_eof_tokens
-
-                        <Self as blf_lib::io::packed_encoding::PackedEncoder>::encode_packed(
-                            self,
-                            blf_lib::io::endian::Endianness::new(#big_endian),
-                            blf_lib::io::packing::Packing::new(#packing)
-                        )
-                    }
-
-                    fn decode_body(&mut self, buffer: &[u8]) {
-                        self.clone_from(&<Self as blf_lib::io::packed_decoding::PackedDecoder>::decode_packed(
-                            &mut std::io::Cursor::new(buffer),
-                            blf_lib::io::endian::Endianness::new(#big_endian),
-                            blf_lib::io::packing::Packing::new(#packing)
-                        ).unwrap());
-                    }
-                }
-            }).into()
-        }
-        _ => panic!("Tried to apply PackedSerialize derive to a non-struct!")
-    }
-}
+// pub fn generate_serializable_chunk(input: TokenStream, signature_string: &String) -> TokenStream {
+//     let input = parse_macro_input!(input as DeriveInput);
+//     let name = input.ident.clone();
+//
+//     let update_eof_tokens = if signature_string == "_eof" { quote! {
+//         self.update_eof(previously_written);
+//     }} else { quote! {} };
+//
+//     match input.data {
+//         Data::Struct(..) => {
+//             (quote! {
+//                 impl blf_lib::blf::chunks::SerializableBlfChunk for #name {
+//                     fn encode_body(&mut self, previously_written: &Vec<u8>) -> Vec<u8> {
+//                         #update_eof_tokens
+//
+//                         let mut writer = std::io::Cursor::new(Vec::<u8>::new());
+//                         <std::io::Cursor<std::vec::Vec<u8>> as binrw::BinWriterExt>::write_ne(&mut writer, &self).unwrap();
+//                         writer.get_ref().clone()
+//                     }
+//
+//                     fn decode_body(&mut self, buffer: &[u8]) {
+//                         let mut reader = std::io::Cursor::new(buffer);
+//                         self.clone_from(&<std::io::Cursor<[u8]> as binrw::BinReaderExt>::read_ne(&mut reader).unwrap());
+//                     }
+//                 }
+//             }).into()
+//         }
+//         _ => panic!("Tried to apply PackedSerialize derive to a non-struct!")
+//     }
+// }

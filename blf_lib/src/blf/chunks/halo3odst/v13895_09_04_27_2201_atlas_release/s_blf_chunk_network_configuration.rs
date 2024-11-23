@@ -1,13 +1,18 @@
+use binrw::binrw;
+use serde::{Deserialize, Serialize};
 use blf_lib::types::array::StaticArray;
-use crate::blf_chunk;
+use blf_lib_derivable::blf::chunks::BlfChunkHooks;
+use blf_lib_derive::BlfChunk;
 
-blf_chunk!(
-    #[Signature("netc")]
-    #[Version(128.1)]
-    #[PackedSerialize(1, LittleEndian)]
-    pub struct s_blf_chunk_network_configuration
-    {
-        // TODO: Map
-        data: StaticArray<u8, 5568>,
-    }
-);
+#[binrw]
+#[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
+#[Signature("netc")]
+#[Version(128.1)]
+#[brw(big)]
+pub struct s_blf_chunk_network_configuration
+{
+    // TODO: Map
+    data: StaticArray<u8, 5568>,
+}
+
+impl BlfChunkHooks for s_blf_chunk_network_configuration {}

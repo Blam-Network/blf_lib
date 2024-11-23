@@ -1,15 +1,14 @@
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 use blf_lib::blam::halo_3::release::game::game_engine_player_traits::c_player_traits;
 use blf_lib::blam::halo_3::release::game::game_engine_traits::{c_game_engine_miscellaneous_options, c_game_engine_respawn_options};
-use blf_lib::types::array::StaticArray;
-use blf_lib_derive::PackedSerialize;
 use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib::{SET_BIT, TEST_BIT};
 
 pub const k_game_engine_type_count: usize = 11;
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct c_game_engine_social_options {
     m_flags: u16,
     m_team_changing: u16,
@@ -17,7 +16,7 @@ pub struct c_game_engine_social_options {
 
 impl c_game_engine_social_options {
     pub fn encode(&self, bitstream: &mut c_bitstream_writer) {
-        bitstream.write_bool(false); // "guess i'll go fuck myself" - observers
+        bitstream.write_bool(false);
         bitstream.write_integer(self.m_team_changing as u32, 2);
         bitstream.write_bool(TEST_BIT!(self.m_flags, 0));
         bitstream.write_bool(TEST_BIT!(self.m_flags, 1));
@@ -37,7 +36,7 @@ impl c_game_engine_social_options {
     }
 }
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct c_game_engine_map_override_options {
     m_flags: u32,
     m_base_player_traits: c_player_traits,
@@ -83,12 +82,13 @@ impl c_game_engine_map_override_options {
     }
 }
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct c_game_engine_base_variant {
     #[serde(skip_serializing,skip_deserializing)]
     m_checksum: u32,
-    #[serde(skip_serializing,skip_deserializing)]
-    pad: StaticArray<u32, 1>,
+    // #[serde(skip_serializing,skip_deserializing)]
+    // pad: StaticArray<u32, 1>
+    #[brw(pad_before = 4)]
     pub m_metadata: s_content_item_metadata,
     m_miscellaneous_options: c_game_engine_miscellaneous_options,
     m_respawn_options: c_game_engine_respawn_options,

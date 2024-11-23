@@ -1,19 +1,25 @@
 use std::ffi::c_char;
-use blf_lib_derivable::blf::chunks::TitleAndBuild;
+use binrw::{binrw};
+use serde::{Deserialize, Serialize};
+use blf_lib_derivable::blf::chunks::{BlfChunkHooks, TitleAndBuild};
+use blf_lib_derive::BlfChunk;
 use crate::types::build_number_identifier::build_number_identifier;
 use crate::types::c_string::from_string_with_length;
 
-#[derive(blf_lib::derive::BlfChunk, Default, PartialEq, Debug, Clone)]
+#[binrw]
+#[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
 #[Signature("athr")]
 #[Version(3.1)]
 #[Size(0x44)]
-#[PackedSerialize(1, BigEndian)]
+#[brw(big)]
 pub struct s_blf_chunk_author {
     pub program_name: [c_char; 16],
     pub build_identifier: build_number_identifier,
     pub build_string: [c_char; 28],
     pub author_name: [c_char; 16],
 }
+
+impl BlfChunkHooks for s_blf_chunk_author {}
 
 impl s_blf_chunk_author {
     pub fn new(build_name: &str, build_identifier: build_number_identifier, build_string: &str, author_name: &str) -> s_blf_chunk_author {

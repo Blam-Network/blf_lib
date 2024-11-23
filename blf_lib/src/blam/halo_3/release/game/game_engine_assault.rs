@@ -1,11 +1,10 @@
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
-use blf_lib_derive::PackedSerialize;
-use crate::types::array::StaticArray;
 use blf_lib::blam::halo_3::release::game::game_engine_player_traits::c_player_traits;
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib::{SET_BIT, TEST_BIT};
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, BinRead, BinWrite, Serialize, Deserialize)]
 pub struct c_game_engine_assault_variant {
     m_variant_flags: u16,
     m_respawn: u16,
@@ -18,9 +17,10 @@ pub struct c_game_engine_assault_variant {
     m_bomb_disarming_time: u16,
     m_bomb_fuse_time: u16,
     m_carrier_traits: c_player_traits,
+    #[brw(pad_after = 4)]
     m_arming_traits: c_player_traits,
-    #[serde(skip_serializing,skip_deserializing)]
-    m_pad1: StaticArray<u8, 4>,
+    // #[serde(skip_serializing,skip_deserializing)]
+    // m_pad1: StaticArray<u8, 4>,
 }
 
 impl c_game_engine_assault_variant {

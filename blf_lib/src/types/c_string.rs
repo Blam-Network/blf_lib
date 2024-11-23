@@ -4,12 +4,7 @@ use blf_lib::types::array::StaticArray;
 use serde::{Deserializer, Serialize, Serializer};
 use widestring::U16CString;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
-use blf_lib::io::packed_decoding::PackedDecoder;
-use blf_lib::io::packed_encoding::PackedEncoder;
-use blf_lib_derivable::io::endian::Endianness;
-use blf_lib_derivable::io::packing::{Packing, PACK1};
-use std::io::Cursor;
-use binrw::binrw;
+use binrw::{BinRead, BinWrite};
 use serde::de::Error;
 
 pub fn to_string(chars: &[c_char]) -> String {
@@ -48,8 +43,7 @@ pub fn from_string(string: String) -> Vec<c_char> {
     vec
 }
 
-#[derive(PartialEq, Debug, Clone, Default)]
-#[binrw]
+#[derive(PartialEq, Debug, Clone, Default, BinRead, BinWrite)]
 pub struct StaticWcharString<const N: usize> {
     buf: StaticArray<u16, N>,
 }
@@ -85,26 +79,6 @@ impl<const N: usize> StaticWcharString<N> {
     }
 }
 
-impl<const N: usize> PackedEncoder for StaticWcharString<N> {
-    fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
-        let mut out = Vec::<u8>::with_capacity(N);
-        self.buf.get().iter().for_each(|&wchar| {out.append(&mut (wchar).encode_packed(endian, PACK1));});
-        out
-    }
-}
-
-impl<const N: usize> PackedDecoder for StaticWcharString<N> {
-    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String> {
-        let mut buf = [u16::default(); N];
-        for i in 0..N {
-            buf[i] = u16::decode_packed(reader, endian, PACK1)?;
-        }
-        Ok(Self {
-            buf: StaticArray::from_slice(&buf).unwrap(),
-        })
-    }
-}
-
 impl<const N: usize> Serialize for StaticWcharString<N> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -126,8 +100,7 @@ impl<'de, const N: usize> serde::Deserialize<'de> for StaticWcharString<N> {
     }
 }
 
-#[derive(PartialEq, Debug, Clone, Copy)]
-#[binrw]
+#[derive(PartialEq, Debug, Clone, Copy, BinRead, BinWrite)]
 pub struct StaticString<const N: usize> {
     buf: [u8; N],
 }
@@ -160,20 +133,6 @@ impl<const N: usize> StaticString<N> {
     pub fn get_string(&self) -> String {
         let null_index = self.buf.iter().position(|c|c == &0u8).unwrap_or(N);
         String::from_utf8(self.buf.as_slice()[0..null_index].to_vec()).unwrap()
-    }
-}
-
-impl<const N: usize> PackedEncoder for StaticString<N> {
-    fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
-        self.buf.encode_packed(endian, packing)
-    }
-}
-
-impl<const N: usize> PackedDecoder for StaticString<N> {
-    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String> {
-        Ok(Self {
-            buf: PackedDecoder::decode_packed(reader, endian, packing)?,
-        })
     }
 }
 

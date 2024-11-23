@@ -95,22 +95,6 @@ pub fn get_blf_file_hash(path: String) -> Result<s_network_http_request_hash, Bo
 }
 
 #[macro_export]
-macro_rules! blf_chunk {
-    ($i:item) => {
-        #[derive(
-            blf_lib::derive::BlfChunk,
-            Default,
-            PartialEq,
-            Debug,
-            Clone,
-            serde::Serialize,
-            serde::Deserialize,
-        )]
-        $i
-    }
-}
-
-#[macro_export]
 macro_rules! blf_file {
     ($i:item) => {
         #[derive(blf_lib::derive::BlfFile, Default, PartialEq, Debug, Clone)]

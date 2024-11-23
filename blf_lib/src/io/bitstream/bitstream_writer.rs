@@ -1,5 +1,7 @@
 
 use std::cmp::min;
+use std::io::Cursor;
+use binrw::BinWrite;
 use widestring::U16CString;
 use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, valid_real_vector3d_axes3, arctangent, quantize_normalized_vector3d, k_pi};
 use crate::blam::common::math::integer_math::int32_point3d;
@@ -67,8 +69,8 @@ impl c_bitstream_writer {
         self.write_integer(value as u32, size_in_bits);
     }
 
-    pub fn write_bool(&mut self, value: bool) {
-        self.write_integer(if value { 1 } else { 0 }, 1);
+    pub fn write_bool<B: Sized + Into<bool>>(&mut self, value: B) {
+        self.write_integer(if value.into() { 1 } else { 0 }, 1);
     }
 
     // Be careful using this.
@@ -84,6 +86,24 @@ impl c_bitstream_writer {
     }
 
     pub fn write_raw_data(&mut self, value: &[u8], size_in_bits: usize) {
+        assert!(value.len() >= size_in_bits / 8);
+        self.write_bits_internal(value, size_in_bits);
+    }
+
+    pub fn write_raw<T: BinWrite>(&mut self, value: T, size_in_bits: usize) where for<'a> <T as BinWrite>::Args<'a>: Default {
+        let mut writer = Cursor::new(Vec::new());
+
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
+                T::write_le(&value, &mut writer).unwrap();
+            }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
+                T::write_be(&value, &mut writer).unwrap();
+            }
+        }
+
+        let value = writer.get_ref().clone();
+        let value = value.as_slice();
         assert!(value.len() >= size_in_bits / 8);
         self.write_bits_internal(value, size_in_bits);
     }

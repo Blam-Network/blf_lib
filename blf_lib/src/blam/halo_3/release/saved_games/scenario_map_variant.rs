@@ -1,25 +1,19 @@
-use std::io::Cursor;
-use binrw::binrw;
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
-use blf_lib::io::packed_decoding::PackedDecoder;
 use blf_lib::TEST_BIT;
 use crate::blam::common::math::real_math::{real_point3d, real_rectangle3d};
 use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
 use blf_lib::types::array::StaticArray;
-use blf_lib_derivable::io::endian::Endianness;
-use blf_lib_derivable::io::packing::PACK1;
-use blf_lib_derive::PackedSerialize;
 use crate::blam::common::math::real_math::vector3d;
 use crate::blam::common::simulation::simulation_encoding::{simulation_read_quantized_position, simulation_write_quantized_position};
-use crate::io::packed_encoding::PackedEncoder;
 use serde_hex::{SerHex,StrictCap};
+use crate::types::bool::s_bool;
 
 const k_object_type_count: usize = 14;
 const k_number_of_map_variant_simulation_entities: usize = 80;
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
-#[PackedSerialize(1, BigEndian)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct c_map_variant {
     pub m_metadata: s_content_item_metadata,
     pub m_map_variant_version: u16,
@@ -31,11 +25,12 @@ pub struct c_map_variant {
     pub m_game_engine_subtype: u32,
     pub m_maximum_budget: f32,
     pub m_spent_budget: f32,
-    pub m_helpers_enabled: bool,
-    pub m_built_in: bool,
-    #[serde(skip_serializing,skip_deserializing)]
-    __pad12A: [u8; 2],
+    pub m_helpers_enabled: s_bool,
+    pub m_built_in: s_bool,
+    // #[serde(skip_serializing,skip_deserializing)]
+    // __pad12A: [u8; 2],
     #[serde(with = "SerHex::<StrictCap>")]
+    #[brw(align_before = 4)]
     pub m_map_variant_checksum: u32,
     pub m_variant_objects: StaticArray<s_variant_object_datum, 640>,
     pub m_object_type_start_index: StaticArray<i16, k_object_type_count>,
@@ -53,7 +48,7 @@ impl c_map_variant {
         bitstream.write_integer(self.m_number_of_placeable_object_quotas as u32, 9);
         bitstream.write_integer(self.m_map_id, 32);
         bitstream.write_bool(self.m_built_in);
-        bitstream.write_raw_data(self.m_world_bounds.encode_packed(Endianness::Big, PACK1).as_slice(), 0xC0);
+        bitstream.write_raw(self.m_world_bounds, 0xC0);
         bitstream.write_integer(self.m_game_engine_subtype, 4);
         bitstream.write_float(self.m_maximum_budget, 32);
         bitstream.write_float(self.m_spent_budget, 32);
@@ -74,7 +69,7 @@ impl c_map_variant {
                 if TEST_BIT!(variant_object.flags, 8) // spawns relative
                 {
                     bitstream.write_bool(true); // parent-object-exists
-                    bitstream.write_raw_data(variant_object.parent_object_identifier.encode_packed(Endianness::Big, PACK1).as_slice(), 64);
+                    bitstream.write_raw(variant_object.parent_object_identifier, 64);
                 }
                 else
                 {
@@ -144,8 +139,8 @@ impl c_map_variant {
         self.m_number_of_variant_objects = bitstream.read_u16(10);
         self.m_number_of_placeable_object_quotas = bitstream.read_u16(9);
         self.m_map_id = bitstream.read_integer(32);
-        self.m_built_in = bitstream.read_bool();
-        self.m_world_bounds = real_rectangle3d::decode_packed(&mut Cursor::new(&bitstream.read_raw_data(0xC0)), Endianness::Big, PACK1).unwrap();
+        self.m_built_in = s_bool::from(bitstream.read_bool());
+        self.m_world_bounds = bitstream.read_raw(0xC0);
         self.m_game_engine_subtype = bitstream.read_integer(4);
         self.m_maximum_budget = bitstream.read_float(32);
         self.m_spent_budget = bitstream.read_float(32);
@@ -164,7 +159,7 @@ impl c_map_variant {
 
             let parent_object_exists = bitstream.read_bool();
             if parent_object_exists {
-                variant_object.parent_object_identifier = c_object_identifier::decode_packed(&mut Cursor::new(&bitstream.read_raw_data(64)), Endianness::Big, PACK1).unwrap();
+                variant_object.parent_object_identifier = bitstream.read_raw(64);
             }
 
             let position_exists = bitstream.read_bool();
@@ -219,9 +214,7 @@ impl c_map_variant {
     }
 }
 
-#[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
-#[PackedSerialize(1, BigEndian)]
-#[binrw]
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct s_variant_quota {
     #[serde(with = "SerHex::<StrictCap>")]
     pub object_definition_index: u32,
@@ -232,9 +225,7 @@ pub struct s_variant_quota {
     pub price_per_item: f32,
 }
 
-#[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
-#[PackedSerialize(1, BigEndian)]
-#[binrw]
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct s_variant_multiplayer_object_properties_definition {
     pub game_engine_flags: u16,
     pub symmetry_placement_flags: u8, // foo
@@ -249,9 +240,7 @@ pub struct s_variant_multiplayer_object_properties_definition {
     pub boundary_negative_height: f32,
 }
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Copy, Serialize, Deserialize)]
-#[PackedSerialize(4, BigEndian)]
-#[binrw]
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct s_variant_object_datum {
     pub flags: u16,
     // pad 16
@@ -265,9 +254,7 @@ pub struct s_variant_object_datum {
     pub multiplayer_game_object_properties: s_variant_multiplayer_object_properties_definition,
 }
 
-#[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
-#[PackedSerialize(1, BigEndian)]
-#[binrw]
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct c_object_identifier {
     m_unique_id: i32,
     m_origin_bsp_index: i16,

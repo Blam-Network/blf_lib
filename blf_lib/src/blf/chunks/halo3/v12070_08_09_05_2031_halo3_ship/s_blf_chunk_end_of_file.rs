@@ -1,36 +1,35 @@
+use binrw::{binrw, BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
-use blf_lib_derive::PackedSerialize;
-use crate::blf_chunk;
+use blf_lib_derivable::blf::chunks::BlfChunkHooks;
+use blf_lib_derive::BlfChunk;
 
-blf_chunk!(
-    #[Signature("_eof")]
-    #[Version(1.1)]
-    #[Size(0x5)]
-    #[PackedSerialize(1, BigEndian)]
-    pub struct s_blf_chunk_end_of_file
-    {
-        pub file_size: u32,
-        pub authentication_type: e_blf_file_authentication_type,
-    }
-);
+#[binrw]
+#[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
+#[Signature("_eof")]
+#[Version(1.1)]
+#[Size(0x5)]
+#[brw(big)]
+pub struct s_blf_chunk_end_of_file
+{
+    pub file_size: u32,
+    pub authentication_type: e_blf_file_authentication_type,
+}
 
-impl s_blf_chunk_end_of_file {
-    // automagically called for _eof chunks by BytePackedEncodeedSerializable derive
-    fn update_eof(&mut self, written_bytes: &Vec<u8>) {
-        self.file_size = written_bytes.len() as u32;
+impl BlfChunkHooks for s_blf_chunk_end_of_file {
+    fn before_write(&mut self, previously_written: &Vec<u8>) {
+        self.file_size = previously_written.len() as u32;
     }
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, PackedSerialize, Serialize, Deserialize)]
-pub struct e_blf_file_authentication_type {
-    value: u8,
+#[derive(Debug, Clone, Copy, PartialEq, BinRead, BinWrite, Serialize, Deserialize, Default)]
+#[brw(repr = u8)]
+pub enum e_blf_file_authentication_type {
+    #[default]
+    none = 0,
+    crc = 1,
+    sha1 = 2,
+    rsa = 3
 }
-
-pub const _blf_file_authentication_type_none: e_blf_file_authentication_type = e_blf_file_authentication_type { value: 0 };
-pub const _blf_file_authentication_type_crc: e_blf_file_authentication_type = e_blf_file_authentication_type { value: 1 };
-pub const _blf_file_authentication_type_sha1: e_blf_file_authentication_type = e_blf_file_authentication_type { value: 2 };
-pub const _blf_file_authentication_type_rsa: e_blf_file_authentication_type = e_blf_file_authentication_type { value: 2 };
-
 
 impl s_blf_chunk_end_of_file {
     pub fn new(file_size: u32, authentication_type: e_blf_file_authentication_type) -> s_blf_chunk_end_of_file {

@@ -4,7 +4,7 @@ use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk
 use blf_lib::blf::versions::v12070_08_09_05_2031_halo3_ship;
 use blf_lib::blf_file;
 use blf_lib::io::read_json_file;
-use blf_lib::types::byte_order_mark::little_endian;
+use blf_lib::types::byte_order_mark::byte_order_mark;
 use crate::build_path;
 use crate::io::create_parent_folders;
 
@@ -24,7 +24,7 @@ blf_file! {
 impl network_configuration {
     pub fn create(netc: s_blf_chunk_network_configuration) -> Self {
         Self {
-            _blf: s_blf_chunk_start_of_file::new("halo3 net config", little_endian),
+            _blf: s_blf_chunk_start_of_file::new("halo3 net config", byte_order_mark::little_endian),
             athr: s_blf_chunk_author::for_build::<v12070_08_09_05_2031_halo3_ship>(),
             netc,
             _eof: s_blf_chunk_end_of_file::default(),

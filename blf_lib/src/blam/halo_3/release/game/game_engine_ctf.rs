@@ -1,10 +1,10 @@
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
-use blf_lib_derive::PackedSerialize;
 use blf_lib::blam::halo_3::release::game::game_engine_player_traits::c_player_traits;
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib::{SET_BIT, TEST_BIT};
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct c_game_engine_ctf_variant {
     m_variant_flags: u8,
     m_home_flag_waypoint: u8,

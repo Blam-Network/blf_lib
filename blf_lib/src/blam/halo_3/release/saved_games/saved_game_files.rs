@@ -1,10 +1,11 @@
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
-use blf_lib_derive::PackedSerialize;
 use crate::types::c_string::StaticString;
 use crate::types::c_string::StaticWcharString;
 use serde_hex::{SerHex,StrictCap};
 use blf_lib::types::time::time_t;
+use crate::types::bool::s_bool;
 
 pub const e_saved_game_file_type_none: u32 = 0xFFFFFFFF;
 pub const e_saved_game_file_type_personal: u32 = 0;
@@ -23,19 +24,19 @@ pub const e_saved_game_file_type_clip: u32 = 11;
 pub const e_saved_game_file_type_screenshot: u32 = 12;
 pub const k_saved_game_file_type_count: u32 = 13;
 
-#[derive(PackedSerialize, Default, PartialEq, Debug, Clone, Serialize, Deserialize)]
-#[PackedSerialize(4, BigEndian)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct s_content_item_metadata {
     unique_id: u64,
     pub name: StaticWcharString<0x10>,
     description: StaticString<128>,
     author: StaticString<16>,
     file_type: u32,
-    author_is_xuid_online: bool, // padded by 3 bytes, must be pack4
+    #[brw(align_after = 4)]
+    author_is_xuid_online: s_bool,
     #[serde(with = "SerHex::<StrictCap>")]
     author_id: u64,
     size_in_bytes: u64,
-    date: time_t, // time_t probs
+    date: time_t,
     length_seconds: u32,
     campaign_id: i32,
     map_id: i32,
@@ -71,7 +72,7 @@ impl s_content_item_metadata {
         self.description.set_string(&bitstream.read_string_utf8(128)).unwrap();
         self.author.set_string(&bitstream.read_string_utf8(16)).unwrap();
         self.file_type = bitstream.read_integer(5) - 1;
-        self.author_is_xuid_online = bitstream.read_bool();
+        self.author_is_xuid_online = s_bool::from(bitstream.read_bool());
         self.author_id = bitstream.read_qword(64);
         self.size_in_bytes = bitstream.read_qword(64);
         self.date = time_t::from_u64(bitstream.read_qword(64));

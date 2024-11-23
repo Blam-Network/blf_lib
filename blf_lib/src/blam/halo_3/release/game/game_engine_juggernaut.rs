@@ -1,15 +1,15 @@
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
-use blf_lib_derive::PackedSerialize;
 use blf_lib::blam::halo_3::release::game::game_engine_player_traits::c_player_traits;
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib::{SET_BIT, TEST_BIT};
-use crate::types::array::StaticArray;
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, BinRead, BinWrite, Serialize, Deserialize)]
 pub struct c_game_engine_juggernaut_variant {
     m_score_to_win_round: u16,
-    #[serde(skip_serializing,skip_deserializing)]
-    m_pad1: StaticArray<u8, 2>,
+    // #[serde(skip_serializing,skip_deserializing)]
+    // m_pad1: StaticArray<u8, 2>,
+    #[brw(align_before = 4)]
     m_initial_juggernaut: u8,
     m_next_juggernaut: u8,
     m_variant_flags: u8,
@@ -22,9 +22,10 @@ pub struct c_game_engine_juggernaut_variant {
     m_suicide_points: i8,
     m_betrayal_points: i8,
     m_juggernaut_delay: u8,
+    #[brw(pad_after = 4)]
     m_juggernaut_traits: c_player_traits,
-    #[serde(skip_serializing,skip_deserializing)]
-    m_pad2: StaticArray<u8, 4>,
+    // #[serde(skip_serializing,skip_deserializing)]
+    // m_pad2: StaticArray<u8, 4>,
 }
 
 impl c_game_engine_juggernaut_variant {

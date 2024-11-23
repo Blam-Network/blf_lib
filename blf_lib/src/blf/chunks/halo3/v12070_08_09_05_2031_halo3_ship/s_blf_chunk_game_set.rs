@@ -1,10 +1,23 @@
+use std::io::{Read, Seek, Write};
+use binrw::{BinRead, BinResult, BinWrite, BinWriterExt, Endian};
 use serde::{Deserialize, Serialize};
 use blf_lib::blam::common::memory::secure_signature::s_network_http_request_hash;
-use blf_lib::blf_chunk;
-use blf_lib::io::bitstream::{create_bitstream_reader, create_bitstream_writer, e_bitstream_byte_order};
+use blf_lib::io::bitstream::{c_bitstream_reader, create_bitstream_writer, e_bitstream_byte_order};
+use blf_lib_derivable::blf::chunks::BlfChunkHooks;
+use blf_lib_derive::BlfChunk;
 use crate::types::c_string::StaticString;
-use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
 use crate::io::bitstream::close_bitstream_writer;
+
+#[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
+#[Signature("gset")]
+#[Version(6.1)]
+pub struct s_blf_chunk_game_set
+{
+    game_entry_count: usize,
+    game_entries: Vec<s_blf_chunk_game_set_entry>,
+}
+
+impl BlfChunkHooks for s_blf_chunk_game_set {}
 
 #[derive(Clone, Default, PartialEq, Debug, Copy, Serialize, Deserialize)]
 pub struct s_blf_chunk_game_set_entry {
@@ -20,16 +33,6 @@ pub struct s_blf_chunk_game_set_entry {
 }
 
 pub const k_maximum_game_sets: usize = 63;
-
-blf_chunk!(
-    #[Signature("gset")]
-    #[Version(6.1)]
-    pub struct s_blf_chunk_game_set
-    {
-        game_entry_count: usize,
-        game_entries: Vec<s_blf_chunk_game_set_entry>,
-    }
-);
 
 impl s_blf_chunk_game_set {
     pub fn get_entries(&self) -> Vec<s_blf_chunk_game_set_entry> {
@@ -47,8 +50,42 @@ impl s_blf_chunk_game_set {
     }
 }
 
-impl SerializableBlfChunk for s_blf_chunk_game_set {
-    fn encode_body(&mut self, previously_written: &Vec<u8>) -> Vec<u8> {
+impl BinRead for s_blf_chunk_game_set {
+    type Args<'a> = ();
+
+    fn read_options<R: Read + Seek>(reader: &mut R, endian: Endian, args: Self::Args<'_>) -> BinResult<Self> {
+        let mut buffer = Vec::<u8>::new();
+        reader.read_to_end(&mut buffer)?;
+
+        let mut bitstream = c_bitstream_reader::new(buffer.as_slice(), e_bitstream_byte_order::_bitstream_byte_order_big_endian);
+        bitstream.begin_reading();
+
+        let mut game_set = Self::default();
+
+        game_set.game_entry_count = bitstream.read_integer(6) as usize;
+        game_set.game_entries.resize(game_set.game_entry_count, s_blf_chunk_game_set_entry::default());
+
+        for i in 0..game_set.game_entry_count {
+            let game_entry = &mut game_set.game_entries.as_mut_slice()[i];
+            game_entry.weight = bitstream.read_integer(32);
+            game_entry.minimum_player_count = bitstream.read_integer(4) as u8;
+            game_entry.skip_after_veto = bitstream.read_bool();
+            game_entry.optional = bitstream.read_bool();
+            game_entry.map_id = bitstream.read_integer(32);
+            game_entry.game_variant_file_name.set_string(&bitstream.read_string_utf8(32)).unwrap();
+            game_entry.game_variant_file_hash = s_network_http_request_hash::try_from(bitstream.read_raw_data(0xA0)).unwrap();
+            game_entry.map_variant_file_name.set_string(&bitstream.read_string_utf8(32)).unwrap();
+            game_entry.map_variant_file_hash = s_network_http_request_hash::try_from(bitstream.read_raw_data(0xA0)).unwrap();
+        }
+
+        Ok(game_set)
+    }
+}
+
+impl BinWrite for s_blf_chunk_game_set {
+    type Args<'a> = ();
+
+    fn write_options<W: Write + Seek>(&self, writer: &mut W, endian: Endian, args: Self::Args<'_>) -> BinResult<()> {
         let mut bitstream = create_bitstream_writer(0x1BC0, e_bitstream_byte_order::_bitstream_byte_order_big_endian);
 
         bitstream.write_integer(self.game_entry_count as u32, 6);
@@ -66,26 +103,6 @@ impl SerializableBlfChunk for s_blf_chunk_game_set {
             bitstream.write_raw_data(&game_entry.map_variant_file_hash.data, 0xA0);
         }
 
-        close_bitstream_writer(&mut bitstream)
-    }
-
-    fn decode_body(&mut self, buffer: &[u8]) {
-        let mut bitstream = create_bitstream_reader(buffer, e_bitstream_byte_order::_bitstream_byte_order_big_endian);
-
-        self.game_entry_count = bitstream.read_integer(6) as usize;
-        self.game_entries.resize(self.game_entry_count, s_blf_chunk_game_set_entry::default());
-
-        for i in 0..self.game_entry_count {
-            let game_entry = &mut self.game_entries.as_mut_slice()[i];
-            game_entry.weight = bitstream.read_integer(32);
-            game_entry.minimum_player_count = bitstream.read_integer(4) as u8;
-            game_entry.skip_after_veto = bitstream.read_bool();
-            game_entry.optional = bitstream.read_bool();
-            game_entry.map_id = bitstream.read_integer(32);
-            game_entry.game_variant_file_name.set_string(&bitstream.read_string_utf8(32)).unwrap();
-            game_entry.game_variant_file_hash = s_network_http_request_hash::try_from(bitstream.read_raw_data(0xA0)).unwrap();
-            game_entry.map_variant_file_name.set_string(&bitstream.read_string_utf8(32)).unwrap();
-            game_entry.map_variant_file_hash = s_network_http_request_hash::try_from(bitstream.read_raw_data(0xA0)).unwrap();
-        }
+        writer.write_ne(&close_bitstream_writer(&mut bitstream))
     }
 }

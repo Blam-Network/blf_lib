@@ -1,103 +1,68 @@
 use std::io::{Read, Write};
 use serde::{Deserialize, Serialize};
 use blf_lib::types::array::StaticArray;
-use crate::blf_chunk;
 use crate::types::c_string::StaticString;
 use binrw::io::{Cursor, Seek};
-use binrw::{binrw, BinRead, BinResult, BinWrite, BinWriterExt};
+use binrw::{binrw, BinRead, BinResult, BinWrite};
 use binrw::BinReaderExt;
-use blf_lib_derivable::blf::chunks::SerializableBlfChunk;
 use crate::types::bool::s_bool;
 use serde_hex::{SerHex,StrictCapPfx};
+use blf_lib_derivable::blf::chunks::BlfChunkHooks;
+use blf_lib_derive::BlfChunk;
 
-blf_chunk!(
-    #[Signature("netc")]
-    #[Version(135.1)]
-    pub struct s_blf_chunk_network_configuration
-    {
-        pub config: s_network_configuration,
-    }
-);
-
-impl SerializableBlfChunk for s_blf_chunk_network_configuration {
-    fn encode_body(&mut self, previously_written: &Vec<u8>) -> Vec<u8> {
-        let mut writer = Cursor::new(Vec::new());
-        writer.write_be(&self.config).unwrap();
-        writer.get_ref().clone()
-    }
-
-    fn decode_body(&mut self, buffer: &[u8]) {
-        let mut reader = Cursor::new(buffer);
-        self.config = reader.read_be().unwrap();
-    }
+#[binrw]
+#[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
+#[Signature("netc")]
+#[Version(135.1)]
+#[brw(big)]
+pub struct s_blf_chunk_network_configuration
+{
+    pub config: s_network_configuration,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[binrw]
+impl BlfChunkHooks for s_blf_chunk_network_configuration {}
+
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite, Default)]
 #[brw(big, repr = u32)]
 pub enum e_dlc_pack {
+    #[default]
     dlc_pack_none = 0,
     dlc_pack_heroic = 1,
     dlc_pack_legendary = 2,
     dlc_pack_mythic = 3,
 }
 
-impl Default for e_dlc_pack {
-    fn default() -> Self {
-        e_dlc_pack::dlc_pack_none
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite, Default)]
 #[brw(big, repr = u32)]
 pub enum e_alpha_configuration_ui_level {
     alpha_ui_level_locked = 0,
+    #[default]
     alpha_ui_level_main = 1,
     alpha_ui_level_internal_beta = 2,
     alpha_ui_level_external_beta = 3,
 }
 
-impl Default for e_alpha_configuration_ui_level {
-    fn default() -> Self {
-        e_alpha_configuration_ui_level::alpha_ui_level_locked
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite, Default)]
 #[brw(big, repr = u32)]
 pub enum e_minidump_generation {
     minidump_generation_none = 0,
     minidump_generation_regular = 1,
+    #[default]
     minidump_generation_minimini = 2,
     minidump_generation_count = 3,
 }
 
-impl Default for e_minidump_generation {
-    fn default() -> Self {
-        e_minidump_generation::minidump_generation_none
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite, Default)]
 #[brw(big, repr = u32)]
 pub enum e_map_status {
+    #[default]
     map_status_default = 0,
     map_status_dlc = 1,
     map_status_replaced = 2,
     map_status_revoked = 3,
 }
 
-impl Default for e_map_status {
-    fn default() -> Self {
-        e_map_status::map_status_default
-    }
-}
-
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_network_file_download_configuration {
     pub master_catalog_file_download_interval_msec: i32,
@@ -105,8 +70,7 @@ pub struct s_network_file_download_configuration {
     pub required_file_download_retry_interval_msec: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_bandwidth_configuration_host_preference_table {
     #[serde(with = "SerHex::<StrictCapPfx>")]
@@ -137,8 +101,7 @@ pub struct s_bandwidth_configuration_host_preference_table {
     pub synchronous_hostable_peers_multiplier: u32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_bandwidth_configuration {
     pub bandwidth_outlier_discard_fraction: f32,
@@ -191,8 +154,7 @@ pub struct s_bandwidth_configuration {
     pub voice_channel_bandwidth_bps: u32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_life_cycle_handler_joining_configuration {
     pub network_session_migration_wait_timeout_msec: i32,
@@ -206,8 +168,7 @@ pub struct s_life_cycle_handler_joining_configuration {
     pub desperation_wait_time_seconds: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_life_cycle_handler_matchmaking_configuration {
     pub perform_nat_check: s_bool,
@@ -236,16 +197,14 @@ pub struct s_life_cycle_handler_matchmaking_configuration {
     pub warning_toast_minimum_time_seconds: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_life_cycle_handler_in_game_configuration {
     pub simulation_aborted_host_delay_ms: i32,
     pub simulation_aborted_peer_delay_ms: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_life_cycle_configuration {
     pub joining: s_life_cycle_handler_joining_configuration,
@@ -253,8 +212,7 @@ pub struct s_life_cycle_configuration {
     pub in_game: s_life_cycle_handler_in_game_configuration,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_logic_session_tracker_configuration {
     pub unsuitable_session_cache_count: i32,
@@ -266,8 +224,7 @@ pub struct s_logic_session_tracker_configuration {
     pub maximum_qos_tasks: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_logic_matchmaking_desirability {
     pub add_to_match_desirability_bonus: i32,
@@ -295,8 +252,7 @@ pub struct s_logic_matchmaking_desirability {
     pub desirability_bonus_per_ping_interval: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_logic_matchmaking_seeker_configuration {
     pub session_search_wait_time_ms: i32,
@@ -320,8 +276,7 @@ pub struct s_logic_matchmaking_seeker_configuration {
     pub search_stage_any_final_desired_skill_range: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_logic_leaderboard_configuration {
     pub consecutive_failed_download_threshold: i32,
@@ -330,8 +285,7 @@ pub struct s_logic_leaderboard_configuration {
     pub refresh_request_wait_time_ms: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_session_interface_configuration {
     pub peer_properties_interval_msec: i32,
@@ -343,8 +297,7 @@ pub struct s_session_interface_configuration {
     pub stat_replication_wait_threshold_milliseconds: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_qos_reply_block_configuration {
     pub qos_listener_update_interval: i32,
@@ -352,8 +305,7 @@ pub struct s_qos_reply_block_configuration {
     pub disabled_qos_reply_bandwidth_bps: u32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_session_qos_reply_block_configuration {
     #[serde(with = "SerHex::<StrictCapPfx>")]
@@ -362,8 +314,7 @@ pub struct s_session_qos_reply_block_configuration {
     pub in_game_qos_reply_bandwidth_bps: u32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_logic_configuration {
     pub session_tracker: s_logic_session_tracker_configuration,
@@ -378,8 +329,7 @@ pub struct s_logic_configuration {
     pub maximum_players_in_forge: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_banhammer_configuration {
     pub machine_file_refresh_seconds: i32,
@@ -390,8 +340,7 @@ pub struct s_banhammer_configuration {
     pub idle_controller_timeout_seconds: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_zoom_relevance {
     pub zoom_0_tolerance: f32,
@@ -400,8 +349,7 @@ pub struct s_simulation_zoom_relevance {
     pub zoom_1_relevance_bonus: f32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_control_relevance {
     pub zero_relevance_distance: f32,
@@ -411,8 +359,7 @@ pub struct s_simulation_control_relevance {
     pub max_period: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_position_relevance {
     pub distance_to_player_threshold: f32,
@@ -421,32 +368,28 @@ pub struct s_simulation_position_relevance {
     pub distance_to_player_medium_tolerance: f32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_netdebug_configuration {
     pub bar_maximum_count: i32,
     pub axis_bounds: StaticArray<StaticArray<i32, 2>, 4>
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_view_configuration {
     pub game_results_update_interval_msec: i32,
     pub synchronous_client_block_duration_msec: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_shared_configuration {
     pub action_persist_time: f32,
     pub simulation_event_projectile_supercombine_request_fraction: f32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_world_configuration {
     pub maximum_catchup_views: i32,
@@ -464,8 +407,7 @@ pub struct s_simulation_world_configuration {
     pub game_simulation_queue_danger_allocation_count_percentage: f32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_event_configuration {
     pub constant_priority: f32,
@@ -475,8 +417,7 @@ pub struct s_simulation_event_configuration {
     pub maximum_priority: f32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_entity_creation_configuration {
     pub constant_priority: f32,
@@ -485,8 +426,7 @@ pub struct s_simulation_entity_creation_configuration {
     pub creation_maximum_priority: f32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_entity_update_configuration {
     pub constant_priority: f32,
@@ -506,16 +446,14 @@ pub struct s_simulation_entity_update_configuration {
     pub in_motion_by_unit: f32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_entity_configuration {
     pub creation_configuration: s_simulation_entity_creation_configuration,
     pub update_configuration: s_simulation_entity_update_configuration,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_warping_configuration {
     pub simulation_position_update_object_corrective_accept_tolerance: f32,
@@ -526,8 +464,7 @@ pub struct s_simulation_warping_configuration {
     pub position_update_minimum_distance: f32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_weapon_configuration {
     pub trigger_recent_spew_time: f32,
@@ -536,8 +473,7 @@ pub struct s_simulation_weapon_configuration {
     pub predicted_fire_always_allow_threshold: f32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_simulation_configuration {
     pub zoom_relevance: s_simulation_zoom_relevance,
@@ -553,15 +489,13 @@ pub struct s_simulation_configuration {
     pub weapon: s_simulation_weapon_configuration,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_event_manager_view_configuration {
     pub replication_event_maximum_blocked_time: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_replication_control_view {
     pub base_non_player_motion_priority: f32,
@@ -573,8 +507,7 @@ pub struct s_replication_control_view {
     pub min_priority_relevance_scale: f32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_replication_configuration {
     pub event_manager_view: s_event_manager_view_configuration,
@@ -582,8 +515,7 @@ pub struct s_replication_configuration {
     pub maximum_requests_to_send_in_one_frame: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_session_configuration {
     pub session_recreate_timeout_msec: i32,
@@ -614,8 +546,7 @@ pub struct s_session_configuration {
     pub allow_third_party_host_elections: s_bool,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_observer_configuration {
     pub secure_connect_attempts: i32,
@@ -885,8 +816,7 @@ pub struct s_observer_configuration {
     pub slow_probe_overprobe_transmit_ratio: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_channel_configuration {
     pub connect_request_interval_msec: i32,
@@ -896,8 +826,7 @@ pub struct s_channel_configuration {
     pub packet_statistics_interval: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_connection_configuration {
     pub sequence_advance_rate: i32,
@@ -923,16 +852,14 @@ pub struct s_connection_configuration {
     pub bandwidth_warning_latency_minimum_increase: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_delivery_configuration {
     pub channel: s_channel_configuration,
     pub connection: s_connection_configuration,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_transport_configuration {
     pub address_resolution_timeout_msec: i32,
@@ -944,8 +871,7 @@ pub struct s_transport_configuration {
     pub qos_upstream_cap_correction_modifier: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_voice_configuration {
     pub push_to_talk_inactivity_threshold_seconds: f32,
@@ -955,8 +881,7 @@ pub struct s_voice_configuration {
     pub open_channel_player_count: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_data_mine_configuration {
     pub ui_upload_record_threshold: i32,
@@ -965,8 +890,7 @@ pub struct s_data_mine_configuration {
     pub record_uploads_prevent_game_from_starting: s_bool,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_griefer_configuration {
     pub betrayal_decrement_time: u32,
@@ -976,16 +900,14 @@ pub struct s_griefer_configuration {
     pub UNUSED_friendly_assist_amount: f32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_network_memory_configuration {
     pub network_heap_large_size: i32,
     pub network_heap_small_size: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_user_interface {
     pub allow_matchmaking_abort_interval_msec: i32,
@@ -994,23 +916,20 @@ pub struct s_user_interface {
     pub basic_training_completion_minimum_experience: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_skill_level_configuration {
     pub bonus_skill_level_wins_required: StaticArray<i32, 50>,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_experience_configuration {
     pub experience_for_rank: StaticArray<i32, 56>,
     pub skill_for_rank: StaticArray<i32, 14>,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_alpha_configuration {
     pub disable_game: s_bool,
@@ -1020,8 +939,7 @@ pub struct s_alpha_configuration {
     pub maximum_multiplayer_split_screen: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_crash_handling_configuration {
     pub display_crash_handling_ui: s_bool,
@@ -1029,8 +947,7 @@ pub struct s_crash_handling_configuration {
     pub minidump_generation: e_minidump_generation,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_lsp_configuration {
     pub port_range_start: i32,
@@ -1040,8 +957,7 @@ pub struct s_lsp_configuration {
     pub recent_activity_milliseconds: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_map_information {
     pub map_id: u32,
@@ -1050,8 +966,7 @@ pub struct s_map_information {
     pub dlc_pack: e_dlc_pack,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_map_configuration {
     pub map_list: StaticArray<s_map_information, 32>,
@@ -1062,8 +977,7 @@ pub struct s_dlc_path {
     pub path: StaticString<0x80>,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_dlc_paths {
     pub paths: StaticArray<s_dlc_path, 16>,
@@ -1106,8 +1020,7 @@ impl BinWrite for s_dlc_path {
     }
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_chicken_switches {
     pub allow_no_hdd_network_coop: s_bool,
@@ -1119,16 +1032,14 @@ pub struct s_chicken_switches {
     pub au2_lsp_acquire_fix_only_enable_if_wb2_is_present: s_bool,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_determinism_configuration {
     pub determinism_version: i32,
     pub determinism_compatible_version: i32,
 }
 
-#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
-#[binrw]
+#[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite)]
 #[brw(big)]
 pub struct s_network_configuration {
     pub config_download: s_network_file_download_configuration,

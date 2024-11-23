@@ -1,3 +1,5 @@
+use std::any::Any;
+use binrw::{BinRead, BinWrite, BinWriterExt};
 use crate::blf::s_blf_header::s_blf_header;
 use crate::types::chunk_signature::chunk_signature;
 use crate::types::chunk_version::chunk_version;
@@ -10,6 +12,11 @@ pub trait BlfChunk {
 pub trait DynamicBlfChunk {
     fn signature(&self) -> chunk_signature;
     fn version(&self) -> chunk_version;
+}
+
+pub trait BlfChunkHooks {
+    fn before_write(&mut self, _previously_written: &Vec<u8>) {}
+    fn after_read(&mut self) {}
 }
 
 pub trait SerializableBlfChunk: DynamicBlfChunk {
@@ -29,6 +36,25 @@ pub trait SerializableBlfChunk: DynamicBlfChunk {
         encoded.append(&mut encoded_chunk);
 
         encoded
+    }
+}
+
+impl<T: DynamicBlfChunk + BinRead + BinWrite + Clone + Any + BlfChunkHooks> SerializableBlfChunk for T
+    where for<'a> <T as BinWrite>::Args<'a>: Default, for<'a> <T as BinRead>::Args<'a>: Default {
+    fn encode_body(&mut self, previously_written: &Vec<u8>) -> Vec<u8> where for<'a> <T as BinWrite>::Args<'a>: Default {
+        self.before_write(previously_written);
+
+        let mut writer = std::io::Cursor::new(Vec::<u8>::new());
+        writer.write_ne(self).unwrap();
+        writer.get_ref().clone()
+    }
+
+    fn decode_body(&mut self, buffer: &[u8]) where for<'b> <T as BinRead>::Args<'b>: Default {
+        let mut reader = std::io::Cursor::new(buffer);
+
+        self.clone_from(&T::read_ne(&mut reader).unwrap());
+
+        self.after_read();
     }
 }
 

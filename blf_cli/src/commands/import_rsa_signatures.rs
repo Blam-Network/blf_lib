@@ -66,11 +66,10 @@ pub fn import_rsa_signatures(
                 format!("{map_file_name}.map")
             );
 
-
             let cache_file = s_cache_file_header_v11::read(map_file_path);
             if cache_file.is_err() {
                 task.add_error(format!("Failed to read {map_file_name}.map"));
-                return;
+                continue;
             }
 
             let cache_file = cache_file.unwrap();

@@ -1,20 +1,27 @@
 use std::u32;
-use blf_lib::blf_chunk;
+use binrw::binrw;
+use serde::{Deserialize, Serialize};
+use blf_lib_derivable::blf::chunks::BlfChunkHooks;
+use blf_lib_derive::BlfChunk;
 use crate::types::c_string::StaticString;
 
 const k_banhammmer_messages_max_messages: usize = 32usize;
 const k_banhammer_message_max_length: usize = 0x100;
 
-blf_chunk!(
-    #[Signature("bhms")]
-    #[Version(1.1)]
-    #[PackedSerialize(1, BigEndian)]
-    pub struct s_blf_chunk_banhammer_messages
-    {
-        message_count: u32,
-        pub messages: Vec<StaticString<k_banhammer_message_max_length>> // UTF bytes,
-    }
-);
+#[binrw]
+#[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
+#[Signature("bhms")]
+#[Version(1.1)]
+#[brw(big)]
+pub struct s_blf_chunk_banhammer_messages
+{
+    #[bw(try_calc(u32::try_from(messages.len())))]
+    message_count: u32,
+    #[br(count = message_count)]
+    pub messages: Vec<StaticString<k_banhammer_message_max_length>> // UTF bytes,
+}
+
+impl BlfChunkHooks for s_blf_chunk_banhammer_messages {}
 
 impl s_blf_chunk_banhammer_messages {
     pub fn get_messages(&self) -> Vec<String> {
@@ -38,7 +45,7 @@ impl s_blf_chunk_banhammer_messages {
 
             self.messages.push(message);
         }
-        self.message_count = self.messages.len() as u32;
+        // self.message_count = self.messages.len() as u32;
         Ok(())
     }
 

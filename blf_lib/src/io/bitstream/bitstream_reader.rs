@@ -1,5 +1,8 @@
 
 use std::cmp::min;
+use std::io::Cursor;
+use binrw::BinRead;
+use num_traits::FromPrimitive;
 use widestring::U16CString;
 use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, valid_real_vector3d_axes3, arctangent, k_pi, dequantize_real, rotate_vector_about_axis, valid_real_vector3d_axes2};
 use crate::blam::common::math::integer_math::int32_point3d;
@@ -54,6 +57,20 @@ impl<'a> c_bitstream_reader<'a> {
         let mut buffer = vec![0u8; (size_in_bits as f32 / 8f32).ceil() as usize];
         self.read_bits_internal(buffer.as_mut_slice(), size_in_bits);
         buffer
+    }
+
+    pub fn read_raw<T: BinRead>(&mut self, size_in_bits: usize) -> T where for<'b> <T as BinRead>::Args<'b>: Default {
+        let data = self.read_raw_data(size_in_bits);
+        let mut reader = Cursor::new(data);
+
+        match self.m_byte_order {
+            e_bitstream_byte_order::_bitstream_byte_order_little_endian => {
+                T::read_le(&mut reader).unwrap()
+            }
+            e_bitstream_byte_order::_bitstream_byte_order_big_endian => {
+                T::read_be(&mut reader).unwrap()
+            }
+        }
     }
 
     pub fn read_bool(&mut self) -> bool {
@@ -174,6 +191,10 @@ impl<'a> c_bitstream_reader<'a> {
         self.m_bitstream_data.current_memory_bit_position = 0;
     }
 
+    pub fn read_enum<T: FromPrimitive>(&mut self, size_in_bits: usize) -> T {
+        let integer = self.read_integer(size_in_bits);
+        FromPrimitive::from_u32(integer).unwrap()
+    }
 
     pub fn read_integer(&mut self, size_in_bits: usize) -> u32 {
         assert!(size_in_bits > 0);

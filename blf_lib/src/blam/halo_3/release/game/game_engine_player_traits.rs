@@ -1,8 +1,8 @@
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
-use blf_lib_derive::PackedSerialize;
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct c_player_trait_weapons {
     m_initial_grenade_count_setting: u16,
     m_initial_primary_weapon_absolute_index: i8,
@@ -13,27 +13,29 @@ pub struct c_player_trait_weapons {
     m_weapon_pickup_setting: u8,
 }
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct c_player_trait_shield_vitality {
     m_damage_resistance_percentage_setting: u8,
     m_shield_recharge_rate_percentage_setting: u8,
     m_vampirism_percentage_setting: u8,
     m_headshot_immunity_setting: u8,
+    #[brw(align_after = 4)]
     m_shield_multiplier_setting: u8,
-    #[serde(skip_serializing,skip_deserializing)]
-    pad: [u8;3], // pelican
+    // #[serde(skip_serializing,skip_deserializing)]
+    // pad: [u8;3], // pelican
 }
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct c_player_trait_movement {
     m_speed_setting: u8,
     m_gravity_setting: u8,
+    #[brw(align_after = 4)]
     m_vehicle_usage_setting: u8,
-    #[serde(skip_serializing,skip_deserializing)]
-    pad: u8, // hornet
+    // #[serde(skip_serializing,skip_deserializing)]
+    // pad: u8, // hornet
 }
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct c_player_trait_appearance {
     m_active_camo_setting: u8,
     m_waypoint_setting: u8,
@@ -41,13 +43,13 @@ pub struct c_player_trait_appearance {
     m_forced_change_color_setting: u8,
 }
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct c_player_trait_sensors {
     m_motion_tracker_setting: u16,
     m_motion_tracker_range_setting: u16,
 }
 
-#[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct c_player_traits {
     m_shield_vitality_traits: c_player_trait_shield_vitality,
     m_weapon_traits: c_player_trait_weapons,

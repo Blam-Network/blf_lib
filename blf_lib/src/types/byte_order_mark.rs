@@ -1,16 +1,10 @@
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
-use blf_lib_derive::PackedSerialize;
 
-#[derive(Clone, Copy, Debug, PartialEq, PackedSerialize, Serialize, Deserialize)]
-pub struct byte_order_mark {
-    pub value: u16,
+#[derive(Clone, Copy, Debug, PartialEq, BinRead, BinWrite, Serialize, Deserialize, Default)]
+#[brw(repr = u16)]
+pub enum byte_order_mark {
+    #[default]
+    little_endian = 0xFFFE,
+    big_endian = 0xFEFF
 }
-
-impl Default for byte_order_mark {
-    fn default() -> byte_order_mark {
-        little_endian
-    }
-}
-
-pub const little_endian: byte_order_mark = byte_order_mark { value: u16::from_le_bytes([0xFF, 0xFE]) };
-pub const big_endian: byte_order_mark = byte_order_mark { value: u16::from_le_bytes([0xFE, 0xFF]) };

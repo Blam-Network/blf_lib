@@ -1,12 +1,8 @@
-use std::io::{Cursor, Read};
+use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use blf_lib::io::packed_decoding::{seek_pad, PackedDecoder};
-use blf_lib::io::packed_encoding::PackedEncoder;
-use blf_lib_derivable::io::endian::Endianness;
-use blf_lib_derivable::io::packing::Packing;
 use chrono::{NaiveDateTime, TimeZone, Utc};
 
-#[derive(Default, Clone, Debug, PartialEq)]
+#[derive(Default, Clone, Debug, PartialEq, BinRead, BinWrite)]
 pub struct time_t(u64);
 
 impl time_t {
@@ -38,31 +34,8 @@ impl<'de> Deserialize<'de> for time_t {
         Ok(time_t(datetime.and_utc().timestamp() as u64))
     }
 }
-impl PackedEncoder for time_t {
-    fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
-        match endian {
-            Endianness::Little => { packing.create_packed_buffer_from_slice(self.0.to_le_bytes().as_slice()) }
-            Endianness::Big => { packing.create_packed_buffer_from_slice(self.0.to_be_bytes().as_slice()) }
-        }
-    }
-}
 
-impl PackedDecoder for time_t {
-    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>  {
-        let mut bytes = [0u8; 8];
-        reader.read_exact(&mut bytes).map_err(|_|"Failed to read bytes.")?;
-        seek_pad(reader, &bytes, packing)?;
-
-        Ok(Self {0: match endian {
-            Endianness::Little => { u64::from_le_bytes(bytes) }
-            Endianness::Big => { u64::from_be_bytes(bytes) }
-        }})
-    }
-}
-
-
-
-#[derive(Default, Clone, Debug, PartialEq)]
+#[derive(Default, Clone, Debug, PartialEq, BinRead, BinWrite)]
 pub struct filetime(u64);
 
 impl filetime {
@@ -115,33 +88,5 @@ impl<'de> Deserialize<'de> for filetime {
         let datetime = NaiveDateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S")
             .map_err(serde::de::Error::custom)?;
         Ok(Self::from_time_t(datetime.and_utc().timestamp() as u64))
-    }
-}
-
-impl PackedEncoder for filetime {
-    fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
-        match endian {
-            Endianness::Little => {
-                packing.create_packed_buffer_from_slice(self.0.to_le_bytes().as_slice())
-            }
-            Endianness::Big => {
-                packing.create_packed_buffer_from_slice(self.0.to_be_bytes().as_slice())
-            }
-        }
-    }
-}
-
-impl PackedDecoder for filetime {
-    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String> {
-        let mut bytes = [0u8; 8];
-        reader.read_exact(&mut bytes).map_err(|_| "Failed to read bytes.")?;
-        seek_pad(reader, &bytes, packing)?;
-
-        Ok(Self {
-            0: match endian {
-                Endianness::Little => u64::from_le_bytes(bytes),
-                Endianness::Big => u64::from_be_bytes(bytes),
-            },
-        })
     }
 }

@@ -1,27 +1,27 @@
-use std::io::{Cursor, Read, Seek, Write};
+use std::io::{Read, Seek, Write};
 use binrw::{BinRead, BinReaderExt, BinResult, BinWrite, Endian};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use blf_lib::io::packed_decoding::PackedDecoder;
-use blf_lib::io::packed_encoding::PackedEncoder;
-use blf_lib_derivable::io::endian::Endianness;
-use blf_lib_derivable::io::packing::Packing;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct s_bool(pub bool); // Renamed to s_bool
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub struct s_bool(pub bool);
 
-impl PackedDecoder for s_bool {
-    fn decode_packed(reader: &mut Cursor<&[u8]>, endian: Endianness, packing: Packing) -> Result<Self, String>
-    where
-        Self: Sized
-    {
-        // TODO: Remove Packed Serialize entirely.
-        todo!()
+impl Into<bool> for s_bool {
+    fn into(self) -> bool {
+        self.0
     }
 }
 
-impl PackedEncoder for s_bool {
-    fn encode_packed(&self, endian: Endianness, packing: Packing) -> Vec<u8> {
-        todo!()
+impl From<bool> for s_bool {
+    fn from(val: bool) -> s_bool {
+        s_bool {
+            0: val
+        }
+    }
+}
+
+impl PartialEq<bool> for s_bool {
+    fn eq(&self, other: &bool) -> bool {
+        self.0 == *other
     }
 }
 
