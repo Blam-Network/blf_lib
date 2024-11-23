@@ -1,4 +1,5 @@
 use std::io::Cursor;
+use binrw::binrw;
 use serde::{Deserialize, Serialize};
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
 use blf_lib::io::packed_decoding::PackedDecoder;
@@ -220,6 +221,7 @@ impl c_map_variant {
 
 #[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
 #[PackedSerialize(1, BigEndian)]
+#[binrw]
 pub struct s_variant_quota {
     #[serde(with = "SerHex::<StrictCap>")]
     pub object_definition_index: u32,
@@ -232,6 +234,7 @@ pub struct s_variant_quota {
 
 #[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
 #[PackedSerialize(1, BigEndian)]
+#[binrw]
 pub struct s_variant_multiplayer_object_properties_definition {
     pub game_engine_flags: u16,
     pub symmetry_placement_flags: u8, // foo
@@ -248,6 +251,7 @@ pub struct s_variant_multiplayer_object_properties_definition {
 
 #[derive(Default, PartialEq, Debug, Clone, PackedSerialize, Copy, Serialize, Deserialize)]
 #[PackedSerialize(4, BigEndian)]
+#[binrw]
 pub struct s_variant_object_datum {
     pub flags: u16,
     // pad 16
@@ -263,6 +267,7 @@ pub struct s_variant_object_datum {
 
 #[derive(Default, PartialEq, Debug, Clone, Copy, PackedSerialize, Serialize, Deserialize)]
 #[PackedSerialize(1, BigEndian)]
+#[binrw]
 pub struct c_object_identifier {
     m_unique_id: i32,
     m_origin_bsp_index: i16,

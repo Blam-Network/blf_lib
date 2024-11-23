@@ -1,3 +1,4 @@
+use binrw::binrw;
 use serde::{Deserialize, Serialize};
 use crate::types::c_string::StaticWcharString;
 use crate::blf_chunk;
@@ -6,11 +7,13 @@ use blf_lib::blam::common::cseries::language::k_language_count;
 use blf_lib::blam::halo_3::release::game::game_engine_default::k_game_engine_type_count;
 use crate::types::c_string::StaticString;
 use blf_lib_derive::PackedSerialize;
+use crate::types::bool::s_bool;
 
 #[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, PackedSerialize)]
 #[PackedSerialize(1, BigEndian)]
+#[binrw]
 pub struct s_blf_chunk_scenario_insertion {
-    pub visible: bool,
+    pub visible: s_bool,
     pub flags: u8,
     pub zone_set: u16,
     __pad4: [u8;4],

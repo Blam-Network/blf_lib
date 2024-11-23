@@ -5,3 +5,4 @@ pub mod build_number_identifier;
 pub mod byte_order_mark;
 pub mod array;
 pub mod time;
+pub mod bool;

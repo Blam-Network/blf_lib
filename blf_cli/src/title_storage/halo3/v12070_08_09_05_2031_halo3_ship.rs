@@ -707,16 +707,8 @@ impl v12070_08_09_05_2031_halo3_ship {
             k_network_configuration_file_name
         );
 
-        let network_configuration_dest_path = build_path!(
-            hoppers_config_path,
-            k_network_configuration_file_name
-        );
-
-        // We read and rewrite to tidy any padding and the headers.
-        let mut network_config = network_configuration::read(&network_configuration_source_path)?;
-        network_config.write(&network_configuration_dest_path);
-
-        fs::copy(network_configuration_source_path, network_configuration_dest_path)?;
+        let network_config = network_configuration::read(&network_configuration_source_path)?;
+        network_config.write_to_config(&hoppers_config_path)?;
 
         やった!(task)
     }
@@ -1502,12 +1494,8 @@ impl v12070_08_09_05_2031_halo3_ship {
         hoppers_blfs_path: &String,
     ) -> Result<(), Box<dyn Error>> {
         let mut task = console_task::start("Building Network Configuration");
-        let netc = find_chunk_in_file(build_path!(
-            hoppers_config_path,
-            k_network_configuration_file_name
-        ))?;
 
-        let mut network_configuration_blf_file = network_configuration::create(netc);
+        let mut network_configuration_blf_file = network_configuration::read_from_config(&hoppers_config_path)?;
         network_configuration_blf_file.write(
             build_path!(
                 hoppers_blfs_path,

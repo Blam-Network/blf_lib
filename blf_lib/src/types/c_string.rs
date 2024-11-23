@@ -9,6 +9,7 @@ use blf_lib::io::packed_encoding::PackedEncoder;
 use blf_lib_derivable::io::endian::Endianness;
 use blf_lib_derivable::io::packing::{Packing, PACK1};
 use std::io::Cursor;
+use binrw::binrw;
 use serde::de::Error;
 
 pub fn to_string(chars: &[c_char]) -> String {
@@ -48,6 +49,7 @@ pub fn from_string(string: String) -> Vec<c_char> {
 }
 
 #[derive(PartialEq, Debug, Clone, Default)]
+#[binrw]
 pub struct StaticWcharString<const N: usize> {
     buf: StaticArray<u16, N>,
 }
@@ -125,6 +127,7 @@ impl<'de, const N: usize> serde::Deserialize<'de> for StaticWcharString<N> {
 }
 
 #[derive(PartialEq, Debug, Clone, Copy)]
+#[binrw]
 pub struct StaticString<const N: usize> {
     buf: [u8; N],
 }

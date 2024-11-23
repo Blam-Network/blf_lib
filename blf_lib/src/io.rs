@@ -19,7 +19,7 @@ pub fn read_file_to_string(path: impl Into<String>) -> Result<String, Box<dyn Er
     Ok(contents)
 }
 
-pub fn read_json_file<T: DeserializeOwned>(path: impl Into<String>) -> Result<T, Box<dyn std::error::Error>> {
+pub fn read_json_file<T: DeserializeOwned>(path: impl Into<String>) -> Result<T, Box<dyn Error>> {
     let json = read_file_to_string(path)?;
     serde_json::from_str(&json).map_err(|e| e.into())
 }
