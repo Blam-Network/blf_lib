@@ -1,7 +1,7 @@
 [package]
 name = "blf_lib-derive"
 description = "Derive macros for blf_lib"
-version = "1.4.1"
+version = "1.4.2"
 edition = "2021"
 
 [lib]
