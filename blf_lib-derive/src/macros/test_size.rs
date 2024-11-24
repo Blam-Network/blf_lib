@@ -21,7 +21,15 @@ pub fn test_size_macro(input: TokenStream) -> TokenStream {
 
             let size_literal = parsed_ints.first().unwrap();
 
-            expected_size = size_literal.base10_parse().expect("Size value is invalid");
+            if size_literal.to_string().starts_with("0x") {
+
+                expected_size = usize::from_str_radix(&size_literal.to_string()[2..], 16).unwrap();
+
+                // panic!("HEX {} EXPECTED {}", size_literal.to_string(), expected_size);
+
+            } else {
+                expected_size = size_literal.base10_parse().expect("Size value is invalid");
+            }
         }
         _ => {
             panic!("Unsupported attribute type for Size. Please use the #[Size(0x44)] syntax.");
@@ -35,18 +43,14 @@ pub fn test_size_macro(input: TokenStream) -> TokenStream {
                 mod derive_test_size {
                     use super::*;
 
-                    const fn size_of_raw<T>(_: *const T) -> usize {
-                        core::mem::size_of::<T>()
-                    }
-
                     #[test]
                     fn #test_name() {
-                        let m = core::mem::MaybeUninit::<#name>::uninit();
+                        let m: #name = Default::default();
 
                         let mut total_size: usize = 0;
 
                         let mut writer = std::io::Cursor::new(Vec::new());
-                        writer.write_ne(&self).unwrap();
+                        <std::io::Cursor<std::vec::Vec<u8>> as binrw::BinWriterExt>::write_ne(&mut writer, &m).unwrap();
                         let written = writer.get_ref().clone();
                         let total_size = written.len();
 

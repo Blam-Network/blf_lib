@@ -32,7 +32,7 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
     let bytes = signature_string.as_bytes();
     assert_eq!(bytes.len(), 4, "Signature provided with invalid byte length! {signature_string}");
 
-    // let test_size_tokens: TokenStream2 = if size_attribute.is_some() { test_size_macro(tokens.clone()).into() } else { quote! {} };
+    let test_size_tokens: TokenStream2 = if size_attribute.is_some() { test_size_macro(tokens.clone()).into() } else { quote! {} };
 
     match input.data {
         Data::Struct(_s) => {

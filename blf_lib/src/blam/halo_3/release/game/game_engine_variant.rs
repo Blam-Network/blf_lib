@@ -35,7 +35,7 @@ pub enum e_game_engine {
 
 #[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct c_game_variant {
-    pub m_game_engine_index: e_game_engine,
+    pub m_game_engine: e_game_engine,
     pub m_base_variant: c_game_engine_base_variant,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub m_ctf_variant: Option<c_game_engine_ctf_variant>,
@@ -63,10 +63,10 @@ impl BinWrite for c_game_variant {
     type Args<'a> = ();
 
     fn write_options<W: Write + Seek>(&self, writer: &mut W, endian: Endian, args: Self::Args<'_>) -> BinResult<()> {
-        writer.write_ne(&self.m_game_engine_index)?;
+        writer.write_ne(&self.m_game_engine)?;
         writer.write_ne(&self.m_base_variant)?;
 
-        match self.m_game_engine_index {
+        match self.m_game_engine {
             e_game_engine::none => { Ok(()) }
             e_game_engine::ctf => { writer.write_ne(&self.m_ctf_variant.as_ref().unwrap()) }
             e_game_engine::slayer => { writer.write_ne(&self.m_slayer_variant.as_ref().unwrap()) }
@@ -90,7 +90,7 @@ impl BinRead for c_game_variant {
         let base_game_engine: c_game_engine_base_variant = reader.read_ne()?;
 
         let mut game_variant = c_game_variant {
-            m_game_engine_index: game_engine_index,
+            m_game_engine: game_engine_index,
             m_base_variant: base_game_engine,
             m_ctf_variant: None,
             m_slayer_variant: None,
@@ -104,7 +104,7 @@ impl BinRead for c_game_variant {
             m_infection_variant: None,
         };
 
-        match game_variant.m_game_engine_index {
+        match game_variant.m_game_engine {
             e_game_engine::none => {}
             e_game_engine::ctf => { game_variant.m_ctf_variant = reader.read_ne()?; }
             e_game_engine::slayer => { game_variant.m_slayer_variant = reader.read_ne()?; }
@@ -125,11 +125,11 @@ impl BinRead for c_game_variant {
 
 impl c_game_variant {
     pub fn encode(&self, bitstream: &mut c_bitstream_writer) {
-        bitstream.write_raw(&self.m_game_engine_index, 4);
+        bitstream.write_raw(&self.m_game_engine, 4);
 
         self.m_base_variant.encode(bitstream);
 
-        match self.m_game_engine_index {
+        match self.m_game_engine {
             e_game_engine::none => { }
             e_game_engine::ctf => { self.m_ctf_variant.as_ref().unwrap().encode(bitstream); }
             e_game_engine::slayer => { self.m_slayer_variant.as_ref().unwrap().encode(bitstream); }
@@ -146,10 +146,10 @@ impl c_game_variant {
     }
 
     pub fn decode(&mut self, bitstream: &mut c_bitstream_reader) {
-        self.m_game_engine_index = bitstream.read_enum(4);
+        self.m_game_engine = bitstream.read_enum(4);
         self.m_base_variant.decode(bitstream);
 
-        match self.m_game_engine_index {
+        match self.m_game_engine {
             e_game_engine::none => { }
             e_game_engine::ctf => {
                 self.m_ctf_variant = Some(c_game_engine_ctf_variant::default());

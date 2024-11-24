@@ -13,6 +13,7 @@ use blf_lib_derive::BlfChunk;
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
 #[Header("netc", 135.1)]
+#[Size(8300)]
 #[brw(big)]
 pub struct s_blf_chunk_network_configuration
 {

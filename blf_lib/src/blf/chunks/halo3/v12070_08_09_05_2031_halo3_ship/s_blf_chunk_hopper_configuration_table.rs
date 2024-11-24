@@ -34,6 +34,7 @@ pub struct s_game_hopper_custom_category {
 #[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
 pub struct c_hopper_configuration {
     pub hopper_name: StaticString<15>,
+    #[serde(skip_serializing,skip_deserializing)]
     pub game_set_hash: s_network_http_request_hash,
     pub hopper_identifier: u16,
     pub hopper_category: u16,
