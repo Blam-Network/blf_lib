@@ -1,8 +1,8 @@
 [package]
 name = "blf_lib-derivable"
 description = "Shared traits used by blf_lib and blf_lib-derive"
-version = "1.4.3"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
 binrw = "0.14.1"

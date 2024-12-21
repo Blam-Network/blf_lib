@@ -1,8 +1,8 @@
 [package]
 name = "blf_lib-derive"
 description = "Derive macros for blf_lib"
-version = "1.4.3"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 
 [lib]
 proc-macro = true

@@ -1,7 +1,7 @@
 [package]
 name = "blf_cli"
-version = "1.4.3"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
 blf_lib = { path = "../blf_lib" }
