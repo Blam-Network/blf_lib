@@ -1,10 +1,9 @@
-use std::ffi::c_char;
 use binrw::{binrw};
 use serde::{Deserialize, Serialize};
 use blf_lib_derivable::blf::chunks::{BlfChunkHooks, TitleAndBuild};
 use blf_lib_derive::BlfChunk;
 use crate::types::build_number_identifier::build_number_identifier;
-use crate::types::c_string::from_string_with_length;
+use crate::types::c_string::StaticString;
 
 #[binrw]
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
@@ -12,10 +11,10 @@ use crate::types::c_string::from_string_with_length;
 #[Size(0x44)]
 #[brw(big)]
 pub struct s_blf_chunk_author {
-    pub program_name: [c_char; 16],
+    pub program_name: StaticString<16>,
     pub build_identifier: build_number_identifier,
-    pub build_string: [c_char; 28],
-    pub author_name: [c_char; 16],
+    pub build_string: StaticString<28>,
+    pub author_name: StaticString<16>,
 }
 
 impl BlfChunkHooks for s_blf_chunk_author {}
@@ -23,10 +22,10 @@ impl BlfChunkHooks for s_blf_chunk_author {}
 impl s_blf_chunk_author {
     pub fn new(build_name: &str, build_identifier: build_number_identifier, build_string: &str, author_name: &str) -> s_blf_chunk_author {
         s_blf_chunk_author {
-            program_name: from_string_with_length(build_name.to_string(), 16).try_into().unwrap(),
+            program_name: StaticString::from_string(build_name.to_string()).unwrap(),
             build_identifier,
-            build_string: from_string_with_length(build_string.to_string(), 28).try_into().unwrap(),
-            author_name: from_string_with_length(author_name.to_string(), 16).try_into().unwrap(),
+            build_string: StaticString::from_string(build_string.to_string()).unwrap(),
+            author_name: StaticString::from_string(author_name.to_string()).unwrap(),
         }
     }
 
@@ -40,12 +39,12 @@ impl s_blf_chunk_author {
         let name = env!("CARGO_PKG_NAME");
 
         Self {
-            program_name: from_string_with_length(format!("{name} v{version}"), 16).try_into().unwrap(),
+            program_name: StaticString::from_string(format!("{name} v{version}")).unwrap(),
             build_identifier: build_number_identifier {
                 build_number,
                 build_number_version: 1,
             },
-            build_string: from_string_with_length(T::get_build_string().to_string(), 28).try_into().unwrap(),
+            build_string: StaticString::from_string(T::get_build_string().to_string()).unwrap(),
             author_name: Default::default(),
         }
     }

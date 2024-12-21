@@ -56,7 +56,7 @@ pub fn convert_halo3mcc_map_variants(mcc_maps_folder: String, converted_maps_pat
             blf_file.add_chunk(s_blf_chunk_map_variant::create(map_variant));
             blf_file.add_chunk(s_blf_chunk_end_of_file::default());
 
-            blf_file.write(build_path!(
+            blf_file.write_file(build_path!(
                 &converted_maps_path,
                 &output_file_name
             ));

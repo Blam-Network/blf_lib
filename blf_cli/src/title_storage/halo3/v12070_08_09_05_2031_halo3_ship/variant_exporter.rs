@@ -30,7 +30,7 @@ pub fn export_variant(source_json_path: &str, desination_path: &str) {
 
     blf_file.add_chunk(s_blf_chunk_end_of_file::default());
 
-    blf_file.write(desination_path);
+    blf_file.write_file(desination_path);
 
     task.complete();
 }

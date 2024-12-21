@@ -1,3 +1,4 @@
+use std::fmt::Display;
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct chunk_version {
@@ -18,3 +19,8 @@ impl chunk_version {
     }
 }
 
+impl Display for chunk_version {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}.{}", self.major, self.minor)
+    }
+}

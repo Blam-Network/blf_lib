@@ -1,12 +1,12 @@
 use std::error::Error;
 use std::fs::{create_dir_all, File};
-use std::io::{Read, Write};
+use std::io::{Cursor, Read, Write};
 use std::path::Path;
 use lazy_static::lazy_static;
 use sha1::{Digest, Sha1};
 use sha1::digest::Update;
 use blf_lib::blam::common::memory::secure_signature::s_network_http_request_hash;
-use blf_lib_derivable::blf::chunks::{ChunkFactory, SerializableBlfChunk};
+use blf_lib_derivable::blf::chunks::{BlfChunk, SerializableBlfChunk};
 
 pub mod chunks;
 pub mod versions;
@@ -39,16 +39,27 @@ impl BlfFileBuilder {
     pub fn get_chunks(&self) -> &Vec<Box<dyn SerializableBlfChunk>> {
         &self.chunks
     }
-}
 
-impl BlfFileBuilder {
-    pub fn write(&mut self, path: impl Into<String>) {
-        let path = &path.into();
+    pub fn get_chunk<T: BlfChunk + SerializableBlfChunk + 'static>(&self) -> Result<&T, Box<dyn Error>> {
+        self.chunks
+            .iter()
+            .find_map(|chunk| chunk.as_ref().as_any().downcast_ref::<T>())
+            .ok_or_else(|| format!("Chunk {} {} not found", T::get_signature(), T::get_version()).into())
+    }
+
+    pub fn write(&mut self) -> Vec<u8> {
         let mut data: Vec<u8> = Vec::new();
 
         for chunk in &mut self.chunks.iter_mut()  {
             data.append(&mut chunk.write(&data));
         }
+
+        data
+    }
+
+    pub fn write_file(&mut self, path: impl Into<String>) {
+        let path = &path.into();
+        let data = self.write();
         
         let parent_path = Path::new(path).parent().unwrap();
         create_dir_all(parent_path).unwrap();
@@ -58,19 +69,34 @@ impl BlfFileBuilder {
             .write_all(&data);
     }
 
-    pub fn read(path: &str, version: impl ChunkFactory) -> Result<Self, Box<dyn Error>> {
-        let mut file = File::open(path)?;
+    pub fn read(&mut self, buffer: &Vec<u8>) -> Result<&mut BlfFileBuilder, Box<dyn Error>> {
+        let mut reader = Cursor::new(buffer);
         let mut headerBytes = [0u8; s_blf_header::size()];
         let mut header: s_blf_header;
-        let mut blf_file_builder = BlfFileBuilder::new();
 
-        while file.read_exact(&mut headerBytes).is_ok() {
+        for chunk in &mut self.chunks.iter_mut()  {
+            reader.read_exact(&mut headerBytes)?;
             header = s_blf_header::decode(&headerBytes);
-            let body_bytes = vec![0u8; (header.chunk_size as usize) - s_blf_header::size()];
-            blf_file_builder.add_dyn_chunk(version.decode(header.signature, header.version, body_bytes)?);
+
+            if header.signature != chunk.signature() || header.version != chunk.version() {
+                return Err(Box::from(format!("Failed to read chunk {} {}, found {} {} instead!",
+                                             chunk.signature(),
+                                             chunk.version(),
+                                             header.signature,
+                                             header.version
+                )))
+            }
+
+            let mut body_bytes = vec![0u8; (header.chunk_size as usize) - s_blf_header::size()];
+            reader.read_exact(&mut body_bytes)?;
+            chunk.decode_body(&body_bytes);
         }
 
-        Ok(blf_file_builder)
+        Ok(self)
+    }
+
+    pub fn chunk_count(&self) -> usize {
+        self.chunks.len()
     }
 }
 
@@ -97,7 +123,7 @@ pub fn get_blf_file_hash(path: String) -> Result<s_network_http_request_hash, Bo
 #[macro_export]
 macro_rules! blf_file {
     ($i:item) => {
-        #[derive(blf_lib::derive::BlfFile, Default, PartialEq, Debug, Clone)]
+        #[derive(blf_lib::derive::BlfFile, Default, PartialEq, Debug, Clone, serde::Serialize)]
         $i
     }
 }

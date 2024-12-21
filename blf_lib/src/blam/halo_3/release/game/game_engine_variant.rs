@@ -63,21 +63,43 @@ impl BinWrite for c_game_variant {
     type Args<'a> = ();
 
     fn write_options<W: Write + Seek>(&self, writer: &mut W, endian: Endian, args: Self::Args<'_>) -> BinResult<()> {
-        writer.write_ne(&self.m_game_engine)?;
-        writer.write_ne(&self.m_base_variant)?;
+        match endian {
+            Endian::Big => {
+                writer.write_be(&self.m_game_engine)?;
+                writer.write_be(&self.m_base_variant)?;
 
-        match self.m_game_engine {
-            e_game_engine::none => { Ok(()) }
-            e_game_engine::ctf => { writer.write_ne(&self.m_ctf_variant.as_ref().unwrap()) }
-            e_game_engine::slayer => { writer.write_ne(&self.m_slayer_variant.as_ref().unwrap()) }
-            e_game_engine::oddball => { writer.write_ne(&self.m_oddball_variant.as_ref().unwrap()) }
-            e_game_engine::king => { writer.write_ne(&self.m_king_variant.as_ref().unwrap()) }
-            e_game_engine::sandbox => { writer.write_ne(&self.m_sandbox_variant.as_ref().unwrap()) }
-            e_game_engine::vip => { writer.write_ne(&self.m_vip_variant.as_ref().unwrap()) }
-            e_game_engine::juggernaut => { writer.write_ne(&self.m_juggernaut_variant.as_ref().unwrap()) }
-            e_game_engine::territories => { writer.write_ne(&self.m_territories_variant.as_ref().unwrap()) }
-            e_game_engine::assault => { writer.write_ne(&self.m_assault_variant.as_ref().unwrap()) }
-            e_game_engine::infection => { writer.write_ne(&self.m_infection_variant.as_ref().unwrap()) }
+                match self.m_game_engine {
+                    e_game_engine::none => { Ok(()) }
+                    e_game_engine::ctf => { writer.write_be(&self.m_ctf_variant.as_ref().unwrap()) }
+                    e_game_engine::slayer => { writer.write_be(&self.m_slayer_variant.as_ref().unwrap()) }
+                    e_game_engine::oddball => { writer.write_be(&self.m_oddball_variant.as_ref().unwrap()) }
+                    e_game_engine::king => { writer.write_be(&self.m_king_variant.as_ref().unwrap()) }
+                    e_game_engine::sandbox => { writer.write_be(&self.m_sandbox_variant.as_ref().unwrap()) }
+                    e_game_engine::vip => { writer.write_be(&self.m_vip_variant.as_ref().unwrap()) }
+                    e_game_engine::juggernaut => { writer.write_be(&self.m_juggernaut_variant.as_ref().unwrap()) }
+                    e_game_engine::territories => { writer.write_be(&self.m_territories_variant.as_ref().unwrap()) }
+                    e_game_engine::assault => { writer.write_be(&self.m_assault_variant.as_ref().unwrap()) }
+                    e_game_engine::infection => { writer.write_be(&self.m_infection_variant.as_ref().unwrap()) }
+                }
+            }
+            Endian::Little => {
+                writer.write_le(&self.m_game_engine)?;
+                writer.write_le(&self.m_base_variant)?;
+
+                match self.m_game_engine {
+                    e_game_engine::none => { Ok(()) }
+                    e_game_engine::ctf => { writer.write_le(&self.m_ctf_variant.as_ref().unwrap()) }
+                    e_game_engine::slayer => { writer.write_le(&self.m_slayer_variant.as_ref().unwrap()) }
+                    e_game_engine::oddball => { writer.write_le(&self.m_oddball_variant.as_ref().unwrap()) }
+                    e_game_engine::king => { writer.write_le(&self.m_king_variant.as_ref().unwrap()) }
+                    e_game_engine::sandbox => { writer.write_le(&self.m_sandbox_variant.as_ref().unwrap()) }
+                    e_game_engine::vip => { writer.write_le(&self.m_vip_variant.as_ref().unwrap()) }
+                    e_game_engine::juggernaut => { writer.write_le(&self.m_juggernaut_variant.as_ref().unwrap()) }
+                    e_game_engine::territories => { writer.write_le(&self.m_territories_variant.as_ref().unwrap()) }
+                    e_game_engine::assault => { writer.write_le(&self.m_assault_variant.as_ref().unwrap()) }
+                    e_game_engine::infection => { writer.write_le(&self.m_infection_variant.as_ref().unwrap()) }
+                }
+            }
         }
     }
 }
@@ -86,39 +108,78 @@ impl BinRead for c_game_variant {
     type Args<'a> = ();
 
     fn read_options<R: Read + Seek>(reader: &mut R, endian: Endian, args: Self::Args<'_>) -> BinResult<Self> {
-        let game_engine_index: e_game_engine = reader.read_ne()?;
-        let base_game_engine: c_game_engine_base_variant = reader.read_ne()?;
+        match endian {
+            Endian::Big => {
+                let game_engine_index: e_game_engine = reader.read_be()?;
+                let base_game_engine: c_game_engine_base_variant = reader.read_be()?;
 
-        let mut game_variant = c_game_variant {
-            m_game_engine: game_engine_index,
-            m_base_variant: base_game_engine,
-            m_ctf_variant: None,
-            m_slayer_variant: None,
-            m_oddball_variant: None,
-            m_king_variant: None,
-            m_sandbox_variant: None,
-            m_vip_variant: None,
-            m_juggernaut_variant: None,
-            m_territories_variant: None,
-            m_assault_variant: None,
-            m_infection_variant: None,
-        };
+                let mut game_variant = c_game_variant {
+                    m_game_engine: game_engine_index,
+                    m_base_variant: base_game_engine,
+                    m_ctf_variant: None,
+                    m_slayer_variant: None,
+                    m_oddball_variant: None,
+                    m_king_variant: None,
+                    m_sandbox_variant: None,
+                    m_vip_variant: None,
+                    m_juggernaut_variant: None,
+                    m_territories_variant: None,
+                    m_assault_variant: None,
+                    m_infection_variant: None,
+                };
 
-        match game_variant.m_game_engine {
-            e_game_engine::none => {}
-            e_game_engine::ctf => { game_variant.m_ctf_variant = reader.read_ne()?; }
-            e_game_engine::slayer => { game_variant.m_slayer_variant = reader.read_ne()?; }
-            e_game_engine::oddball => { game_variant.m_oddball_variant = reader.read_ne()?; }
-            e_game_engine::king => { game_variant.m_king_variant = reader.read_ne()?; }
-            e_game_engine::sandbox => { game_variant.m_sandbox_variant = reader.read_ne()?; }
-            e_game_engine::vip => { game_variant.m_vip_variant = reader.read_ne()?; }
-            e_game_engine::juggernaut => { game_variant.m_juggernaut_variant = reader.read_ne()?; }
-            e_game_engine::territories => { game_variant.m_territories_variant = reader.read_ne()?; }
-            e_game_engine::assault => { game_variant.m_assault_variant = reader.read_ne()?; }
-            e_game_engine::infection => { game_variant.m_infection_variant = reader.read_ne()?; }
+                match game_variant.m_game_engine {
+                    e_game_engine::none => {}
+                    e_game_engine::ctf => { game_variant.m_ctf_variant = reader.read_be()?; }
+                    e_game_engine::slayer => { game_variant.m_slayer_variant = reader.read_be()?; }
+                    e_game_engine::oddball => { game_variant.m_oddball_variant = reader.read_be()?; }
+                    e_game_engine::king => { game_variant.m_king_variant = reader.read_be()?; }
+                    e_game_engine::sandbox => { game_variant.m_sandbox_variant = reader.read_be()?; }
+                    e_game_engine::vip => { game_variant.m_vip_variant = reader.read_be()?; }
+                    e_game_engine::juggernaut => { game_variant.m_juggernaut_variant = reader.read_be()?; }
+                    e_game_engine::territories => { game_variant.m_territories_variant = reader.read_be()?; }
+                    e_game_engine::assault => { game_variant.m_assault_variant = reader.read_be()?; }
+                    e_game_engine::infection => { game_variant.m_infection_variant = reader.read_be()?; }
+                }
+
+                Ok(game_variant)
+            }
+            Endian::Little => {
+                let game_engine_index: e_game_engine = reader.read_le()?;
+                let base_game_engine: c_game_engine_base_variant = reader.read_le()?;
+
+                let mut game_variant = c_game_variant {
+                    m_game_engine: game_engine_index,
+                    m_base_variant: base_game_engine,
+                    m_ctf_variant: None,
+                    m_slayer_variant: None,
+                    m_oddball_variant: None,
+                    m_king_variant: None,
+                    m_sandbox_variant: None,
+                    m_vip_variant: None,
+                    m_juggernaut_variant: None,
+                    m_territories_variant: None,
+                    m_assault_variant: None,
+                    m_infection_variant: None,
+                };
+
+                match game_variant.m_game_engine {
+                    e_game_engine::none => {}
+                    e_game_engine::ctf => { game_variant.m_ctf_variant = reader.read_le()?; }
+                    e_game_engine::slayer => { game_variant.m_slayer_variant = reader.read_le()?; }
+                    e_game_engine::oddball => { game_variant.m_oddball_variant = reader.read_le()?; }
+                    e_game_engine::king => { game_variant.m_king_variant = reader.read_le()?; }
+                    e_game_engine::sandbox => { game_variant.m_sandbox_variant = reader.read_le()?; }
+                    e_game_engine::vip => { game_variant.m_vip_variant = reader.read_le()?; }
+                    e_game_engine::juggernaut => { game_variant.m_juggernaut_variant = reader.read_le()?; }
+                    e_game_engine::territories => { game_variant.m_territories_variant = reader.read_le()?; }
+                    e_game_engine::assault => { game_variant.m_assault_variant = reader.read_le()?; }
+                    e_game_engine::infection => { game_variant.m_infection_variant = reader.read_le()?; }
+                }
+
+                Ok(game_variant)
+            }
         }
-
-        Ok(game_variant)
     }
 }
 

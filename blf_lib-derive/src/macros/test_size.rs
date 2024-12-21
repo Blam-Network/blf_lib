@@ -8,6 +8,7 @@ pub fn test_size_macro(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name: syn::Ident = input.ident.clone();
     let test_name = format_ident!("sizeof_{}", name);
+    let test_mod_name = format_ident!("derive_test_size_{}", name);
 
 
     let expected_size: usize;
@@ -40,7 +41,7 @@ pub fn test_size_macro(input: TokenStream) -> TokenStream {
         Data::Struct(_body) => {
             (quote! {
                 #[cfg(test)]
-                mod derive_test_size {
+                mod #test_mod_name {
                     use super::*;
 
                     #[test]
@@ -54,7 +55,7 @@ pub fn test_size_macro(input: TokenStream) -> TokenStream {
                         let written = writer.get_ref().clone();
                         let total_size = written.len();
 
-                        assert_eq!(total_size, #expected_size);
+                        assert_eq!(#expected_size, total_size, "Expected size = {} ({:X}), Actual size = {} ({:X})", #expected_size, #expected_size, total_size, total_size);
                     }
                 }
             }).into()
