@@ -44,7 +44,7 @@ impl s_blf_chunk_author {
                 build_number,
                 build_number_version: 1,
             },
-            build_string: StaticString::from_string(T::get_build_string().to_string()).unwrap(),
+            build_string: StaticString::from_string(T::get_build_string()[..28].to_string()).unwrap(),
             author_name: Default::default(),
         }
     }

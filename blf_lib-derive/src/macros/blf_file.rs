@@ -19,12 +19,12 @@ pub fn blf_file_macro(input: TokenStream) -> TokenStream {
                 let field_name = format_ident!("{}", field.clone().ident.unwrap().to_string());
 
                 quote! {
-                    <File as std::io::Read>::read_exact(&mut file, &mut headerBytes).unwrap();
+                    reader.read_exact(&mut headerBytes).unwrap();
                     header = derive_s_blf_header::decode(&headerBytes);
 
                     if header.signature == blf_file.#field_name.signature() && header.version == blf_file.#field_name.version() {
                         let mut body_bytes = vec![0u8; (header.chunk_size as usize) - derive_s_blf_header::size()];
-                        <File as std::io::Read>::read_exact(&mut file, body_bytes.as_mut_slice()).unwrap();
+                        reader.read_exact(body_bytes.as_mut_slice()).unwrap();
                         blf_file.#field_name.decode_body(body_bytes.as_slice());
                     }
                     else {
@@ -58,10 +58,15 @@ pub fn blf_file_macro(input: TokenStream) -> TokenStream {
                         <File as std::io::Write>::write_all(&mut file, &data).unwrap();
                     }
 
-                    fn read(path: &String) -> Result<Self, Box<dyn std::error::Error>> {
+                    fn read_file(path: &String) -> Result<Self, Box<dyn std::error::Error>> {
+                        let mut reader = File::open(path)?;
+
+                        Self::read(&mut reader)
+                    }
+
+                    fn read(reader: &mut dyn std::io::Read) -> Result<Self, Box<dyn std::error::Error>> {
                         let mut headerBytes = [0u8; derive_s_blf_header::size()];
                         let mut header: derive_s_blf_header;
-                        let mut file = File::open(path)?;
 
                         let mut blf_file = Self::default();
 

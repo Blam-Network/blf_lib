@@ -132,10 +132,7 @@ impl<const N: usize> StaticString<N> {
 
     pub fn get_string(&self) -> String {
         let null_index = self.buf.iter().position(|c|c == &0u8).unwrap_or(N);
-        // In rare cases, halo gives us invalid utf-8 strings.
-        // Example: "ÆCFE205A564DD53376FC3EFD5C58E93A597D9E434D:\midship"
-        // I'm not sure why it does this, but we parse as utf-16 to avoid loss in read.
-        String::from_utf16(&self.buf.as_slice()[0..null_index].iter().map(|c| *c as u16).collect::<Vec<u16>>()).unwrap()
+        String::from_utf8(self.buf.as_slice()[0..null_index].to_vec()).unwrap()
     }
 }
 

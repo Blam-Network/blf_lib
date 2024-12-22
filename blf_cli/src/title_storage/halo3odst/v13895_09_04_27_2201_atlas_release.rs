@@ -166,7 +166,7 @@ impl v13895_09_04_27_2201_atlas_release {
                 continue;
             }
 
-            matchmaking_banhammer_messages::read(&blf_file_path)?.write_to_config(hoppers_config_path, language_code)?;
+            matchmaking_banhammer_messages::read_file(&blf_file_path)?.write_to_config(hoppers_config_path, language_code)?;
         }
 
         やった!(task)
@@ -193,7 +193,7 @@ impl v13895_09_04_27_2201_atlas_release {
                 continue;
             }
 
-            motd::read(&file_path)?.write_to_config(hoppers_config_path, language_code)?;
+            motd::read_file(&file_path)?.write_to_config(hoppers_config_path, language_code)?;
         }
 
         // JPEGs
@@ -249,7 +249,7 @@ impl v13895_09_04_27_2201_atlas_release {
                 continue;
             }
 
-            motd_popup::read(&file_path)?.write_to_config(hoppers_config_path, language_code, vidmaster)?;
+            motd_popup::read_file(&file_path)?.write_to_config(hoppers_config_path, language_code, vidmaster)?;
         }
 
         // JPEGs
@@ -305,7 +305,7 @@ impl v13895_09_04_27_2201_atlas_release {
         );
 
         // We read and rewrite to tidy any padding and the headers.
-        let mut network_config = network_configuration::read(&network_configuration_source_path)?;
+        let mut network_config = network_configuration::read_file(&network_configuration_source_path)?;
         network_config.write(&network_configuration_dest_path);
 
         fs::copy(network_configuration_source_path, network_configuration_dest_path)?;

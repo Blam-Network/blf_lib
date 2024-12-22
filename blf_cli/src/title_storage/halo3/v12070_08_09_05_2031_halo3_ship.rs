@@ -214,7 +214,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            matchmaking_banhammer_messages::read(&blf_file_path)?.write_to_config(hoppers_config_path, language_code)?;
+            matchmaking_banhammer_messages::read_file(&blf_file_path)?.write_to_config(hoppers_config_path, language_code)?;
         }
 
         やった!(task)
@@ -235,7 +235,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            matchmaking_tips::read(&blf_file_path)?.write_to_config(hoppers_config_path, language_code)?;
+            matchmaking_tips::read_file(&blf_file_path)?.write_to_config(hoppers_config_path, language_code)?;
         }
 
         やった!(task)
@@ -266,7 +266,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            motd::read(&file_path)?.write_to_config(hoppers_config_path, language_code, mythic)?;
+            motd::read_file(&file_path)?.write_to_config(hoppers_config_path, language_code, mythic)?;
         }
 
         // JPEGs
@@ -323,7 +323,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            motd_popup::read(&file_path)?.write_to_config(hoppers_config_path, language_code, mythic)?;
+            motd_popup::read_file(&file_path)?.write_to_config(hoppers_config_path, language_code, mythic)?;
         }
 
         // JPEGs
@@ -427,7 +427,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                     remove_file(&map_variant_json_file_path)?
                 }
 
-                map_variant::read(&map_variant_blf_file_path)?
+                map_variant::read_file(&map_variant_blf_file_path)?
                     .write_to_config(&hoppers_config_path, &map_variant_file_name)?;
             }
         }
@@ -498,7 +498,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                     remove_file(&game_variant_json_file_path)?;
                 }
 
-                game_variant::read(&game_variant_blf_file_path)?
+                game_variant::read_file(&game_variant_blf_file_path)?
                     .write_to_config(&hoppers_config_path, &game_variant_file_name)?;
             }
         }
@@ -532,7 +532,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            let game_set = game_set::read(&game_set_blf_path)?;
+            let game_set = game_set::read_file(&game_set_blf_path)?;
 
             let output_folder_path = build_path!(
                 hoppers_config_path,
@@ -707,7 +707,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             k_network_configuration_file_name
         );
 
-        let network_config = network_configuration::read(&network_configuration_source_path)?;
+        let network_config = network_configuration::read_file(&network_configuration_source_path)?;
         network_config.write_to_config(&hoppers_config_path)?;
 
         やった!(task)
