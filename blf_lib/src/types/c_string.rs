@@ -102,7 +102,6 @@ impl<'de, const N: usize> serde::Deserialize<'de> for StaticWcharString<N> {
 
 #[derive(PartialEq, Debug, Clone, Copy, BinRead, BinWrite)]
 pub struct StaticString<const N: usize> {
-    unknown_bit1,
     buf: [u8; N],
 }
 
