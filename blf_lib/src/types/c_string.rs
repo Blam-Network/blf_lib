@@ -133,10 +133,10 @@ impl<const N: usize> StaticString<N> {
     pub fn get_string(&self) -> String {
         let null_index = self.buf.iter().position(|c|c == &0u8).unwrap_or(N);
 
-        //String::from_utf8(self.buf.as_slice()[0..null_index].to_vec()).unwrap()
-        // Halo sometimes provide invalid characters, but we don't want to lose it's extra data,
-        // so we don't validate the utf characters and just assume they're OK.
-        unsafe { String::from_utf8_unchecked(self.buf.as_slice()[0..null_index].to_vec()) }
+        // Halo sometimes provide invalid characters, but we don't want to lose it's extra data.
+        let mut string = (0..null_index).map(|_| "\u{00}").collect::<String>();
+        unsafe { string.as_bytes_mut()[..null_index].copy_from_slice(&self.buf[..null_index]); }
+        string
     }
 }
 
