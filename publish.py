@@ -40,7 +40,7 @@ try:
 except:
     print("Failed to publish blf_cli")
 
-subprocess.call("git add blf_cli/Cargo.toml blf_lib/Cargo.toml blf_lib-derive/Cargo.toml")
+subprocess.call("git add Cargo.toml blf_cli/Cargo.toml blf_lib/Cargo.toml blf_lib-derive/Cargo.toml")
 subprocess.call(f"git commit -m \"Publish {new_version}\"")
 subprocess.call(f"git tag v{current_version}")
 subprocess.call("git push")
