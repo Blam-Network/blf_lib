@@ -76,9 +76,9 @@ impl Into<u32> for time32_t {
     }
 }
 
-impl Into<NaiveDateTime> for time32_t {
-    fn into(self) -> NaiveDateTime {
-        DateTime::from_timestamp(self.0 as i64, 0).into()
+impl Into<DateTime<Utc>> for time32_t {
+    fn into(self) -> DateTime<Utc> {
+        Utc.timestamp(self.0 as i64, 0)
     }
 }
 
