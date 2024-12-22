@@ -1,5 +1,6 @@
 [package]
 name = "blf_cli"
+description = "Command Line utilities for Blam-Files"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

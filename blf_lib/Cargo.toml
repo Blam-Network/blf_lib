@@ -1,5 +1,6 @@
 [package]
 name = "blf_lib"
+description = "Multi-purpose Blam-File library."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
