@@ -3,6 +3,7 @@ name = "blf_lib-derivable"
 description = "Shared traits used by blf_lib and blf_lib-derive"
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [dependencies]
 binrw = "0.14.1"

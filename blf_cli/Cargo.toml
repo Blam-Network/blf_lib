@@ -2,6 +2,7 @@
 name = "blf_cli"
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [dependencies]
 blf_lib = { path = "../blf_lib" }
