@@ -3,6 +3,6 @@ resolver = "2"
 members = [ "blf_lib-derivable", "blf_lib-derive", "blf_lib", 'blf_cli' ]
 
 [workspace.package]
-version = "1.4.4"
+version = "1.4.5"
 edition = "2021"
 license = "MIT"
