@@ -13,4 +13,4 @@ syn = "2.0.79"
 quote = "1.0.37"
 indoc = "2.0.5"
 proc-macro2 = "1.0.86"
-blf_lib-derivable = { path = '../blf_lib-derivable' }
+blf_lib-derivable = { path = '../blf_lib-derivable', version = "1.4.4" }
