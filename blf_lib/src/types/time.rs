@@ -48,7 +48,7 @@ impl Display for time32_t {
         let datetime = datetime.unwrap();
         let formatted = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
 
-        write!(f, "{}", self.0)
+        write!(f, "{formatted}")
     }
 }
 
