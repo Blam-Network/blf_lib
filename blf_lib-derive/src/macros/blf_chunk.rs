@@ -39,22 +39,22 @@ pub fn blf_chunk_macro(input: TokenStream) -> TokenStream {
             quote! {
                 #test_size_tokens
 
-                impl blf_lib_derivable::blf::chunks::DynamicBlfChunk for #name {
-                    fn signature(&self) -> blf_lib_derivable::types::chunk_signature::chunk_signature {
-                        blf_lib_derivable::types::chunk_signature::chunk_signature::new([#((#bytes) as std::ffi::c_char), *])
+                impl blf_lib::blf::chunks::DynamicBlfChunk for #name {
+                    fn signature(&self) -> blf_lib::types::chunk_signature::chunk_signature {
+                        blf_lib::types::chunk_signature::chunk_signature::new([#((#bytes) as std::ffi::c_char), *])
                     }
 
-                    fn version(&self) -> blf_lib_derivable::types::chunk_version::chunk_version {
-                        blf_lib_derivable::types::chunk_version::chunk_version::new(#version_float)
+                    fn version(&self) -> blf_lib::types::chunk_version::chunk_version {
+                        blf_lib::types::chunk_version::chunk_version::new(#version_float)
                     }
                 }
-                impl blf_lib_derivable::blf::chunks::BlfChunk for #name {
-                    fn get_signature() -> blf_lib_derivable::types::chunk_signature::chunk_signature {
-                        blf_lib_derivable::types::chunk_signature::chunk_signature::new([#((#bytes) as std::ffi::c_char), *])
+                impl blf_lib::blf::chunks::BlfChunk for #name {
+                    fn get_signature() -> blf_lib::types::chunk_signature::chunk_signature {
+                        blf_lib::types::chunk_signature::chunk_signature::new([#((#bytes) as std::ffi::c_char), *])
                     }
 
-                    fn get_version() -> blf_lib_derivable::types::chunk_version::chunk_version {
-                        blf_lib_derivable::types::chunk_version::chunk_version::new(#version_float)
+                    fn get_version() -> blf_lib::types::chunk_version::chunk_version {
+                        blf_lib::types::chunk_version::chunk_version::new(#version_float)
                     }
                 }
             }
