@@ -26,24 +26,24 @@ pub const k_saved_game_file_type_count: u32 = 13;
 
 #[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
 pub struct s_content_item_metadata {
-    unique_id: u64,
+    pub unique_id: u64,
     pub name: StaticWcharString<0x10>,
-    description: StaticString<128>,
-    author: StaticString<16>,
-    file_type: u32,
+    pub description: StaticString<128>,
+    pub author: StaticString<16>,
+    pub file_type: u32,
     #[brw(align_after = 4)]
-    author_is_xuid_online: s_bool,
+    pub author_is_xuid_online: s_bool,
     #[serde(with = "SerHex::<StrictCap>")]
-    author_id: u64,
-    size_in_bytes: u64,
-    date: time64_t,
-    length_seconds: u32,
-    campaign_id: i32,
-    map_id: i32,
-    game_engine_type: u32,
-    campaign_difficulty: i32,
-    hopper_id: i16,
-    game_id: u64,
+    pub author_id: u64,
+    pub size_in_bytes: u64,
+    pub date: time64_t,
+    pub length_seconds: u32,
+    pub campaign_id: i32,
+    pub map_id: i32,
+    pub game_engine_type: u32,
+    pub campaign_difficulty: i32,
+    pub hopper_id: i16,
+    pub game_id: u64,
 }
 
 impl s_content_item_metadata {

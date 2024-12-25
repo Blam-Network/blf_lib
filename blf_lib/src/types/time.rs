@@ -36,6 +36,12 @@ impl From<u64> for time64_t {
     }
 }
 
+impl Into<DateTime<Utc>> for time64_t {
+    fn into(self) -> DateTime<Utc> {
+        Utc.timestamp(self.0 as i64, 0)
+    }
+}
+
 #[derive(Default, Clone, Debug, PartialEq, BinRead, BinWrite, Copy)]
 pub struct time32_t(u32);
 
