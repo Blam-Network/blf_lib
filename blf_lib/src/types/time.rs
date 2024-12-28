@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use chrono::{NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 
 #[derive(Default, Clone, Debug, PartialEq, BinRead, BinWrite, Copy)]
 pub struct time64_t(u64);
@@ -33,6 +33,12 @@ impl Into<u64> for time64_t {
 impl From<u64> for time64_t {
     fn from(t: u64) -> Self {
         Self { 0: t }
+    }
+}
+
+impl Into<DateTime<Utc>> for time64_t {
+    fn into(self) -> DateTime<Utc> {
+        Utc.timestamp(self.0 as i64, 0)
     }
 }
 
@@ -73,6 +79,12 @@ impl<'de> Deserialize<'de> for time32_t {
 impl Into<u32> for time32_t {
     fn into(self) -> u32 {
         self.0
+    }
+}
+
+impl Into<DateTime<Utc>> for time32_t {
+    fn into(self) -> DateTime<Utc> {
+        Utc.timestamp(self.0 as i64, 0)
     }
 }
 
