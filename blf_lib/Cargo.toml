@@ -7,8 +7,8 @@ license.workspace = true
 
 [dependencies]
 libc = "0.2"
-blf_lib-derivable = { path = "../blf_lib-derivable", version = "1.4.5" }
-blf_lib-derive = { path = "../blf_lib-derive", optional = true, version = "1.4.5" }
+blf_lib-derivable = { path = "../blf_lib-derivable", version = "1.4.6" }
+blf_lib-derive = { path = "../blf_lib-derive", optional = true, version = "1.4.6" }
 serde_json = "1.0.128"
 serde = {  version = "1.0.210", features = ["serde_derive"] }
 serde-big-array = "0.5.1"
