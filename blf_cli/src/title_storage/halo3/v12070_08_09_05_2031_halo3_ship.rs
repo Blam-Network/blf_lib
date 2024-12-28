@@ -724,7 +724,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 task.fail();
             })?;
 
-            matchmaking_banhammer_messages.write(build_path!(
+            matchmaking_banhammer_messages.write_file(build_path!(
                 hoppers_blf_folder,
                 language_code,
                 k_matchmaking_banhammer_messages_file_name
@@ -745,7 +745,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 task.fail();
             })?;
 
-            matchmaking_tips.write(build_path!(
+            matchmaking_tips.write_file(build_path!(
                 hoppers_blf_folder,
                 language_code,
                 k_matchmaking_tips_file_name
@@ -783,7 +783,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            motd?.write(build_path!(
+            motd?.write_file(build_path!(
                 hoppers_blf_path,
                 language_code,
                 if mythic { k_mythic_motd_file_name } else { k_mythic_motd_file_name }
@@ -842,7 +842,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                 continue;
             }
 
-            motd_popup?.write(build_path!(
+            motd_popup?.write_file(build_path!(
                 hoppers_blf_folder,
                 language_code,
                 if mythic { k_mythic_motd_popup_file_name } else { k_motd_popup_file_name }
@@ -888,7 +888,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         let mut rsa_manifest = rsa_manifest::build_for_hoppers(hoppers_config_path)
             .inspect_err(|_| { task.fail() })?;
 
-        rsa_manifest.write(build_path!(
+        rsa_manifest.write_file(build_path!(
             hoppers_blf_path,
             k_rsa_manifest_file_name
         ));
@@ -1041,7 +1041,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                             let game_variant_json: c_game_variant = serde_json::from_str(&json).unwrap();
 
                             let mut map_variant_blf_file = game_variant::create(game_variant_json);
-                            map_variant_blf_file.write(&game_variant_blf_path);
+                            map_variant_blf_file.write_file(&game_variant_blf_path);
 
                             let hash = get_blf_file_hash(game_variant_blf_path).unwrap();
                             let mut hashes = shared_variant_hashes.lock().await;
@@ -1216,7 +1216,7 @@ impl v12070_08_09_05_2031_halo3_ship {
                             map_ids.insert(map_variant_file_name.clone(), map_variant_json.m_map_id);
 
                             let mut map_variant_blf_file = map_variant::create(map_variant_json);
-                            map_variant_blf_file.write(&map_variant_blf_path);
+                            map_variant_blf_file.write_file(&map_variant_blf_path);
 
                             let hash = get_blf_file_hash(map_variant_blf_path).unwrap();
                             let mut hashes = shared_variant_hashes.lock().await;
@@ -1329,7 +1329,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             )?;
 
             // Write the game set file
-            game_set.write(build_path!(
+            game_set.write_file(build_path!(
                 &hopper_folder_path,
                 k_game_set_blf_file_name
             ))
@@ -1476,12 +1476,12 @@ impl v12070_08_09_05_2031_halo3_ship {
             );
 
             let mut matchmaking_hopper_descriptions = matchmaking_hopper_descriptions::create(language_descriptions);
-            matchmaking_hopper_descriptions.write(&descriptions_blf_path);
+            matchmaking_hopper_descriptions.write_file(&descriptions_blf_path);
         }
 
         // Write the hopper config file.
         let mut matchmaking_hopper_blf = matchmaking_hopper::create(hopper_configuration_table);
-        matchmaking_hopper_blf.write(build_path!(
+        matchmaking_hopper_blf.write_file(build_path!(
             hoppers_blfs_path,
             k_matchmaking_hopper_file_name
         ));
@@ -1496,7 +1496,7 @@ impl v12070_08_09_05_2031_halo3_ship {
         let mut task = console_task::start("Building Network Configuration");
 
         let mut network_configuration_blf_file = network_configuration::read_from_config(&hoppers_config_path)?;
-        network_configuration_blf_file.write(
+        network_configuration_blf_file.write_file(
             build_path!(
                 hoppers_blfs_path,
                 k_network_configuration_file_name
@@ -1515,7 +1515,7 @@ impl v12070_08_09_05_2031_halo3_ship {
             task.fail();
         })?;
 
-        manifest_blf_file.write(build_path!(
+        manifest_blf_file.write_file(build_path!(
             hoppers_blfs_path,
             k_manifest_file_name
         ));

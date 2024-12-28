@@ -306,7 +306,7 @@ impl v13895_09_04_27_2201_atlas_release {
 
         // We read and rewrite to tidy any padding and the headers.
         let mut network_config = network_configuration::read_file(&network_configuration_source_path)?;
-        network_config.write(&network_configuration_dest_path);
+        network_config.write_file(&network_configuration_dest_path);
 
         fs::copy(network_configuration_source_path, network_configuration_dest_path)?;
 
@@ -327,7 +327,7 @@ impl v13895_09_04_27_2201_atlas_release {
                 continue;
             }
 
-            matchmaking_banhammer_messages?.write(build_path!(
+            matchmaking_banhammer_messages?.write_file(build_path!(
                 hoppers_blf_folder,
                 language_code,
                 k_matchmaking_banhammer_messages_file_name
@@ -360,7 +360,7 @@ impl v13895_09_04_27_2201_atlas_release {
                 continue;
             }
 
-            motd?.write(build_path!(
+            motd?.write_file(build_path!(
                 hoppers_blf_path,
                 language_code,
                 k_motd_file_name
@@ -418,7 +418,7 @@ impl v13895_09_04_27_2201_atlas_release {
                 continue;
             }
 
-            motd_popup?.write(build_path!(
+            motd_popup?.write_file(build_path!(
                 hoppers_blf_folder,
                 language_code,
                 if vidmaster { k_vidmaster_popup_file_name } else { k_motd_popup_file_name }
@@ -464,7 +464,7 @@ impl v13895_09_04_27_2201_atlas_release {
         let mut rsa_manifest = rsa_manifest::build_for_hoppers(hoppers_config_path)
             .inspect_err(|_| { task.fail() })?;
 
-        rsa_manifest.write(build_path!(
+        rsa_manifest.write_file(build_path!(
             hoppers_blf_path,
             k_rsa_manifest_file_name
         ));
@@ -483,7 +483,7 @@ impl v13895_09_04_27_2201_atlas_release {
         ))?;
 
         let mut network_configuration_blf_file = network_configuration::create(netc);
-        network_configuration_blf_file.write(
+        network_configuration_blf_file.write_file(
             build_path!(
                 hoppers_blfs_path,
                 k_network_configuration_file_name
@@ -502,7 +502,7 @@ impl v13895_09_04_27_2201_atlas_release {
             task.fail();
         })?;
 
-        manifest_blf_file.write(build_path!(
+        manifest_blf_file.write_file(build_path!(
             hoppers_blfs_path,
             k_manifest_file_name
         ));
