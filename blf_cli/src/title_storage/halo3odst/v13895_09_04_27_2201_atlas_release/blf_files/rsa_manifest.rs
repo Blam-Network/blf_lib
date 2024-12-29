@@ -5,6 +5,7 @@ use blf_lib::blf::versions::v12070_08_09_05_2031_halo3_ship;
 use blf_lib::blf_file;
 use crate::build_path;
 use crate::io::get_files_in_folder;
+use std::fs::File;
 
 pub const k_rsa_manifest_file_name: &str = "rsa_manifest.bin";
 

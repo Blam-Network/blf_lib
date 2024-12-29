@@ -43,6 +43,7 @@ pub struct s_content_item_metadata {
     pub game_engine_type: u32,
     pub campaign_difficulty: i32,
     pub hopper_id: i16,
+    #[brw(pad_before = 2)]
     pub game_id: u64,
 }
 

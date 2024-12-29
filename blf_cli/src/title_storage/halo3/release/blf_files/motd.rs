@@ -11,6 +11,7 @@ use blf_lib::types::byte_order_mark::byte_order_mark;
 use crate::build_path;
 use crate::io::create_parent_folders;
 use crate::title_storage::check_file_exists;
+use std::fs::File;
 
 pub const k_motd_file_name: &str = "motd.bin";
 pub const k_mythic_motd_file_name: &str = "blue_motd.bin";

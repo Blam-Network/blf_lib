@@ -10,6 +10,7 @@ use blf_lib::io::read_file_to_string;
 use crate::build_path;
 use crate::io::create_parent_folders;
 use crate::title_storage::check_file_exists;
+use std::fs::File;
 
 pub const k_motd_file_name: &str = "black_motd.bin";
 pub const k_motd_image_file_name: &str = "black_motd_image.jpg";

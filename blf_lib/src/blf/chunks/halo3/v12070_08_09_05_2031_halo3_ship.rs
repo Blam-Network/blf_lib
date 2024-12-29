@@ -20,3 +20,6 @@ pub mod s_blf_chunk_content_header;
 pub mod s_blf_chunk_recent_players;
 pub mod s_blf_chunk_player_data;
 pub mod s_blf_chunk_machine_network_statistics;
+pub mod s_blf_chunk_screenshot_data;
+pub mod s_blf_chunk_screenshot_camera;
+pub mod s_blf_chunk_compressed_data;

@@ -5,7 +5,7 @@ use blf_lib::TEST_BIT;
 use crate::blam::common::math::real_math::{real_point3d, real_rectangle3d};
 use crate::blam::halo_3::release::saved_games::saved_game_files::s_content_item_metadata;
 use blf_lib::types::array::StaticArray;
-use crate::blam::common::math::real_math::vector3d;
+use crate::blam::common::math::real_math::real_vector3d;
 use crate::blam::common::simulation::simulation_encoding::{simulation_read_quantized_position, simulation_write_quantized_position};
 use serde_hex::{SerHex,StrictCap};
 use crate::types::bool::s_bool;
@@ -248,8 +248,8 @@ pub struct s_variant_object_datum {
     pub editor_object_index: i32,
     pub variant_quota_index: i32,
     pub position: real_point3d,
-    pub forward: vector3d,
-    pub up: vector3d,
+    pub forward: real_vector3d,
+    pub up: real_vector3d,
     pub parent_object_identifier: c_object_identifier,
     pub multiplayer_game_object_properties: s_variant_multiplayer_object_properties_definition,
 }

@@ -5,7 +5,7 @@ use binrw::BinWrite;
 use widestring::U16CString;
 use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, valid_real_vector3d_axes3, arctangent, quantize_normalized_vector3d, k_pi};
 use crate::blam::common::math::integer_math::int32_point3d;
-use crate::blam::common::math::real_math::{quantize_real, vector3d};
+use crate::blam::common::math::real_math::{quantize_real, real_vector3d};
 use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
 use crate::io::bitstream::{e_bitstream_byte_order, e_bitstream_state, k_bitstream_maximum_position_stack_size, s_bitstream_data};
 
@@ -249,11 +249,11 @@ impl c_bitstream_writer {
         self.write_value_internal(&0u16.to_ne_bytes(), 16);
     }
 
-    pub fn write_unit_vector(unit_vector: &vector3d, size_in_bits: u8) {
+    pub fn write_unit_vector(unit_vector: &real_vector3d, size_in_bits: u8) {
         unimplemented!()
     }
 
-    pub fn write_vector(vector: &vector3d, min_value: f32, max_value: f32, step_count_size_in_bits: u32, size_in_bits: u8) {}
+    pub fn write_vector(vector: &real_vector3d, min_value: f32, max_value: f32, step_count_size_in_bits: u32, size_in_bits: u8) {}
 
     // GUTS
 
@@ -380,9 +380,9 @@ impl c_bitstream_writer {
     // }
 
     pub fn axes_compute_reference_internal(
-        up: &vector3d,
-        forward_reference: &mut vector3d,
-        left_reference: &mut vector3d
+        up: &real_vector3d,
+        forward_reference: &mut real_vector3d,
+        left_reference: &mut real_vector3d
     ) {
         assert!(assert_valid_real_normal3d(up));
 
@@ -406,22 +406,22 @@ impl c_bitstream_writer {
         assert!(valid_real_vector3d_axes3(forward_reference, left_reference, up)); // Failing
     }
 
-    fn axes_to_angle_internal(forward: &vector3d, up: &vector3d) -> f32 {
-        let mut forward_reference: vector3d = vector3d::default();
-        let mut left_reference: vector3d = vector3d::default();
+    fn axes_to_angle_internal(forward: &real_vector3d, up: &real_vector3d) -> f32 {
+        let mut forward_reference: real_vector3d = real_vector3d::default();
+        let mut left_reference: real_vector3d = real_vector3d::default();
         c_bitstream_writer::axes_compute_reference_internal(up, &mut forward_reference, &mut left_reference);
         arctangent(dot_product3d(&left_reference, &forward), dot_product3d(&forward_reference, &forward))
     }
 
     pub fn write_axes(
         &mut self,
-        forward: &vector3d,
-        up: &vector3d,
+        forward: &real_vector3d,
+        up: &real_vector3d,
     ) {
         assert!(assert_valid_real_normal3d(up));
         assert!(assert_valid_real_normal3d(forward));
 
-        let mut dequantized_up: vector3d = vector3d::default();
+        let mut dequantized_up: real_vector3d = real_vector3d::default();
 
         let i_abs = (up.i - global_up3d.i).abs();
         let j_abs = (up.j - global_up3d.j).abs();

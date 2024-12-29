@@ -67,7 +67,7 @@ impl<T: DynamicBlfChunk + BinRead + BinWrite + Clone + Any + BlfChunkHooks> Seri
 pub trait ReadableBlfChunk: BlfChunk + Sized + SerializableBlfChunk + Default {
     fn read(buffer: Vec<u8>, header: Option<s_blf_header>) -> Self {
         let offset = if header.is_some() { 0 } else { s_blf_header::size() };
-        let header = header.unwrap_or_else(|| s_blf_header::decode(buffer.as_slice()) );
+        let header = header.unwrap_or_else(|| s_blf_header::decode(&buffer.as_slice()) );
         let end = (header.chunk_size as usize - s_blf_header::size()) - offset;
         let mut chunk = Self::default();
         chunk.decode_body(&buffer[offset..end]);

@@ -7,10 +7,10 @@ use blf_lib::io::read_json_file;
 use blf_lib::types::byte_order_mark::byte_order_mark;
 use crate::build_path;
 use crate::io::create_parent_folders;
+use std::fs::File;
 
 pub const k_network_configuration_file_name: &str = "network_configuration_135.bin";
 pub const k_network_configuration_json_file_name: &str = "network_configuration_135.json";
-
 
 blf_file! {
     pub struct network_configuration {

@@ -11,6 +11,7 @@ use blf_lib::io::read_json_file;
 use crate::build_path;
 use crate::io::create_parent_folders;
 use crate::title_storage::check_file_exists;
+use std::fs::File;
 
 pub const k_motd_popup_file_name: &str = "black_motd_popup.bin";
 pub const k_vidmaster_popup_file_name: &str = "black_vidmaster_popup.bin";

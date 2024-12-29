@@ -6,7 +6,7 @@ use num_traits::FromPrimitive;
 use widestring::U16CString;
 use blf_lib::blam::common::math::real_math::{assert_valid_real_normal3d, cross_product3d, dequantize_unit_vector3d, dot_product3d, k_real_epsilon, global_forward3d, global_left3d, global_up3d, normalize3d, valid_real_vector3d_axes3, arctangent, k_pi, dequantize_real, rotate_vector_about_axis, valid_real_vector3d_axes2};
 use crate::blam::common::math::integer_math::int32_point3d;
-use crate::blam::common::math::real_math::vector3d;
+use crate::blam::common::math::real_math::real_vector3d;
 use crate::blam::common::networking::transport::transport_security::s_transport_secure_address;
 use crate::io::bitstream::{e_bitstream_byte_order, e_bitstream_state, k_bitstream_maximum_position_stack_size, s_bitstream_data};
 
@@ -299,7 +299,7 @@ impl<'a> c_bitstream_reader<'a> {
         unimplemented!()
     }
 
-    pub fn read_axis(&mut self, forward: &mut vector3d, up: &mut vector3d) {
+    pub fn read_axis(&mut self, forward: &mut real_vector3d, up: &mut real_vector3d) {
         let up_is_global_up = self.read_bool();
 
         if up_is_global_up {
@@ -316,9 +316,9 @@ impl<'a> c_bitstream_reader<'a> {
         c_bitstream_reader::angle_to_axes_internal(up, forward_angle, forward);
     }
 
-    pub fn angle_to_axes_internal(up: &vector3d, angle: f32, forward: &mut vector3d) {
-        let mut forward_reference = vector3d::default();
-        let mut left_reference = vector3d::default();
+    pub fn angle_to_axes_internal(up: &real_vector3d, angle: f32, forward: &mut real_vector3d) {
+        let mut forward_reference = real_vector3d::default();
+        let mut left_reference = real_vector3d::default();
 
         c_bitstream_reader::axes_compute_reference_internal(up, &mut forward_reference, &mut left_reference);
 
@@ -388,11 +388,11 @@ impl<'a> c_bitstream_reader<'a> {
         panic!("Exceeded max string size reading wchar string.");
     }
 
-    pub fn read_unit_vector(unit_vector: &mut vector3d, size_in_bits: u8) {
+    pub fn read_unit_vector(unit_vector: &mut real_vector3d, size_in_bits: u8) {
         unimplemented!()
     }
 
-    pub fn read_vector(vector: &mut vector3d, min_value: f32, max_value: f32, step_count_size_in_bits: f32, size_in_bits: u8) {
+    pub fn read_vector(vector: &mut real_vector3d, min_value: f32, max_value: f32, step_count_size_in_bits: f32, size_in_bits: u8) {
         unimplemented!()
     }
 
@@ -519,9 +519,9 @@ impl<'a> c_bitstream_reader<'a> {
     // }
 
     pub fn axes_compute_reference_internal(
-        up: &vector3d,
-        forward_reference: &mut vector3d,
-        left_reference: &mut vector3d
+        up: &real_vector3d,
+        forward_reference: &mut real_vector3d,
+        left_reference: &mut real_vector3d
     ) {
         assert!(assert_valid_real_normal3d(up));
 
@@ -545,9 +545,9 @@ impl<'a> c_bitstream_reader<'a> {
         assert!(valid_real_vector3d_axes3(forward_reference, left_reference, up)); // Failing
     }
 
-    fn axes_to_angle_internal(forward: &vector3d, up: &vector3d) -> f32 {
-        let mut forward_reference: vector3d = vector3d::default();
-        let mut left_reference: vector3d = vector3d::default();
+    fn axes_to_angle_internal(forward: &real_vector3d, up: &real_vector3d) -> f32 {
+        let mut forward_reference: real_vector3d = real_vector3d::default();
+        let mut left_reference: real_vector3d = real_vector3d::default();
         c_bitstream_reader::axes_compute_reference_internal(up, &mut forward_reference, &mut left_reference);
         arctangent(dot_product3d(&left_reference, &forward), dot_product3d(&forward_reference, &forward))
     }

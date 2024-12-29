@@ -12,6 +12,7 @@ use crate::io::create_parent_folders;
 use crate::title_storage::check_file_exists;
 use std::path::Path;
 use filesize::PathExt;
+use std::fs::File;
 
 pub const k_motd_popup_file_name: &str = "motd_popup.bin";
 pub const k_mythic_motd_popup_file_name: &str = "blue_motd_popup.bin";

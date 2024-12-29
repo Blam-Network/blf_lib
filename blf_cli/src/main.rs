@@ -6,6 +6,11 @@
 #![allow(unused_variables)]
 
 use clap::{command, Parser};
+use blf_lib::blf::BlfFile;
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_author, s_blf_chunk_compressed_data, s_blf_chunk_content_header, s_blf_chunk_end_of_file, s_blf_chunk_screenshot_camera, s_blf_chunk_screenshot_data, s_blf_chunk_start_of_file};
+use blf_lib::blf_file;
+use blf_lib::io::write_json_file;
+use blf_lib::types::byte_order_mark::byte_order_mark;
 use crate::commands::Commands;
 use crate::commands::Commands::{ConvertH3MCCMapVariants, TitleStorage};
 use crate::commands::convert_halo3mcc_map_variants::convert_halo3mcc_map_variants;
@@ -28,7 +33,90 @@ struct Cli {
     command: Commands,
 }
 
+blf_file!(
+    pub struct screenshot_file {
+        pub _blf: s_blf_chunk_start_of_file,
+        pub chdr: s_blf_chunk_content_header,
+        pub scnc: s_blf_chunk_screenshot_camera,
+        pub _cmp_scnd: s_blf_chunk_compressed_data<s_blf_chunk_screenshot_data>,
+        pub _eof: s_blf_chunk_end_of_file
+    }
+);
+
+blf_file!(
+    pub struct decompressed_screenshot {
+        pub _blf: s_blf_chunk_start_of_file,
+        pub chdr: s_blf_chunk_content_header,
+        pub scnc: s_blf_chunk_screenshot_camera,
+        pub scnd: s_blf_chunk_screenshot_data,
+        pub _eof: s_blf_chunk_end_of_file
+    }
+);
+
 fn main() {
+    // let bytes = std::fs::read("img_in.jpg").unwrap();
+    let bytes = std::fs::read("C:\\Users\\stell\\Downloads\\badass.jpg").unwrap();
+
+
+    let mut old_screenshot = screenshot_file::read_file(&String::from("C:\\Users\\stell\\Downloads\\anime.bin")).unwrap();
+
+    old_screenshot.chdr.metadata.name.set_string(&String::from("BADASS"));
+    old_screenshot.chdr.metadata.description.set_string(&String::from("Frieren is BADASS"));
+    old_screenshot.chdr.metadata.author.set_string(&String::from("kanokoga"));
+    // let mut new_screenshot = screenshot_file::read_file(&String::from("C:\\Users\\stell\\Downloads\\anime_new.bin")).unwrap();
+    // std::fs::write("C:\\Users\\stell\\Downloads\\anime_new.jpg", &old_screenshot._cmp_scnd.get_chunk().jpeg_data);
+
+
+    // let mut decomp_new_screenshot = decompressed_screenshot {
+    //     _blf: new_screenshot._blf,
+    //     chdr: new_screenshot.chdr,
+    //     scnc: new_screenshot.scnc,
+    //     scnd: new_screenshot._cmp_scnd.chunk,
+    //     _eof: new_screenshot._eof,
+    // };
+    //
+    // decomp_old_screenshot.write_file("C:\\Users\\stell\\Downloads\\decomp_anime.bin");
+    // decomp_new_screenshot.write_file("C:\\Users\\stell\\Downloads\\decomp_anime_new.bin");
+
+    old_screenshot._cmp_scnd.chunk.jpeg_data = bytes;
+    old_screenshot.scnc.jpeg_data_length = old_screenshot._cmp_scnd.chunk.jpeg_data.len() as u32;
+
+    old_screenshot.write_file("C:\\Users\\stell\\Downloads\\anime_new.bin");
+
+    // let mut decomp_new_screenshot = decompressed_screenshot {
+    //     _blf: old_screenshot._blf,
+    //     chdr: old_screenshot.chdr,
+    //     scnc: old_screenshot.scnc,
+    //     scnd: old_screenshot._cmp_scnd.chunk,
+    //     _eof: old_screenshot._eof,
+    // };
+    //
+    // decomp_new_screenshot.write_file("C:\\Users\\stell\\Downloads\\decomp_anime_new.bin");
+
+
+
+    // debug_log!("{}", serde_json::to_string_pretty(&old_screenshot.scnc).unwrap());
+    //
+    //
+    // let mut screenshot = screenshot_file {
+    //     _blf: s_blf_chunk_start_of_file::new("halo3 screenshot", byte_order_mark::default()),
+    //     chdr: old_screenshot.chdr,
+    //     scnc: old_screenshot.scnc,
+    //     _cmp_scnd: s_blf_chunk_compressed_data::create(s_blf_chunk_screenshot_data {
+    //         jpeg_data: bytes
+    //     }),
+    //     _eof: s_blf_chunk_end_of_file::default()
+    // };
+    //
+    // screenshot.write_file("new_screenshot.bin");
+
+
+    // std::fs::write("img_new.jpg", &old_screenshot._cmp_scnd.get_chunk().jpeg_data);
+
+
+    return;
+
+
     let args = Cli::parse();
 
     match args.command {

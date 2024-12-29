@@ -37,8 +37,4 @@ impl s_blf_chunk_end_of_file {
             authentication_type,
         }
     }
-
-    fn before_write(&mut self, previous_chunks: Vec<u8>) {
-        self.file_size = previous_chunks.len() as u32;
-    }
 }

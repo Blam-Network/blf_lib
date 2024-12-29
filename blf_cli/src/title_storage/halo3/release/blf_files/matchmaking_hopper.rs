@@ -8,6 +8,7 @@ use blf_lib::blf_file;
 use blf_lib::types::byte_order_mark::byte_order_mark;
 use crate::build_path;
 use crate::io::ordered_map;
+use std::fs::File;
 
 pub const k_matchmaking_hopper_file_name: &str = "matchmaking_hopper_011.bin";
 pub const k_hoppers_config_folder_name: &str = "hoppers";

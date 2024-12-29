@@ -11,7 +11,7 @@ pub fn blf_file_macro(input: TokenStream) -> TokenStream {
                 let field_name = format_ident!("{}", field.clone().ident.unwrap().to_string());
 
                 quote! {
-                    data.append(&mut self.#field_name.write(&data));
+                    data.append(&mut blf_lib::blf::chunks::SerializableBlfChunk::write(&mut self.#field_name, &data));
                 }
             });
 
@@ -20,27 +20,21 @@ pub fn blf_file_macro(input: TokenStream) -> TokenStream {
 
                 quote! {
                     reader.read_exact(&mut headerBytes).unwrap();
-                    header = derive_s_blf_header::decode(&headerBytes);
+                    header = blf_lib::blf::s_blf_header::decode(&headerBytes);
 
-                    if header.signature == blf_file.#field_name.signature() && header.version == blf_file.#field_name.version() {
-                        let mut body_bytes = vec![0u8; (header.chunk_size as usize) - derive_s_blf_header::size()];
+                    if header.signature == blf_lib::blf::chunks::DynamicBlfChunk::signature(&blf_file.#field_name) && header.version == blf_lib::blf::chunks::DynamicBlfChunk::version(&blf_file.#field_name) {
+                        let mut body_bytes = vec![0u8; (header.chunk_size as usize) - blf_lib::blf::s_blf_header::size()];
                         reader.read_exact(body_bytes.as_mut_slice()).unwrap();
-                        blf_file.#field_name.decode_body(body_bytes.as_slice());
+                        blf_lib::blf::chunks::SerializableBlfChunk::decode_body(&mut blf_file.#field_name, body_bytes.as_slice());
                     }
                     else {
-                        panic!("{} Chunk not found!", blf_file.#field_name.signature().to_string());
+                        panic!("{} Chunk not found!", blf_lib::blf::chunks::DynamicBlfChunk::signature(&blf_file.#field_name).to_string());
                     }
                 }
             });
 
 
             (quote! {
-                use std::fs::File;
-                use blf_lib::blf::chunks::ReadableBlfChunk as DeriveReadableBlfChunk;
-                use blf_lib::blf::chunks::SerializableBlfChunk as DeriveSerializableBlfChunk;
-                use blf_lib::blf::chunks::DynamicBlfChunk as DeriveDynamicBlfChunk;
-                use blf_lib::blf::chunks::BlfChunk;
-                use blf_lib::blf::s_blf_header as derive_s_blf_header;
                 impl blf_lib::blf::BlfFile for #name {
                     fn write(&mut self) -> Vec<u8> {
                         let mut data: Vec<u8> = Vec::new();
@@ -58,21 +52,21 @@ pub fn blf_file_macro(input: TokenStream) -> TokenStream {
                             std::fs::create_dir_all(parent.unwrap()).unwrap();
                         }
 
-                        let mut file = File::create(path)
+                        let mut file = std::fs::File::create(path)
                             .unwrap();
 
-                        <File as std::io::Write>::write_all(&mut file, &data).unwrap();
+                        <std::fs::File as std::io::Write>::write_all(&mut file, &data).unwrap();
                     }
 
                     fn read_file(path: &String) -> Result<Self, Box<dyn std::error::Error>> {
-                        let mut reader = File::open(path)?;
+                        let mut reader = std::fs::File::open(path)?;
 
                         Self::read(&mut reader)
                     }
 
                     fn read(reader: &mut dyn std::io::Read) -> Result<Self, Box<dyn std::error::Error>> {
-                        let mut headerBytes = [0u8; derive_s_blf_header::size()];
-                        let mut header: derive_s_blf_header;
+                        let mut headerBytes = [0u8; blf_lib::blf::s_blf_header::size()];
+                        let mut header: blf_lib::blf::s_blf_header;
 
                         let mut blf_file = Self::default();
 

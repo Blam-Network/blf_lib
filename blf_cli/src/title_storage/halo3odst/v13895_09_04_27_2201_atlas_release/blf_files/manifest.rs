@@ -7,6 +7,7 @@ use crate::build_path;
 use crate::title_storage::halo3::release::blf_files::matchmaking_banhammer_messages::k_matchmaking_banhammer_messages_file_name;
 use crate::title_storage::halo3::release::blf_files::rsa_manifest::k_rsa_manifest_file_name;
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::k_language_suffixes;
+use blf_lib::blf::chunks::BlfChunk;
 
 pub const k_manifest_file_name: &str = "manifest_001.bin";
 

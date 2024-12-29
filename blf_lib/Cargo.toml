@@ -21,6 +21,7 @@ chrono = "0.4.38"
 binrw = "0.14.1"
 num-traits = "0.2.19"
 num-derive = "0.4.2"
+flate2 = "1.0.35"
 
 [features]
 default = ["derive"]

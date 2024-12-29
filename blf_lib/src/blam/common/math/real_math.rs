@@ -8,16 +8,22 @@
 use binrw::{BinRead, BinWrite};
 use serde::{Deserialize, Serialize};
 use blf_lib::blam::common::math::integer_math::int32_point3d;
+use blf_lib_derive::TestSize;
 
 const k_3d_count: usize = 3;
 
 #[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
-pub struct vector3d {
+pub struct real_vector3d {
     pub i: f32,
     pub j: f32,
     pub k: f32,
 }
 
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
+pub struct real_vector2d {
+    pub i: f32,
+    pub j: f32,
+}
 
 #[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite, Copy)]
 pub struct real_bounds {
@@ -32,12 +38,48 @@ pub struct real_rectangle3d {
     pub z: real_bounds,
 }
 
-#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite, Copy)]
+pub struct real_rectangle2d {
+    pub x: real_bounds,
+    pub y: real_bounds,
+}
+
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite, TestSize)]
+#[Size(0xC)]
 pub struct real_point3d {
     pub x: f32,
     pub y: f32,
     pub z: f32,
 }
+
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite, TestSize)]
+#[Size(0x8)]
+pub struct real_point2d {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
+pub struct real_matrix3x3 {
+    pub forward: real_vector3d,
+    pub left: real_vector3d,
+    pub up: real_vector3d,
+}
+
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
+pub struct real_matrix4x3 {
+    pub scale: f32,
+    pub matrix: real_matrix3x3,
+    pub center: real_point3d,
+}
+
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
+pub struct real_plane3d {
+    pub n: real_vector3d,
+    pub d: f32,
+}
+
+
 
 pub fn dequantize_real_point3d(
     point: &int32_point3d,
@@ -52,8 +94,8 @@ pub fn dequantize_real_point3d(
 }
 
 pub fn rotate_vector_about_axis(
-    forward: &mut vector3d,
-    up: &vector3d,
+    forward: &mut real_vector3d,
+    up: &real_vector3d,
     u: f32,
     v: f32
 ) {
@@ -148,7 +190,7 @@ pub fn dequantize_real(quantized: i32, min_value: f32, max_value: f32, size_in_b
     dequantized
 }
 
-pub fn assert_valid_real_normal3d(vector: &vector3d) -> bool {
+pub fn assert_valid_real_normal3d(vector: &real_vector3d) -> bool {
     // Calculate the squared length of the vector and subtract 1.0
     let squared_length = vector.i * vector.i + vector.j * vector.j + vector.k * vector.k - 1.0;
 
@@ -165,7 +207,7 @@ pub fn arctangent(a1: f32, a2: f32) -> f32 {
     a1.atan2(a2)
 }
 
-pub fn dot_product3d(a1: &vector3d, a2: &vector3d) -> f32 {
+pub fn dot_product3d(a1: &real_vector3d, a2: &real_vector3d) -> f32 {
     (a1.i * a2.i) + (a1.j * a2.j) + (a1.k * a2.k)
 }
 
@@ -173,25 +215,25 @@ pub const k_test_real_epsilon: f32 = 0.001;
 pub const k_real_epsilon: f32 = 0.0001;
 pub const k_pi: f32 = 3.1415927;
 
-pub const global_up3d: vector3d = vector3d {
+pub const global_up3d: real_vector3d = real_vector3d {
     i: 0f32,
     j: 0f32,
     k: 1f32,
 };
 
-pub const global_forward3d: vector3d = vector3d {
+pub const global_forward3d: real_vector3d = real_vector3d {
     i: 1f32,
     j: 0f32,
     k: 0f32,
 };
 
-pub const global_left3d: vector3d = vector3d {
+pub const global_left3d: real_vector3d = real_vector3d {
     i: 0f32,
     j: 1f32,
     k: 0f32,
 };
 
-pub fn quantize_normalized_vector3d(vector: &vector3d) -> i32 {
+pub fn quantize_normalized_vector3d(vector: &real_vector3d) -> i32 {
     assert!(assert_valid_real_normal3d(vector));
 
     let mut axis_code: u8;
@@ -246,21 +288,21 @@ pub fn square_root(value: f32) -> f32 {
     value.sqrt()
 }
 
-pub fn magnitude_squared3d(a1: &vector3d) -> f32 {
+pub fn magnitude_squared3d(a1: &real_vector3d) -> f32 {
     (a1.i * a1.i) + (a1.j * a1.j) + (a1.k * a1.k)
 }
 
-fn magnitude3d(vector: &vector3d) -> f32 {
+fn magnitude3d(vector: &real_vector3d) -> f32 {
     square_root(magnitude_squared3d(vector))
 }
 
-fn scale_vector3d(vector: &mut vector3d, scale: f32) {
+fn scale_vector3d(vector: &mut real_vector3d, scale: f32) {
     vector.i *= scale;
     vector.j *= scale;
     vector.k *= scale;
 }
 
-pub fn normalize3d(vector: &mut vector3d) -> f32 {
+pub fn normalize3d(vector: &mut real_vector3d) -> f32 {
     let mut result = magnitude3d(vector);
 
     if result.abs() >= k_real_epsilon {
@@ -273,7 +315,7 @@ pub fn normalize3d(vector: &mut vector3d) -> f32 {
     result
 }
 
-pub fn dequantize_unit_vector3d(value: i32, vector: &mut vector3d) {
+pub fn dequantize_unit_vector3d(value: i32, vector: &mut real_vector3d) {
     let face = value & 7;
     let x = dequantize_real((value >> 3) as u8 as i32, -1.0, 1.0, 8, true);
     let y = dequantize_real((value >> 11) as u8 as i32, -1.0, 1.0, 8, true);
@@ -317,7 +359,7 @@ pub fn dequantize_unit_vector3d(value: i32, vector: &mut vector3d) {
     normalize3d(vector);
 }
 
-pub fn cross_product3d(a: &vector3d, b: &vector3d, out: &mut vector3d) {
+pub fn cross_product3d(a: &real_vector3d, b: &real_vector3d, out: &mut real_vector3d) {
     out.i = (a.j * b.k) - (a.k * b.j);
     out.j = (a.k * b.i) - (a.i * b.k);
     out.k = (a.i * b.j) - (a.j * b.i);
@@ -331,13 +373,13 @@ pub fn valid_realcmp(a1: f32, a2: f32) -> bool {
     valid_real(a1 - a2) && (a1 - a2).abs() < k_test_real_epsilon
 }
 
-pub fn valid_real_vector3d_axes2(a: &vector3d, b: &vector3d) -> bool {
+pub fn valid_real_vector3d_axes2(a: &real_vector3d, b: &real_vector3d) -> bool {
     assert_valid_real_normal3d(a)
         && assert_valid_real_normal3d(b)
         && valid_realcmp(dot_product3d(a, b), 0.0)
 }
 
-pub fn valid_real_vector3d_axes3(forward: &vector3d, left: &vector3d, up: &vector3d) -> bool {
+pub fn valid_real_vector3d_axes3(forward: &real_vector3d, left: &real_vector3d, up: &real_vector3d) -> bool {
     assert_valid_real_normal3d(forward)
     && assert_valid_real_normal3d(left)
     && assert_valid_real_normal3d(up)
