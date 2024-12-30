@@ -1,9 +1,16 @@
+use std::fmt;
 use std::io::{Read, Seek, Write};
 use binrw::{BinRead, BinReaderExt, BinResult, BinWrite, Endian};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub struct s_bool(pub bool);
+
+impl fmt::Display for s_bool {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", if self.0 { "true" } else { "false" })
+    }
+}
 
 impl Into<bool> for s_bool {
     fn into(self) -> bool {

@@ -7,10 +7,6 @@
 
 use clap::{command, Parser};
 use blf_lib::blf::BlfFile;
-use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_author, s_blf_chunk_compressed_data, s_blf_chunk_content_header, s_blf_chunk_end_of_file, s_blf_chunk_screenshot_camera, s_blf_chunk_screenshot_data, s_blf_chunk_start_of_file};
-use blf_lib::blf_file;
-use blf_lib::io::write_json_file;
-use blf_lib::types::byte_order_mark::byte_order_mark;
 use crate::commands::Commands;
 use crate::commands::Commands::{ConvertH3MCCMapVariants, TitleStorage};
 use crate::commands::convert_halo3mcc_map_variants::convert_halo3mcc_map_variants;
@@ -32,26 +28,6 @@ struct Cli {
     #[command(subcommand)]
     command: Commands,
 }
-
-blf_file!(
-    pub struct screenshot_file {
-        pub _blf: s_blf_chunk_start_of_file,
-        pub chdr: s_blf_chunk_content_header,
-        pub scnc: s_blf_chunk_screenshot_camera,
-        pub _cmp_scnd: s_blf_chunk_compressed_data<s_blf_chunk_screenshot_data>,
-        pub _eof: s_blf_chunk_end_of_file
-    }
-);
-
-blf_file!(
-    pub struct decompressed_screenshot {
-        pub _blf: s_blf_chunk_start_of_file,
-        pub chdr: s_blf_chunk_content_header,
-        pub scnc: s_blf_chunk_screenshot_camera,
-        pub scnd: s_blf_chunk_screenshot_data,
-        pub _eof: s_blf_chunk_end_of_file
-    }
-);
 
 fn main() {
     let args = Cli::parse();
