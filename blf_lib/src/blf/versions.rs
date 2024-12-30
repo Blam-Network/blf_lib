@@ -5,6 +5,7 @@ pub use halo3odst::v13895_09_04_27_2201_atlas_release::v13895_09_04_27_2201_atla
 
 pub mod halo3;
 pub mod halo3odst;
+pub mod haloreach;
 
 // Macro manages the implementation.
 #[derive(VersionFactory)]
