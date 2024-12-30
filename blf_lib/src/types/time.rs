@@ -4,7 +4,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 
 #[derive(Default, Clone, Debug, PartialEq, BinRead, BinWrite, Copy)]
-pub struct time64_t(u64);
+pub struct time64_t(pub u64);
 
 impl Serialize for time64_t {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
@@ -43,7 +43,7 @@ impl Into<DateTime<Utc>> for time64_t {
 }
 
 #[derive(Default, Clone, Debug, PartialEq, BinRead, BinWrite, Copy)]
-pub struct time32_t(u32);
+pub struct time32_t(pub u32);
 
 impl Display for time32_t {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {

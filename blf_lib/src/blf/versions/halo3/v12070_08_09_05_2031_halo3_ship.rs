@@ -26,6 +26,9 @@ pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_machine_network_stat
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_screenshot_data::*;
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_screenshot_camera::*;
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_compressed_data::*;
+pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_service_record::*;
+pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_user_bans::*;
+pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_file_transfers::*;
 
 #[derive(ChunkFactory)]
 #[Title("Halo 3")]
@@ -54,5 +57,8 @@ pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_compressed_data::*;
     s_blf_chunk_player_data,
     s_blf_chunk_screenshot_data,
     s_blf_chunk_screenshot_camera,
+    s_blf_chunk_service_record,
+    s_blf_chunk_user_bans,
+    s_blf_chunk_file_transfers,
 )]
 pub struct v12070_08_09_05_2031_halo3_ship {}

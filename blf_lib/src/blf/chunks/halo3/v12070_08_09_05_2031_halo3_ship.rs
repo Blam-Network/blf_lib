@@ -23,3 +23,6 @@ pub mod s_blf_chunk_machine_network_statistics;
 pub mod s_blf_chunk_screenshot_data;
 pub mod s_blf_chunk_screenshot_camera;
 pub mod s_blf_chunk_compressed_data;
+pub mod s_blf_chunk_service_record;
+pub mod s_blf_chunk_user_bans;
+pub mod s_blf_chunk_file_transfers;
