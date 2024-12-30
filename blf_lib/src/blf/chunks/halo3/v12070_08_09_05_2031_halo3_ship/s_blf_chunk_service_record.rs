@@ -25,9 +25,11 @@ pub struct s_blf_chunk_service_record
     pub foreground_emblem: u8,
     pub background_emblem: u8,
     pub emblem_flags: u8,
+    #[brw(pad_before = 1)]
     pub emblem_primary_color: Color,
     pub emblem_secondary_color: Color,
     pub emblem_background_color: Color,
+    #[brw(pad_before = 2)]
     pub spartan_helmet: SpartanHelmet,
     pub spartan_left_shoulder: SpartanShoulder,
     pub spartan_right_shoulder: SpartanShoulder,
