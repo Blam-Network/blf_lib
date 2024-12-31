@@ -169,7 +169,7 @@ fn convert_mcc_map(task: &mut console_task, hoppers_config_folder: &String, map:
         let mut rsa_signature = Vec::<u8>::with_capacity(0x100);
         rsa_file.read_to_end(&mut rsa_signature).unwrap();
 
-        map.m_map_variant_checksum = crc32(0xFFFFFFFF, &rsa_signature);
+        map.m_original_map_rsa_signature_hash = crc32(0xFFFFFFFF, &rsa_signature);
         return;
     }
 

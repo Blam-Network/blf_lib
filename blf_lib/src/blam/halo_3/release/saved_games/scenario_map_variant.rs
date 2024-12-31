@@ -8,12 +8,13 @@ use blf_lib::types::array::StaticArray;
 use crate::blam::common::math::real_math::real_vector3d;
 use crate::blam::common::simulation::simulation_encoding::{simulation_read_quantized_position, simulation_write_quantized_position};
 use serde_hex::{SerHex,StrictCap};
+use blf_lib_derive::TestSize;
 use crate::types::bool::s_bool;
 
 const k_object_type_count: usize = 14;
-const k_number_of_map_variant_simulation_entities: usize = 80;
 
-#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, BinRead, BinWrite, TestSize)]
+#[Size(0xE090)]
 pub struct c_map_variant {
     pub m_metadata: s_content_item_metadata,
     pub m_map_variant_version: u16,
@@ -31,18 +32,19 @@ pub struct c_map_variant {
     // __pad12A: [u8; 2],
     #[serde(with = "SerHex::<StrictCap>")]
     #[brw(align_before = 4)]
-    pub m_map_variant_checksum: u32,
-    pub m_variant_objects: StaticArray<s_variant_object_datum, 640>,
-    pub m_object_type_start_index: StaticArray<i16, k_object_type_count>,
+    pub m_original_map_rsa_signature_hash: u32,
+    pub m_variant_objects: StaticArray<s_variant_object_datum, 640>, // 0x130
+    pub m_object_type_start_index: StaticArray<i16, k_object_type_count>, // 0xD330 // Correct
     pub m_quotas: StaticArray<s_variant_quota, 256>,
-    pub m_chunk_simulation_object_glue_indices: StaticArray<i32, k_number_of_map_variant_simulation_entities>,
+    #[brw(pad_after = 4)]
+    pub m_gamestate_indices: StaticArray<i32, 80>,
 }
 
 impl c_map_variant {
     pub fn encode(&self, bitstream: &mut c_bitstream_writer) {
         self.m_metadata.encode(bitstream);
         bitstream.write_integer(self.m_map_variant_version as u32, 8);
-        bitstream.write_integer(self.m_map_variant_checksum, 32);
+        bitstream.write_integer(self.m_original_map_rsa_signature_hash, 32);
         bitstream.write_integer(self.m_number_of_scenario_objects as u32, 10);
         bitstream.write_integer(self.m_number_of_variant_objects as u32, 10);
         bitstream.write_integer(self.m_number_of_placeable_object_quotas as u32, 9);
@@ -134,7 +136,7 @@ impl c_map_variant {
     pub fn decode(&mut self, bitstream: &mut c_bitstream_reader) {
         self.m_metadata.decode(bitstream);
         self.m_map_variant_version = bitstream.read_integer(8) as u16;
-        self.m_map_variant_checksum = bitstream.read_integer(32);
+        self.m_original_map_rsa_signature_hash = bitstream.read_integer(32);
         self.m_number_of_scenario_objects = bitstream.read_u16(10);
         self.m_number_of_variant_objects = bitstream.read_u16(10);
         self.m_number_of_placeable_object_quotas = bitstream.read_u16(9);
@@ -225,7 +227,8 @@ pub struct s_variant_quota {
     pub price_per_item: f32,
 }
 
-#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite, TestSize)]
+#[Size(0x18)]
 pub struct s_variant_multiplayer_object_properties_definition {
     pub game_engine_flags: u16,
     pub symmetry_placement_flags: u8, // foo
@@ -240,10 +243,11 @@ pub struct s_variant_multiplayer_object_properties_definition {
     pub boundary_negative_height: f32,
 }
 
-#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite, TestSize)]
+#[Size(0x54)]
 pub struct s_variant_object_datum {
     pub flags: u16,
-    // pad 16
+    pub reuse_timeout: u16,
     pub object_datum_index: i32,
     pub editor_object_index: i32,
     pub variant_quota_index: i32,
@@ -254,7 +258,8 @@ pub struct s_variant_object_datum {
     pub multiplayer_game_object_properties: s_variant_multiplayer_object_properties_definition,
 }
 
-#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite)]
+#[derive(Default, PartialEq, Debug, Clone, Copy, Serialize, Deserialize, BinRead, BinWrite, TestSize)]
+#[Size(0x8)]
 pub struct c_object_identifier {
     m_unique_id: i32,
     m_origin_bsp_index: i16,

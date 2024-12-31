@@ -72,7 +72,7 @@ fn convert_mcc_map(task: &mut console_task, map: &mut c_map_variant) -> bool {
         task.add_error(format!("Skipped map variant {} because the map is unsupported.", map.m_metadata.name.get_string()));
         return false;
     } else {
-        map.m_map_variant_checksum = checksum.unwrap();
+        map.m_original_map_rsa_signature_hash = checksum.unwrap();
     }
 
     let mut bad_budget_indices = Vec::<i32>::new();

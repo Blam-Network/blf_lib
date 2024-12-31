@@ -1205,10 +1205,10 @@ impl v12070_08_09_05_2031_halo3_ship {
                             }
                             else {
                                 let expected_scenario_crc = expected_scenario_crc.unwrap();
-                                if expected_scenario_crc != &map_variant_json.m_map_variant_checksum {
+                                if expected_scenario_crc != &map_variant_json.m_original_map_rsa_signature_hash {
                                     let mut task = task.lock().await;
-                                    task.add_error(format!("Map Variant \"{map_variant_file_name}\" has a bad checksum and may not load properly! (got {:08X}, expected {:08X})", &map_variant_json.m_map_variant_checksum, expected_scenario_crc));
-                                    map_variant_json.m_map_variant_checksum = expected_scenario_crc.clone();
+                                    task.add_error(format!("Map Variant \"{map_variant_file_name}\" has a bad checksum and may not load properly! (got {:08X}, expected {:08X})", &map_variant_json.m_original_map_rsa_signature_hash, expected_scenario_crc));
+                                    map_variant_json.m_original_map_rsa_signature_hash = expected_scenario_crc.clone();
                                 }
                             }
 
