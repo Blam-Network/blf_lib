@@ -25,7 +25,7 @@ impl Default for s_blf_chunk_player_data {
     fn default() -> Self {
         s_blf_chunk_player_data {
             hopper_access: 0,
-            bungie_user_role: 1,
+            bungie_user_role: 0xffff,
             unknown1: 0,
             hopper_directory: StaticString::from_string("default_hoppers").unwrap(),
             unknown2: StaticArray::default(),
