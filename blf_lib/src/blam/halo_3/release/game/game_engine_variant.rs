@@ -15,6 +15,7 @@ use blf_lib::blam::halo_3::release::game::game_engine_sandbox::c_game_engine_san
 use blf_lib::blam::halo_3::release::game::game_engine_territories::c_game_engine_territories_variant;
 use blf_lib::blam::halo_3::release::game::game_engine_vip::c_game_engine_vip_variant;
 use blf_lib::io::bitstream::{c_bitstream_reader, c_bitstream_writer};
+use blf_lib_derive::TestSize;
 
 #[derive(BinRead, BinWrite, Serialize, Deserialize, Default, PartialEq, Debug, Copy, Clone, FromPrimitive)]
 #[brw(repr = u32)]
@@ -33,7 +34,8 @@ pub enum e_game_engine {
     infection = 10,
 }
 
-#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, PartialEq, Debug, Clone, Serialize, Deserialize, TestSize)]
+#[Size(0x264)]
 pub struct c_game_variant {
     pub m_game_engine: e_game_engine,
     pub m_base_variant: c_game_engine_base_variant,
@@ -66,6 +68,7 @@ impl BinWrite for c_game_variant {
         match endian {
             Endian::Big => {
                 writer.write_be(&self.m_game_engine)?;
+                let start_offset = writer.stream_position()?;
                 writer.write_be(&self.m_base_variant)?;
 
                 match self.m_game_engine {
@@ -80,10 +83,19 @@ impl BinWrite for c_game_variant {
                     e_game_engine::territories => { writer.write_be(&self.m_territories_variant.as_ref().unwrap()) }
                     e_game_engine::assault => { writer.write_be(&self.m_assault_variant.as_ref().unwrap()) }
                     e_game_engine::infection => { writer.write_be(&self.m_infection_variant.as_ref().unwrap()) }
+                }?;
+
+                let finished_offset = writer.stream_position()?;
+                let written_size = finished_offset - start_offset;
+                let remainder = 608 - written_size;
+                for i in 0..remainder {
+                    writer.write_be(&0u8)?;
                 }
+                Ok(())
             }
             Endian::Little => {
                 writer.write_le(&self.m_game_engine)?;
+                let start_offset = writer.stream_position()?;
                 writer.write_le(&self.m_base_variant)?;
 
                 match self.m_game_engine {
@@ -98,7 +110,15 @@ impl BinWrite for c_game_variant {
                     e_game_engine::territories => { writer.write_le(&self.m_territories_variant.as_ref().unwrap()) }
                     e_game_engine::assault => { writer.write_le(&self.m_assault_variant.as_ref().unwrap()) }
                     e_game_engine::infection => { writer.write_le(&self.m_infection_variant.as_ref().unwrap()) }
+                }?;
+
+                let finished_offset = writer.stream_position()?;
+                let written_size = finished_offset - start_offset;
+                let remainder = 608 - written_size;
+                for i in 0..remainder {
+                    writer.write_le(&0u8)?;
                 }
+                Ok(())
             }
         }
     }
