@@ -10,7 +10,6 @@ use crate::title_storage::halo3::release::blf_files::matchmaking_hopper_descript
 use crate::title_storage::halo3::release::blf_files::matchmaking_tips::k_matchmaking_tips_file_name;
 use crate::title_storage::halo3::release::blf_files::rsa_manifest::k_rsa_manifest_file_name;
 use crate::title_storage::halo3::v12070_08_09_05_2031_halo3_ship::k_language_suffixes;
-use std::fs::File;
 use blf_lib::blf::chunks::BlfChunk;
 
 pub const k_manifest_file_name: &str = "manifest_001.bin";

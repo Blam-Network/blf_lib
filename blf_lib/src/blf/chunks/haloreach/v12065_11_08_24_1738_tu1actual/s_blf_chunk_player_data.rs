@@ -1,7 +1,7 @@
 use binrw::binrw;
 use serde::{Deserialize, Serialize};
 use blf_lib_derivable::blf::chunks::BlfChunkHooks;
-use blf_lib_derive::{BlfChunk, TestSize};
+use blf_lib_derive::BlfChunk;
 use crate::types::array::StaticArray;
 use crate::types::c_string::StaticString;
 

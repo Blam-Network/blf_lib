@@ -6,7 +6,6 @@
 #![allow(unused_variables)]
 
 use clap::{command, Parser};
-use blf_lib::blf::BlfFile;
 use crate::commands::Commands;
 use crate::commands::Commands::{ConvertH3MCCMapVariants, TitleStorage};
 use crate::commands::convert_halo3mcc_map_variants::convert_halo3mcc_map_variants;

@@ -26,3 +26,4 @@ pub mod s_blf_chunk_compressed_data;
 pub mod s_blf_chunk_service_record;
 pub mod s_blf_chunk_user_bans;
 pub mod s_blf_chunk_file_transfers;
+pub mod s_blf_chunk_matchmaking_hopper_statistics;

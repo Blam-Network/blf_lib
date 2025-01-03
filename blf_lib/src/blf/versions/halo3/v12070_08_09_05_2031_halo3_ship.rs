@@ -29,6 +29,7 @@ pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_compressed_data::*;
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_service_record::*;
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_user_bans::*;
 pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_file_transfers::*;
+pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_matchmaking_hopper_statistics::*;
 
 #[derive(ChunkFactory)]
 #[Title("Halo 3")]
@@ -60,5 +61,6 @@ pub use halo3::v12070_08_09_05_2031_halo3_ship::s_blf_chunk_file_transfers::*;
     s_blf_chunk_service_record,
     s_blf_chunk_user_bans,
     s_blf_chunk_file_transfers,
+    s_blf_chunk_matchmaking_hopper_statistics,
 )]
 pub struct v12070_08_09_05_2031_halo3_ship {}
