@@ -11,7 +11,7 @@ use blf_lib_derive::BlfChunk;
 #[Size(0x104)]
 pub struct s_blf_chunk_matchmaking_hopper_statistics {
     pub player_count: u32,
-    data: StaticArray<hopper_population, 32>,
+    pub data: StaticArray<hopper_population, 32>,
 }
 
 #[derive(PartialEq,Debug,Clone,Serialize,Deserialize,Default,BinRead,BinWrite)]
@@ -21,4 +21,3 @@ pub struct hopper_population {
 }
 
 impl BlfChunkHooks for s_blf_chunk_matchmaking_hopper_statistics {}
-
