@@ -6,6 +6,19 @@ use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 #[derive(Default, Clone, Debug, PartialEq, BinRead, BinWrite, Copy)]
 pub struct time64_t(pub u64);
 
+impl Display for time64_t {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let datetime = Utc.timestamp_opt(self.0 as i64, 0).single();
+        if datetime.is_none() {
+            return write!(f, "<Invalid Timestamp>");
+        }
+        let datetime = datetime.unwrap();
+        let formatted = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
+
+        write!(f, "{formatted}")
+    }
+}
+
 impl Serialize for time64_t {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let datetime = Utc.timestamp_opt(self.0 as i64, 0).single()
