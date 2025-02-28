@@ -8,16 +8,17 @@ use blf_lib_derive::BlfChunk;
 #[derive(BlfChunk,Default,PartialEq,Debug,Clone,Serialize,Deserialize)]
 #[Header("mapi", 1.1)]
 #[brw(big)]
-pub struct s_blf_chunk_screenshot_data
+pub struct s_blf_chunk_map_image
 {
-    image_type: e_map_image_type,
+    #[brw(pad_before = 3)]
+    pub image_type: e_map_image_type,
     #[bw(try_calc(u32::try_from(image_data.len())))]
     length: u32,
     #[br(count = length)]
     pub image_data: Vec<u8>
 }
 
-impl BlfChunkHooks for s_blf_chunk_screenshot_data {}
+impl BlfChunkHooks for s_blf_chunk_map_image {}
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize, BinRead, BinWrite, Default)]
 #[brw(big, repr = u8)]

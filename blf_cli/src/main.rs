@@ -5,7 +5,11 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+use std::fs;
 use clap::{command, Parser};
+use blf_lib::blf::chunks::search_for_chunk_in_file;
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::{s_blf_chunk_map_image, s_blf_chunk_map_variant};
+use blf_lib::blf::versions::halo3::v12070_08_09_05_2031_halo3_ship::e_map_image_type::map_image_type_jpg;
 use crate::commands::Commands;
 use crate::commands::Commands::{ConvertH3MCCMapVariants, TitleStorage};
 use crate::commands::convert_halo3mcc_map_variants::convert_halo3mcc_map_variants;
