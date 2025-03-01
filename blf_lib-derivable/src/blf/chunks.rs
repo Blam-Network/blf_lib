@@ -19,7 +19,7 @@ pub trait BlfChunkHooks {
     fn after_read(&mut self) {}
 }
 
-pub trait SerializableBlfChunk: DynamicBlfChunk + Any {
+pub trait SerializableBlfChunk: DynamicBlfChunk + Any + Send + Sync {
     fn encode_body(&mut self, previously_written: &Vec<u8>) -> Vec<u8>;
     fn decode_body(&mut self, buffer: &[u8]);
 
@@ -41,7 +41,7 @@ pub trait SerializableBlfChunk: DynamicBlfChunk + Any {
     fn as_any(&self) -> &dyn Any;
 }
 
-impl<T: DynamicBlfChunk + BinRead + BinWrite + Clone + Any + BlfChunkHooks> SerializableBlfChunk for T
+impl<T: DynamicBlfChunk + BinRead + BinWrite + Clone + Any + BlfChunkHooks + Send + Sync> SerializableBlfChunk for T
     where for<'a> <T as BinWrite>::Args<'a>: Default, for<'a> <T as BinRead>::Args<'a>: Default {
     fn encode_body(&mut self, previously_written: &Vec<u8>) -> Vec<u8> where for<'a> <T as BinWrite>::Args<'a>: Default {
         self.before_write(previously_written);
