@@ -118,7 +118,8 @@ pub enum EliteArmour {
 #[brw(big, repr = u32)]
 pub enum Rank {
     #[default]
-    Recruit = 0,
+    None = 0,
+    Recruit,
     Apprentice,
     Private,
     Corporal,
