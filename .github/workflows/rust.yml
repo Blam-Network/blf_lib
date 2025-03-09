@@ -45,22 +45,22 @@ jobs:
         working-directory: ./blf_cli
         run: cargo test --verbose
       - name: Upload Windows Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: blf_cli Windows (x86_64-pc-windows-gnu)
           path: blf_lib/blf_cli/target/x86_64-pc-windows-gnu/release/blf_cli.exe
       - name: Upload Linux Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: blf_cli Linux (x86_64-unknown-linux-musl)
           path: blf_lib/blf_cli/target/x86_64-unknown-linux-musl/release/blf_cli
       - name: Upload MacOS Binaries (Apple Silicon)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: blf_cli MacOS (aarch64-apple-darwin)
           path: blf_lib/blf_cli/target/aarch64-apple-darwin/release/blf_cli
       - name: Upload MacOS Binaries (x86)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: blf_cli MacOS (x86_64-apple-darwin)
           path: blf_lib/blf_cli/target/x86_64-apple-darwin/release/blf_cli
