@@ -2,9 +2,9 @@ name: Rust
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "workflow" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "workflow" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -45,22 +45,22 @@ jobs:
         working-directory: ./blf_cli
         run: cargo test --verbose
       - name: Upload Windows Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: blf_cli Windows (x86_64-pc-windows-gnu)
-          path: blf_cli/target/x86_64-pc-windows-gnu/release/blf_cli.exe
+          path: /home/runner/work/blf_lib/blf_lib/target/x86_64-pc-windows-gnu/release/blf_cli.exe
       - name: Upload Linux Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: blf_cli Linux (x86_64-unknown-linux-musl)
-          path: blf_cli/target/x86_64-unknown-linux-musl/release/blf_cli
+          path: /home/runner/work/blf_lib/blf_lib/target/x86_64-unknown-linux-musl/release/blf_cli
       - name: Upload MacOS Binaries (Apple Silicon)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: blf_cli MacOS (aarch64-apple-darwin)
-          path: blf_cli/target/aarch64-apple-darwin/release/blf_cli
+          path: /home/runner/work/blf_lib/blf_lib/target/aarch64-apple-darwin/release/blf_cli
       - name: Upload MacOS Binaries (x86)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: blf_cli MacOS (x86_64-apple-darwin)
-          path: blf_cli/target/x86_64-apple-darwin/release/blf_cli
+          path: /home/runner/work/blf_lib/blf_lib/target/x86_64-apple-darwin/release/blf_cli
